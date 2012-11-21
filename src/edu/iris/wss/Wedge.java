@@ -93,16 +93,7 @@ public class Wedge {
 	
 	// [end region]
 
-	
-	@GET
-	@Path("tt")
-	public String tt() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
 
-		WebApplicationException wae = new WebApplicationException(Status.OK);
-		ServiceShellException.logAndThrowException(ri, wae, "fongy");
-return "neverland";
-	}
 	
 	@POST
 	@Path("posty") 
@@ -126,6 +117,7 @@ return "neverland";
 	
 	private Response processQuery() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	
 		if (ri.appConfig.getStreamingOutputClassName() != null) {
 			return runJava();
 		} else {
@@ -134,6 +126,16 @@ return "neverland";
 	}
 	
 	private Response runJava() {
+		
+		// Run the paramter translator to test consistency.  We need an arraylist, but it's not used.
+		ArrayList<String> cmd = new ArrayList<String>();
+		try {
+			ParameterTranslator.parseQueryParams(cmd, ri);
+		} catch (Exception e) {
+			shellException(Status.BAD_REQUEST, e.getMessage());
+		}
+		
+		
 		String className = ri.appConfig.getStreamingOutputClassName();
 		IrisStreamingOutput iso = null;
 		

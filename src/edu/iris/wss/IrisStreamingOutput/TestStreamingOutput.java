@@ -45,7 +45,11 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 		
 		long totalBytesTransmitted = 0L;
 		
-		String testData = "My favorite things";
+		StringBuilder sb = new StringBuilder();
+		sb.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
+		sb.append("<data>My favorite things</data>");
+		
+		String testData = sb.toString();
 		try {
 			output.write(testData.getBytes());
 			totalBytesTransmitted += testData.getBytes().length;

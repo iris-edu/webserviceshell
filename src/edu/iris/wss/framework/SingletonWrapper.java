@@ -48,5 +48,11 @@ public class SingletonWrapper {
     			logger.fatal("Illegal access while instantiating class: " + appConfig.getSingletonClassName());
     		}
     	}
+
+	}
+	
+	public SingletonWrapper(AppConfigurator ac, ParamConfigurator pc) {
+		this.appConfig = ac;
+		this.paramConfig = pc;
 	}
 }

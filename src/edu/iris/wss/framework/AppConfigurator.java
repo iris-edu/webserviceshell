@@ -11,7 +11,7 @@ public class AppConfigurator {
     private static final String configFilePath = "META-INF/service.cfg";
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static enum OutputType { XML, JSON, TEXT, SEED };
+	public static enum OutputType { XML, JSON, TEXT, SEED, TEXTTREE };
 	public static enum LoggingType { LOG4J, JMS };
 	
     private OutputType outputType = OutputType.TEXT;
@@ -52,11 +52,12 @@ public class AppConfigurator {
 	
 	// These config entries have defaults from this class.
 	public OutputType getOutputType() 					{ return outputType; }
-	public void setOutputType(OutputType e)				{ outputType = e; }
+	public void setOutputType(OutputType e)				{ outputType = e;  logger.info("OutputType set to " + e.toString()); }
 	
 	public void setOutputType(String s) throws Exception {
 		try {
 			this.outputType = OutputType.valueOf(s.toUpperCase());	
+			logger.info("OutputType set to " + outputType.toString());
 		} catch (Exception e) {
 			throw new Exception("Unrecognized output format: " + s);
 		}
@@ -182,6 +183,8 @@ public class AppConfigurator {
 			return "application/xml";
 		case TEXT:
 			return "text/plain";
+		case TEXTTREE:
+			return "text/plain";
 		case JSON:
 			return "application/json";
 		case SEED:
@@ -196,6 +199,8 @@ public class AppConfigurator {
 		case XML:
 			return ".xml";
 		case TEXT:
+			return ".txt";
+		case TEXTTREE:
 			return ".txt";
 		case JSON:
 			return ".json";
