@@ -1,16 +1,26 @@
 package edu.iris.wss.IrisStreamingOutput;
 
+
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 
 
 import org.apache.log4j.Logger;
 
+import edu.iris.miniseed.LogicalRecord;
+import edu.iris.miniseed.LogicalRecordIterator;
 import edu.iris.wss.StreamEater;
+import edu.iris.wss.circularbuffer.CircularByteBuffer;
+import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.RequestInfo;
+import edu.sc.seis.seisFile.mseed.*;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -149,13 +159,173 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 		else {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Termination of workeer with exit code: " + exitVal);
+					"Termination of worker with exit code: " + exitVal);
 		}
 		return Status.OK;		// Won't get here.
 	}
 	
 	@Override
 	public void write(OutputStream output) {
+		if (this.ri.appConfig.getOutputType() == OutputType.SEED) {
+			writeSeed(output);
+		} else {
+			writeNonSeed(output);
+		}
+	}
+	
+	public void writeSeed(OutputStream output) {
+
+		long totalBytesTransmitted = 0L;
+		int bytesRead;
+		byte [] buffer = new byte[4096];	 // Complicated
+		
+		HashMap<String, Long> logHash = new HashMap<String, Long>();	
+
+		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
+		rt.schedule(killIt);
+		
+		CircularByteBuffer cbb = new CircularByteBuffer(CircularByteBuffer.INFINITE_SIZE, false);
+		DataInputStream dis = new DataInputStream(cbb.getInputStream());
+
+		try {
+			while (true) {
+				logger.info("Big loop top");
+				bytesRead = is.read(buffer, 0, buffer.length);
+				if (bytesRead < 0) {
+					break;
+				}
+				logger.info("Read " + bytesRead);
+
+				totalBytesTransmitted += bytesRead;
+				output.write(buffer, 0, bytesRead);
+				output.flush();
+				
+				cbb.getOutputStream().write(buffer, 0, bytesRead);				
+
+				LogicalRecordIterator iter = new LogicalRecordIterator(dis);
+				logger.info("Just read:  inputreams available: " + cbb.getAvailable());
+				try {
+					while (true) {
+						if (!iter.hasNext()) {
+							logger.info("No next");
+							break;
+						}
+						LogicalRecord lr = iter.next();
+						logger.info("Read data record: " + lr.getRecordLength());
+						logger.info("Looping:  inputreams available: " + cbb.getAvailable());
+
+
+//						String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
+//								dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
+//								dh.getQualityIndicator());
+//					
+//						if (logHash.containsKey(key)) {
+//							logHash.put(key, dr.getRecordSize() + logHash.get(key));
+//						} else {
+//							logHash.put(key, (long) dr.getRecordSize());
+//						}
+					}
+					logger.info("Done reading this LR");
+				} catch (Exception e) {
+					logger.info("Caught exception in iterator parse: " + e.getMessage());
+
+				}
+				finally {
+					iter.close();
+				}
+				
+//				while (true) {
+//					try {
+//						sr = SeedRecord.read(dis);
+//						if (sr == null)  {
+//							logger.info("Null sr");
+//							break;
+//						}
+//					} catch (Exception e) {
+//						logger.info("Caught exception in seed parse: " + e.getMessage());
+//						break;
+//					}
+//				
+//					if (! (sr  instanceof DataRecord)) {
+//						logger.info("NOT  a SEED RECORD");
+//					}
+//			
+//					DataRecord dr = (DataRecord) sr;
+//					DataHeader dh = dr.getHeader();
+//					logger.info("Read data record: " + dr.getRecordSize());
+//
+//					String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
+//							dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
+//							dh.getQualityIndicator());
+//				
+//					if (logHash.containsKey(key)) {
+//						logHash.put(key, dr.getRecordSize() + logHash.get(key));
+//					} else {
+//						logHash.put(key, (long) dr.getRecordSize());
+//					}
+//				}
+				rt.reschedule();
+			}
+		}
+
+		catch (IOException ioe) {			
+			logger.error("Got IOE: " + ioe.getMessage());
+		}
+		catch (Exception e) {
+			logger.error("Got Generic Exception: " + e.getMessage());
+		
+		} finally {	
+			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");			
+
+			long processingTime = (new Date()).getTime() - startTime.getTime();
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+			String oldAppName = ri.appConfig.getAppName();	
+			ri.appConfig.setAppName(oldAppName + "_summary");
+			Date startDate = null, endDate = null;
+			String quality = null;
+			
+			try {
+				quality =   ri.paramConfig.getValue("quality");
+				startDate = sdf.parse(ri.paramConfig.getValue("starttime"));
+				endDate =   sdf.parse(ri.paramConfig.getValue("endtime"));
+
+			} catch (Exception e) {
+				; // Do nothing
+			}
+			
+			logUsageMessage(ri, totalBytesTransmitted, processingTime,
+					null, Status.OK, null);
+			
+			ri.appConfig.setAppName(oldAppName);
+
+			long total = 0;
+			for (String key: logHash.keySet()) {
+					
+				logUsageMessage(ri, logHash.get(key), processingTime,
+						null, Status.OK, null,
+						LogKey.getNetwork(key), LogKey.getStation(key), LogKey.getLocation(key),
+						LogKey.getChannel(key), LogKey.getQuality(key), 
+						startDate, endDate, quality);
+							
+						total += logHash.get(key);		
+				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
+			
+			}
+			logger.info("Hash total: :" + total);
+    		rt.cancel();
+    		
+    		try {
+    			output.close();
+    			is.close();
+    		} catch (IOException ioe) {
+    			// What can one do?
+    			;
+    		}
+		}	
+	}
+	
+	public void writeNonSeed(OutputStream output) {
 		
 		long totalBytesTransmitted = 0L;
 		int bytesRead;
@@ -198,6 +368,29 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     			;
     		}
 		}	
+	}
+	
+	private static class LogKey {
+		
+		static String makeKey(String n, String s, String l, String c, Character q) {
+			return n + "_" + s + "_" + l + "_" + c + "_" + 	q;
+		}
+		
+		static String getNetwork(String key) {
+			return key.split("_")[0];
+		}
+		static String getStation(String key) {
+			return key.split("_")[1];
+		}
+		static String getLocation(String key) {
+			return key.split("_")[2];
+		}
+		static String getChannel(String key) {
+			return key.split("_")[3];
+		}
+		static String getQuality(String key) {
+			return key.split("_")[4];
+		}		
 	}
 
 	private Runnable killIt = new Runnable() {

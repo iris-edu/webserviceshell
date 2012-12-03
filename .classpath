@@ -23,5 +23,6 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/miniseed-reader"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

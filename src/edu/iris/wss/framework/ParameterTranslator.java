@@ -100,25 +100,10 @@ public class ParameterTranslator {
 				}					
 				break;
 				
-//			case LATITUDE:
-//				try {
-//					f = Float.parseFloat(cp.value);
-//				} catch (Exception e) {
-//					throw new Exception("Bad numeric value for " + key + ": " + cp.value);
-//				}
-//				if  ((f > 90) || (f < -90))
-//					throw new Exception("Out of range value for " + key + ": " + cp.value);
-//				break;
-//				
-//			case LONGITUDE:
-//				try {
-//					f = Float.parseFloat(cp.value);
-//				} catch (Exception e) {
-//					throw new Exception("Bad numeric value for " + key + ": " + cp.value);
-//				}
-//				if  ((f > 180) || (f < -180))
-//					throw new Exception("Out of range value for " + key + ": " + cp.value);
-//				break;
+			case BOOLEAN:
+				if (!cp.value.equalsIgnoreCase("true") && !cp.value.equals("false"))
+					throw new Exception("Bad boolean value for " + key + ": " + cp.value);
+				break;
 			
 			case TEXT:
 				// Text is, well, just text

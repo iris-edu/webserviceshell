@@ -15,10 +15,20 @@ public class LoggerUtils {
 	
 	public static void logMessage(RequestInfo ri, Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText) {
+		logMessage(ri, dataSize, processTime, errorType, httpStatusCode, extraText,
+				null, null, null, null, null, null, null, null);
+	}
+	
+	public static void logMessage(RequestInfo ri, Long dataSize, Long processTime,
+			String errorType, Integer httpStatusCode, String extraText,
+			String network, String station, String location, String channel, String quality,
+			Date startTime, Date endTime, String duration) {
 		
 		if (ri.appConfig.getLoggingType() == LoggingType.LOG4J) {
 			usageLogger.info(makeUsageLogString(ri, dataSize, processTime,
-					errorType, httpStatusCode, extraText));
+					errorType, httpStatusCode, extraText,
+					network, station, location, channel, quality,
+					startTime, endTime, duration));
 			return;
 		}
 		
@@ -37,8 +47,8 @@ public class LoggerUtils {
 					WebUtils.getClientIp(ri.request), 
 					dataSize, 
 					processTime,
-					null, null, null, null, null, // NSCLQ 
-					null, null, null, // Start time, end time, duration
+					network, station, channel, location, quality, 
+					startTime, endTime, duration, 
 					errorType, // Error Type
 					WebUtils.getUserAgent(ri.request),
 					Integer.toString(httpStatusCode),

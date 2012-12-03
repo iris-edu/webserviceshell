@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>StatsWriter</project>
+		<project>miniseed-reader</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

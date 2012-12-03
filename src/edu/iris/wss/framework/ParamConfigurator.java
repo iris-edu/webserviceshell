@@ -15,8 +15,7 @@ public class ParamConfigurator {
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
 	public static class ConfigParam {
-//		public static enum ParamType { TEXT, DATE, NUMBER, LATITUDE, LONGITUDE };
-		public static enum ParamType { TEXT, DATE, NUMBER };
+		public static enum ParamType { TEXT, DATE, NUMBER, BOOLEAN };
 
 		public String name;
 		public ParamType type;
@@ -55,7 +54,7 @@ public class ParamConfigurator {
 	public void loadConfigFile() throws Exception {		
 		Properties configurationProps = new Properties();
 
-		// This configuration rather than .getResourceAsStream() avoids caching.
+		// This configuration rather than .getResourceAsStream() avoids caching.  Or so we orig. thought.
 //		configurationProps.load(this.getClass().getClassLoader().getResource(configFilePath).openStream());
 		
 		// This configuration has caching and requires a restart of the application to pick up the changes to the file.
@@ -80,8 +79,6 @@ public class ParamConfigurator {
 			paramMap.put(key, new ConfigParam(key, paramType)); 
 			configurationProps.remove(key);	
 		}
-		
-
 	}
 
 	private static boolean isOkString(String s) {

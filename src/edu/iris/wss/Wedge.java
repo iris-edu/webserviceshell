@@ -44,12 +44,14 @@ public class Wedge {
       	InputStream is = null;
     	try {
     		
+    		String serviceName = context.getContextPath();
     		// RKRK Fix this when we have a real context path
-//    		String serviceName = context.getContextPath();
-//    		URL l_URL = new URL(ri.config.getRootServiceDoc() + "/" + serviceName + "_root.htm");
+    		logger.info("Service path: " + serviceName);
+    		serviceName = "/station";
     		
-    		logger.info(ri.appConfig.getRootServiceDoc() + "/" + "flinnengdahl" + "_root.htm");
-    		URL l_URL = new URL(ri.appConfig.getRootServiceDoc() + "/" + "flinnengdahl" + "_root.htm");
+    		URL l_URL = new URL(ri.appConfig.getRootServiceDoc() + serviceName + "_root.htm");
+    		logger.info(l_URL.toString());		
+    		
     		is = l_URL.openStream();
 
     	} catch (Exception e) {
@@ -127,7 +129,7 @@ public class Wedge {
 	
 	private Response runJava() {
 		
-		// Run the paramter translator to test consistency.  We need an arraylist, but it's not used.
+		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
 		ArrayList<String> cmd = new ArrayList<String>();
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri);
