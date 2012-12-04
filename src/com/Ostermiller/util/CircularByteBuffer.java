@@ -1,5 +1,4 @@
-package edu.iris.wss.circularbuffer;
-
+package com.Ostermiller.util;
 /*
  * Circular Byte Buffer
  * Copyright (C) 2002-2010 Stephen Ostermiller

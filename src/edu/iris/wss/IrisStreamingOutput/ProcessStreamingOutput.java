@@ -7,17 +7,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 
-
 import org.apache.log4j.Logger;
 
-import edu.iris.miniseed.LogicalRecord;
-import edu.iris.miniseed.LogicalRecordIterator;
+import com.Ostermiller.util.CircularByteBuffer;
+
 import edu.iris.wss.StreamEater;
-import edu.iris.wss.circularbuffer.CircularByteBuffer;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.RequestInfo;
 import edu.sc.seis.seisFile.mseed.*;
@@ -177,7 +174,13 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 		long totalBytesTransmitted = 0L;
 		int bytesRead;
-		byte [] buffer = new byte[4096];	 // Complicated
+		
+		// Hopefully this is the largest logical record size we'll see.  Used in terminating
+		// SeedRecord processing when the circular buffer holds less than this many bytes.
+		final int maxSeedRecordSize = 4096;
+		
+		// Must be bigger (and a multiple) of maxSeedRecordSize 
+		byte [] buffer = new byte[32768];	 
 		
 		HashMap<String, Long> logHash = new HashMap<String, Long>();	
 
@@ -185,89 +188,61 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		rt.schedule(killIt);
 		
 		CircularByteBuffer cbb = new CircularByteBuffer(CircularByteBuffer.INFINITE_SIZE, false);
+//		CircularByteBuffer cbb = new CircularByteBuffer(65536, false);
 		DataInputStream dis = new DataInputStream(cbb.getInputStream());
+
+		SeedRecord sr = null;
 
 		try {
 			while (true) {
-				logger.info("Big loop top");
+				
+				// Read bytes, keep a running total and write them to the output.
 				bytesRead = is.read(buffer, 0, buffer.length);
-				if (bytesRead < 0) {
-					break;
-				}
-				logger.info("Read " + bytesRead);
-
+				if (bytesRead < 0) break;
+				
 				totalBytesTransmitted += bytesRead;
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 				
-				cbb.getOutputStream().write(buffer, 0, bytesRead);				
-
-				LogicalRecordIterator iter = new LogicalRecordIterator(dis);
-				logger.info("Just read:  inputreams available: " + cbb.getAvailable());
-				try {
-					while (true) {
-						if (!iter.hasNext()) {
-							logger.info("No next");
-							break;
-						}
-						LogicalRecord lr = iter.next();
-						logger.info("Read data record: " + lr.getRecordLength());
-						logger.info("Looping:  inputreams available: " + cbb.getAvailable());
-
-
-//						String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
-//								dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
-//								dh.getQualityIndicator());
-//					
-//						if (logHash.containsKey(key)) {
-//							logHash.put(key, dr.getRecordSize() + logHash.get(key));
-//						} else {
-//							logHash.put(key, (long) dr.getRecordSize());
-//						}
-					}
-					logger.info("Done reading this LR");
-				} catch (Exception e) {
-					logger.info("Caught exception in iterator parse: " + e.getMessage());
-
-				}
-				finally {
-					iter.close();
-				}
+				// All the below is only for logging.
 				
-//				while (true) {
-//					try {
-//						sr = SeedRecord.read(dis);
-//						if (sr == null)  {
-//							logger.info("Null sr");
-//							break;
-//						}
-//					} catch (Exception e) {
-//						logger.info("Caught exception in seed parse: " + e.getMessage());
-//						break;
-//					}
-//				
-//					if (! (sr  instanceof DataRecord)) {
-//						logger.info("NOT  a SEED RECORD");
-//					}
-//			
-//					DataRecord dr = (DataRecord) sr;
-//					DataHeader dh = dr.getHeader();
-//					logger.info("Read data record: " + dr.getRecordSize());
-//
-//					String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
-//							dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
-//							dh.getQualityIndicator());
-//				
-//					if (logHash.containsKey(key)) {
-//						logHash.put(key, dr.getRecordSize() + logHash.get(key));
-//					} else {
-//						logHash.put(key, (long) dr.getRecordSize());
-//					}
-//				}
+				// Write the newly read data into the circular buffer.
+				cbb.getOutputStream().write(buffer, 0, bytesRead);				
+				
+				// We're going to parse SEED records out of the circular buffer until the remaining
+				// bytes in the buffer get below maxSeedBlockSize (max seed record size).
+				while (cbb.getAvailable() >= maxSeedRecordSize) {
+					try {						
+						sr = SeedRecord.read(dis);
+					} catch (Exception e) {
+						logger.error("Caught exception in seed parse: " + e.getMessage());
+						break;
+					}
+					if (sr == null) break;
+					
+					// Parse and log the data header for logging.
+					this.processRecord(sr, cbb, logHash);			
+				}	
+				
+				// Reset the timeout timer
 				rt.reschedule();
 			}
+			
+			// Finally clear anything out in the buffer.  There might be data left in the circular
+			// buffer whose length will be less than maxSeedRecordSize.
+			while (cbb.getAvailable() > 0) {
+				try {
+					sr = SeedRecord.read(dis);
+				} catch (Exception e) {
+					logger.error("Caught exception in seed parse: " + e.getMessage());
+					break;
+				}
+			
+				if (sr != null) {
+					this.processRecord(sr, cbb, logHash);					
+				}
+			}
 		}
-
 		catch (IOException ioe) {			
 			logger.error("Got IOE: " + ioe.getMessage());
 		}
@@ -275,7 +250,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Got Generic Exception: " + e.getMessage());
 		
 		} finally {	
-			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");			
+			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");			
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -289,7 +264,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				quality =   ri.paramConfig.getValue("quality");
 				startDate = sdf.parse(ri.paramConfig.getValue("starttime"));
 				endDate =   sdf.parse(ri.paramConfig.getValue("endtime"));
-
 			} catch (Exception e) {
 				; // Do nothing
 			}
@@ -323,6 +297,28 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     			;
     		}
 		}	
+	}
+	
+	private int processRecord(SeedRecord sr, CircularByteBuffer cbb, HashMap<String, Long> logHash) {
+		if (sr  instanceof DataRecord) {
+			
+			DataRecord dr = (DataRecord) sr;
+			DataHeader dh = dr.getHeader();
+//			logger.info("Read data record: " + dr.getRecordSize());
+//			logger.info("Remaining in CBB: " + cbb.getAvailable());
+			
+			String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
+					dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
+					dh.getQualityIndicator());
+		
+			if (logHash.containsKey(key)) {
+				logHash.put(key, dr.getRecordSize() + logHash.get(key));
+			} else {
+				logHash.put(key, (long) dr.getRecordSize());
+			}
+			return dr.getRecordSize();
+		}
+		return 0;
 	}
 	
 	public void writeNonSeed(OutputStream output) {

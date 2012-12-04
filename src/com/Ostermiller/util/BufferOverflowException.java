@@ -1,4 +1,4 @@
-package edu.iris.wss.circularbuffer;
+package com.Ostermiller.util;
 
 /*
  * Buffer Overflow Exception
