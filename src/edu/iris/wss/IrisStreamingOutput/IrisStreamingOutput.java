@@ -3,9 +3,10 @@ package edu.iris.wss.IrisStreamingOutput;
 import java.io.OutputStream;
 import java.util.Date;
 
+//import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.Response.Status;
 
+import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.utils.LoggerUtils;

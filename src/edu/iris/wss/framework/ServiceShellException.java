@@ -5,13 +5,11 @@ import java.util.Date;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import edu.iris.wss.framework.FdsnStatus.Status;
 
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.utils.LoggerUtils;
-import edu.iris.wss.utils.WebUtils;
-
 
 public class ServiceShellException extends WebApplicationException {
 	
@@ -60,7 +58,7 @@ public class ServiceShellException extends WebApplicationException {
     	sb.append("\n\nService version:\n");
     	sb.append(ri.appConfig.getAppName() + ": v " + ri.appConfig.getVersion() + "\n");
     	
-    	sb.append(WebUtils.getCrazyHostPort(ri.request));
+//    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());
     	throw new ServiceShellException(status, sb.toString());
     }

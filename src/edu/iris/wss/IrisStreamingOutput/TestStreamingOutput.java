@@ -6,11 +6,8 @@ import java.util.Date;
 
 
 import org.apache.log4j.Logger;
-
 import edu.iris.wss.framework.RequestInfo;
-
-import javax.ws.rs.core.Response.Status;
-
+import edu.iris.wss.framework.FdsnStatus.Status;
 
 public class TestStreamingOutput extends IrisStreamingOutput {
 	

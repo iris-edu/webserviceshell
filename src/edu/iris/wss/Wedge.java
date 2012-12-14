@@ -7,7 +7,9 @@ import java.util.*;
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import edu.iris.wss.framework.FdsnStatus.Status;
 
 import org.apache.log4j.Logger;
 
@@ -34,6 +36,16 @@ public class Wedge {
     	TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}	
 	
+	@Path("204")
+	@GET
+	public Response foo() {
+		
+		FdsnStatus.Status foo = FdsnStatus.Status.REQUEST_ENTITY_TOO_LARGE;
+
+    	return Response.status(foo).type("text/html").build();
+
+	}
+	
 	// [region] Root path documentation handler and version handler
     @Path("/")
     @GET
@@ -42,26 +54,16 @@ public class Wedge {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
 
       	InputStream is = null;
-    	try {
-    		
-    		String serviceName = context.getContextPath();
-    		// RKRK Fix this when we have a real context path
-    		logger.info("Service path: " + serviceName);
-    		serviceName = "/station";
-    		
-    		URL l_URL = new URL(ri.appConfig.getRootServiceDoc() + serviceName + "_root.htm");
-    		logger.info(l_URL.toString());		
-    		
-    		is = l_URL.openStream();
-
+      	URL url = null;
+    	try {    		
+    		url = new URL(ri.appConfig.getRootServiceDoc());    		
+    		is = url.openStream();
     	} catch (Exception e) {
-    		String err = "Can't find root documentation page";
-        	ResponseBuilder builder = Response.status(Status.OK).entity(err).type("text/plain");
-    		return builder.build();
+    		String err = "Can't find root documentation page: " + url.toString();
+        	return  Response.status(Status.OK).entity(err).type("text/plain").build();
     	}
     	
     	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
-    	final String crazyHostPort = WebUtils.getCrazyHostPort(request); 	
 
     	StreamingOutput so = new StreamingOutput() {
     		@Override
@@ -70,8 +72,8 @@ public class Wedge {
     			String inputLine = null ;
     			while ((inputLine = br.readLine()) != null) {
     				inputLine = inputLine.replace("VERSIONHOST", 
-    							"<div id=\"version\"><pre>Version: " + ri.appConfig.getVersion() + "<BR/>" + 
-    							crazyHostPort + "</pre></div>");
+    							"<div id=\"version\"><pre>Version: " + ri.appConfig.getVersion() 
+    							+ "</pre></div>");
     				inputLine = inputLine.replace("BASEURL", ri.appConfig.getRootServicePath());
     				writer.write(inputLine);
     				writer.newLine();
@@ -86,6 +88,12 @@ public class Wedge {
 		return builder.build();
     }
 	
+    @Path("wssversion")
+	@GET
+	public String getWssVersion() {
+    	return "1.0";
+	}
+	
 	@Path("version")
 	@GET
 	public String getVersion() {
@@ -95,30 +103,36 @@ public class Wedge {
 	
 	// [end region]
 
-
 	
 	@POST
-	@Path("posty") 
-	public String toast(String txt) {
-
-		return "toast: " + txt;
+	@Path("queryauth") 
+	public Response postQueryAuth(String pb) {
+		return processQuery(pb);
 	}
+	
+	@POST
+	@Path("query") 
+	public Response postQuery(String pb) {
+		logger.info("Post query");
+		return processQuery(pb);
+	}
+	
 	
 	@GET
 	@Path("queryauth")
-	public Response queryauth() throws Exception {
-		return processQuery();
+	public Response queryAuth() throws Exception {
+		return processQuery(null);
 	}
-
 	
 	@GET 
 	@Path("query")
 	public Response query() throws Exception {
-		return processQuery();
+		return processQuery(null);
 	}
 	
-	private Response processQuery() {
+	private Response processQuery(String postBody) {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.postBody = postBody;
     	
 		if (ri.appConfig.getStreamingOutputClassName() != null) {
 			return runJava();
@@ -136,8 +150,7 @@ public class Wedge {
 		} catch (Exception e) {
 			shellException(Status.BAD_REQUEST, e.getMessage());
 		}
-		
-		
+				
 		String className = ri.appConfig.getStreamingOutputClassName();
 		IrisStreamingOutput iso = null;
 		
@@ -217,44 +230,9 @@ public class Wedge {
 		builder.header("Content-Disposition", "inline; filename=" + ri.appConfig.getOutputFilename());	
 		return builder.build();
 	}
-	
-//	@GET
-//	@Path("vingy")
-//	public Response getStuffed() throws Exception {
-//    	ri = WebUtils.makeRequestInfo(uriInfo, request, requestHeaders);
-//
-//		ArrayList<String> cmd = new ArrayList<String>();
-//	    cmd.add("/Users/rich/Documents/IndigoWorkspace/Woof/Release/Woof");
-//	    cmd.add("-d2000");	
-//	    cmd.add("-s2000");
-////	    cmd.add("-e2");
-////	    cmd.add("-D1500");
-//	    cmd.add("-K");
-////	    cmd.add("-f/tmp/alm.log");
-////	    cmd.add("-EOws12345678901234567890");
-//	   
-//   
-//	    logger.info(cmd.toString());
-//	    
-//	    ProcessBuilder pb = new ProcessBuilder();
-//	    pb.command(cmd);
-//	    pb.directory(new File(context.getRealPath("/") ));
-//	    
-//	    
-//		IrisStreamingOutput iso = new IrisStreamingOutput(pb, ri);      
-//		
-//		Status status = iso.getResponse();
-//		if (status != Status.OK) {
-//			logger.info("Exit val = " + iso.exitVal);
-//			return Response.status(status).entity(iso.getErrorString()).build();
-//		}
-//		
-//		ResponseBuilder builder = Response.status(status).entity(iso);
-//		return builder.build();	  		
-//	}
 
 	
-	private void shellException(Response.Status status, String s) {
-		ServiceShellException.logAndThrowException(ri, status, s);
+	private void shellException(Status badRequest, String s) {
+		ServiceShellException.logAndThrowException(ri, badRequest, s);
 	}
 }

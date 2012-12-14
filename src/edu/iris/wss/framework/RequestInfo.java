@@ -10,6 +10,8 @@ public  class RequestInfo {
 	public javax.servlet.http.HttpServletRequest request;
 	public HttpHeaders requestHeaders;
 	
+	public String postBody = null;
+	
 	public AppConfigurator appConfig;
 	public ParamConfigurator paramConfig;
 	

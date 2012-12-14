@@ -16,10 +16,11 @@ import com.Ostermiller.util.CircularByteBuffer;
 
 import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
+import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.sc.seis.seisFile.mseed.*;
 
-import javax.ws.rs.core.Response.Status;
+//import javax.ws.rs.core.Response.Status;
 
 
 public class ProcessStreamingOutput extends IrisStreamingOutput {
@@ -99,6 +100,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 	    is = process.getInputStream();
 	    
+	    if (ri.postBody != null) {
+	    	logger.info("PB not null");
+	    	try{ 
+	    		process.getOutputStream().write(ri.postBody.getBytes());
+	    		process.getOutputStream().close();
+			} catch (IOException ioe) {
+				logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
+					"Failure writing POST body\n" + ioe.getMessage());
+			}
+		}
+	    
 	    // Wait for data, error or timeout.
 	    while (true) {
 	    	
@@ -142,8 +154,19 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		
 		if (exitVal == 0) {
 			return Status.OK;
+		} else if (exitVal == 1) {
+			return Status.NO_CONTENT;
+		} else if (exitVal == 2) {
+			return Status.BAD_REQUEST;
+		} else if (exitVal == 3) {
+			return Status.REQUEST_ENTITY_TOO_LARGE;
+		} else if (exitVal == 4) {
+			return Status.INTERNAL_SERVER_ERROR;
 		}
 		
+		
+		// These below are for timeouts and other weird errors that shouldn't 
+		// really generate errors through this mechanism.
 		if (exitVal == 9 + 128) {
 			// SIGKILL
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
@@ -156,7 +179,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 		else {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Termination of worker with exit code: " + exitVal);
+					"Termination of worker with unknown exit code: " + exitVal);
 		}
 		return Status.OK;		// Won't get here.
 	}
@@ -188,7 +211,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		rt.schedule(killIt);
 		
 		CircularByteBuffer cbb = new CircularByteBuffer(CircularByteBuffer.INFINITE_SIZE, false);
-//		CircularByteBuffer cbb = new CircularByteBuffer(65536, false);
 		DataInputStream dis = new DataInputStream(cbb.getInputStream());
 
 		SeedRecord sr = null;

@@ -1,7 +1,9 @@
 package edu.iris.wss.framework;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -82,12 +84,8 @@ public class ParameterTranslator {
 			// Test if param type is OK.  DATE, NUMBERS, LATs and LONs
 			switch (cp.type) {
 			case DATE:
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-				sdf.setLenient(false);
 
-				try {
-					sdf.parse(cp.value);
-				} catch (Exception e) {
+				if (fdsnDateParse(cp.value) == null) {
 					throw new Exception("Bad date value for " + key + ": " + cp.value);
 				}
 				break;
@@ -112,8 +110,9 @@ public class ParameterTranslator {
 			
 			// Add key and also value if valid.
 			cmd.add("--" + key);
-			if (isOkString(cp.value)) 
-				cmd.add(cp.value);
+			if (isOkString(cp.value)) {
+				cmd.add(cp.value.replaceAll("\\p{Cntrl}", ""));
+			}	
 		}
 
 		for (String rawArg: keysWithNoValue) {
@@ -121,6 +120,23 @@ public class ParameterTranslator {
 		}		
 		
 //		logger.info("CMD: " + cmd);
+	}
+	
+	private static String[] formatStrings = {
+		"yyyy-MM-dd'T'HH:mm:ss.SSS",
+		"yyyy-MM-dd'T'HH:mm:ss",
+		"yyyy-MM-dd",
+	};
+	
+	private static Date fdsnDateParse(String dateString) {
+		for (String format: formatStrings) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat(format);
+				sdf.setLenient(false);
+				return sdf.parse(dateString);
+			} catch (ParseException e) {}
+		}
+		return null;
 	}
 	
 	private static boolean isOkString(String s) {
