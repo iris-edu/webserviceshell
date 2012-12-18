@@ -150,12 +150,15 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    }		
 	}
 	
-	private static Status processExitVal(Integer exitVal, RequestInfo ri) {
+	public static Status processExitVal(Integer exitVal, RequestInfo ri) {
 		
 		if (exitVal == 0) {
 			return Status.OK;
 		} else if (exitVal == 1) {
-			return Status.NO_CONTENT;
+			if (ri.appConfig.getUse404For204())
+				return Status.NOT_FOUND;
+			else
+				return Status.NO_CONTENT;
 		} else if (exitVal == 2) {
 			return Status.BAD_REQUEST;
 		} else if (exitVal == 3) {

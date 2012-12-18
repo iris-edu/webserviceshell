@@ -79,6 +79,10 @@ public class ParameterTranslator {
 			if (cp == null) {
 				throw new Exception("Unknown query key: " + key);
 			}
+			
+			if (qps.get(key).size() > 1)
+				throw new Exception("Duplicate query key: " + key);
+
 			cp.value = qps.getFirst(key);
 			
 			// Test if param type is OK.  DATE, NUMBERS, LATs and LONs

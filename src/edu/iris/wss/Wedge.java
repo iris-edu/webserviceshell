@@ -39,14 +39,13 @@ public class Wedge {
 	@Path("204")
 	@GET
 	public Response foo() {
-		
-		FdsnStatus.Status foo = FdsnStatus.Status.REQUEST_ENTITY_TOO_LARGE;
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
 
-    	return Response.status(foo).type("text/html").build();
-
+		return Response.status(ProcessStreamingOutput.processExitVal(1,  ri)).build();
 	}
 	
 	// [region] Root path documentation handler and version handler
+	
     @Path("/")
     @GET
     public Response ok() {
@@ -91,7 +90,7 @@ public class Wedge {
     @Path("wssversion")
 	@GET
 	public String getWssVersion() {
-    	return "1.0";
+    	return "0.52";
 	}
 	
 	@Path("version")
@@ -103,36 +102,49 @@ public class Wedge {
 	
 	// [end region]
 
+	// [region] Main query entry points GET, POST
 	
 	@POST
 	@Path("queryauth") 
 	public Response postQueryAuth(String pb) {
-		return processQuery(pb);
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.postBody = pb;
+    	
+		if (! ri.appConfig.getPostEnabled()) 
+			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+		return processQuery();
 	}
-	
+	 
 	@POST
 	@Path("query") 
 	public Response postQuery(String pb) {
-		logger.info("Post query");
-		return processQuery(pb);
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.postBody = pb;
+    	
+		if (! ri.appConfig.getPostEnabled()) 
+			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+		return processQuery();
 	}
-	
-	
+		
 	@GET
 	@Path("queryauth")
 	public Response queryAuth() throws Exception {
-		return processQuery(null);
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+
+		return processQuery();
 	}
 	
 	@GET 
 	@Path("query")
 	public Response query() throws Exception {
-		return processQuery(null);
-	}
-	
-	private Response processQuery(String postBody) {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-    	ri.postBody = postBody;
+
+		return processQuery();
+	}
+
+	// [end region]
+
+	private Response processQuery() {
     	
 		if (ri.appConfig.getStreamingOutputClassName() != null) {
 			return runJava();
@@ -194,6 +206,7 @@ public class Wedge {
     	
     	// The handler program string from the config file may contain multiple space-delimited
     	// text. These need to be split and added to the cmd collection
+		logger.info("CMD: " + ri.appConfig.getHandlerProgram());
 		ArrayList<String> cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));
 		
 		try {
@@ -202,6 +215,7 @@ public class Wedge {
 			shellException(Status.BAD_REQUEST, e.getMessage());
 		}
 		
+		logger.info("CMD: " + cmd);
 		for (String key: ri.request.getParameterMap().keySet()) {
 			logger.info("PM; Key: " + key + " Val: " + ri.request.getParameter(key));
 		}

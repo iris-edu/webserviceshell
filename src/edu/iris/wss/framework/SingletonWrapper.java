@@ -17,7 +17,7 @@ public class SingletonWrapper {
 	
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
 	
-	// Will be loaded in application scope via the AppScope class.  Essentially, a singleton
+	// Will be loaded in application scope via the AppScope class.  This is essentially, a singleton
 	public SingletonWrapper()  {	
 		
     	try {

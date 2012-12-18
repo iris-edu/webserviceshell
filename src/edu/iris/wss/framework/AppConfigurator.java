@@ -24,6 +24,8 @@ public class AppConfigurator {
 	private String appName;
 	private String version;
 	
+	private Boolean postEnabled = false;
+	private Boolean use404For204 = false;
 	private Integer timeoutSeconds = null;
     
 	private LoggingType loggingType = LoggingType.LOG4J;
@@ -57,7 +59,6 @@ public class AppConfigurator {
 	public void setOutputType(String s) throws Exception {
 		try {
 			this.outputType = OutputType.valueOf(s.toUpperCase());	
-			logger.info("OutputType set to " + outputType.toString());
 		} catch (Exception e) {
 			throw new Exception("Unrecognized output format: " + s);
 		}
@@ -77,7 +78,14 @@ public class AppConfigurator {
 	public String getWorkingDirectory() 				{ return workingDirectory; }
 	public void setWorkingDirectory(String s)			{ workingDirectory = s; }
 	
+	public Boolean getPostEnabled()						{ return postEnabled; }
+	public void setPostEnabled(Boolean b) 				{ postEnabled = b; }
+	
+	public Boolean getUse404For204()					{ return use404For204; }
+	public void setUse404For204(Boolean b) 				{ use404For204 = b; }
+	
 	// Not required.  Might be defaulted elsewhere.
+	
 	public Integer getTimeoutSeconds() 					{ return timeoutSeconds; }
 	public void setTimeoutSeconds(Integer i)			{ timeoutSeconds = i; }	
 	
@@ -154,6 +162,14 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("handlerTimeout");
 		if (isOkString(configStr)) 
 			this.timeoutSeconds = Integer.parseInt(configStr);
+		
+		configStr = configurationProps.getProperty("postEnabled");
+		if (isOkString(configStr)) 
+			this.postEnabled = Boolean.parseBoolean(configStr);
+		
+		configStr = configurationProps.getProperty("use404For204");
+		if (isOkString(configStr)) 
+			this.use404For204 = Boolean.parseBoolean(configStr);
 				
 		configStr = configurationProps.getProperty("connectionFactory");
 		if (isOkString(configStr)) 
