@@ -38,12 +38,12 @@ public class ParamConfigurator {
 
 	public HashMap<String, ConfigParam> paramMap = new HashMap<String, ConfigParam>();
 			
-	public void dump() {
-		logger.info("Found: " + paramMap.size() + " keys");
-		for (String key: paramMap.keySet()) {
-			logger.info("key: " + key + " type: " + paramMap.get(key).type);
-		}
-	}
+//	public void dump() {
+//		logger.info("Found: " + paramMap.size() + " keys");
+//		for (String key: paramMap.keySet()) {
+//			logger.info("key: " + key + " type: " + paramMap.get(key).type);
+//		}
+//	}
 	
 	public String getValue(String key) {
 		ConfigParam cp = paramMap.get(key);

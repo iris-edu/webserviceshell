@@ -40,6 +40,13 @@ public class Wedge {
 	@GET
 	public Response foo() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	
+		ArrayList<String> cmd = new ArrayList<String>();
+		try {
+			ParameterTranslator.parseQueryParams(cmd, ri);
+		} catch (Exception e) {
+			shellException(Status.BAD_REQUEST, e.getMessage());
+		}
 
 		return Response.status(ProcessStreamingOutput.processExitVal(1,  ri)).build();
 	}

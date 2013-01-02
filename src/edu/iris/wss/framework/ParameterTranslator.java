@@ -22,6 +22,7 @@ public class ParameterTranslator {
 	
 	public final static String rawKeySignature = "ARG";
 	public final static String outputControlSignature = "output";
+	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
 	public static final Logger logger = Logger.getLogger(ParameterTranslator.class);
 
@@ -54,6 +55,20 @@ public class ParameterTranslator {
 		if (isOkString(username)) {
 			cmd.add("--" + usernameSignature);
 			cmd.add(username);
+		}
+		
+		// Check for the nodata query parameer and the app config setting appropriately.
+		String nodataVal = qps.getFirst(nodataSignature);
+		if (isOkString(nodataVal)) { 
+			qps.remove(nodataSignature);
+			
+			if (nodataVal.equals("204")) {
+				ri.appConfig.setUse404For204(false);
+			} else if (nodataVal.equals("404")) {
+				ri.appConfig.setUse404For204(true);
+			} else {
+				throw new Exception("Invalid value for " + nodataSignature + ": " + nodataVal);
+			}
 		}
 		
 		// Since the query parameters aren't going to come out of the Map structure in any meaningful 
