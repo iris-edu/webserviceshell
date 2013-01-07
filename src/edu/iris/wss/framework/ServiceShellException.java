@@ -17,6 +17,11 @@ public class ServiceShellException extends WebApplicationException {
 	public static final Logger logger = Logger.getLogger(ServiceShellException.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 
+	// [region] Constructors
+	public ServiceShellException(final Status status) {
+		super(Response.status(status).build());
+	}
+	
     public ServiceShellException(final Status status, final String message) {
         super(Response.status(status).
           entity(message + "\n").type("text/plain").build());
@@ -26,17 +31,29 @@ public class ServiceShellException extends WebApplicationException {
     	super(Response.status(wae.getResponse().getStatus()).
     	          entity(message + "\n").type("text/plain").build());
     }
-
+    
+    // [end region] 
+    
+    public static void logAndThrowException(RequestInfo ri, Status status) {
+		throw new ServiceShellException(status);
+	}
+    
+    public static void logAndThrowException(RequestInfo ri, Status status, String message) {
+    	if (message != null)
+    		logAndThrowException(ri, status, message, null);
+    	else
+    		logAndThrowException(ri, status);
+    }
+    
     public static void logAndThrowException(RequestInfo ri, WebApplicationException wae, String message) {
         logAndThrowException(ri, Status.fromStatusCode(wae.getResponse().getStatus()), message, null);
     }
-    
-    public static void logAndThrowException(RequestInfo ri, Status status, String message) {
-       logAndThrowException(ri, status, message, null);
-    }
 
     public static void logAndThrowException(RequestInfo ri, Status status, String message, Exception e) {
-   		logger.error(message + ": " + getErrorString(e));
+    	ri.statsKeeper.logError();
+    	
+    	logger.error(message + ": " + getErrorString(e));
+    	
    		LoggerUtils.logMessage(ri, 0L, 0L, message, status.getStatusCode(), null);
 		
     	SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");

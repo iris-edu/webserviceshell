@@ -14,6 +14,7 @@ public  class RequestInfo {
 	
 	public AppConfigurator appConfig;
 	public ParamConfigurator paramConfig;
+	public StatsKeeper statsKeeper;
 	
 	public SingletonWrapper sw;
 	
@@ -27,5 +28,6 @@ public  class RequestInfo {
 		this.requestHeaders = requestHeaders;
 		this.appConfig = sw.appConfig;
 		this.paramConfig = sw.paramConfig;
+		this.statsKeeper = sw.statsKeeper;
 	}	
 }

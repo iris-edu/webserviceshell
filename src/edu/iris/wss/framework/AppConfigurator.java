@@ -235,4 +235,47 @@ public class AppConfigurator {
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}	
+	
+	public String toHtmlString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<TABLE border=2 style='width: 600px'>");
+
+		sb.append("<TR><TH colspan=\"2\" >" + "Web Service Shell Configuration" + "</TH></TR>");
+		
+		sb.append("<TR><TD>" + "Root Service Path" + "</TD><TD>" + rootServicePath + "</TD></TR>");
+		sb.append("<TR><TD>" + "Root Service Doc" + "</TD><TD>" + rootServiceDoc + "</TD></TR>");
+		
+		sb.append("<TR><TD>" + "Application Name" + "</TD><TD>" + appName + "</TD></TR>");
+		sb.append("<TR><TD>" + "Version" + "</TD><TD>" +  version + "</TD></TR>");
+
+		sb.append("<TR><TD>" + "Handler Working Directory" + "</TD><TD>" + workingDirectory + "</TD></TR>");
+		sb.append("<TR><TD>" + "Handler Program" + "</TD><TD>" + handlerProgram + "</TD></TR>");
+		sb.append("<TR><TD>" + "Handler Timeout" + "</TD><TD>" + timeoutSeconds + "</TD></TR>");
+		
+		sb.append("<TR><TD>" + "Post Enabled" + "</TD><TD>" + postEnabled + "</TD></TR>");
+		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204 + "</TD></TR>");
+		
+		sb.append("<TR><TD>" + "Output Type" + "</TD><TD>" + outputType + "</TD></TR>");
+		    
+		sb.append("<TR><TD>" + "Logging Method" + "</TD><TD>" + loggingType + "</TD></TR>");
+
+		if (jndiUrl != null) 
+			sb.append("<TR><TD>" + "JNDI URL" + "</TD><TD>" + jndiUrl + "</TD></TR>");
+
+		if (connectionFactory != null) 
+			sb.append("<TR><TD>" + "Connection Factory" + "</TD><TD>" + connectionFactory + "</TD></TR>");
+		
+		if (topicDestination != null) 
+			sb.append("<TR><TD>" + "Topic Destination" + "</TD><TD>" + topicDestination + "</TD></TR>");
+		
+		if (singletonClassName != null) 
+			sb.append("<TR><TD>" + "Singleton ClassName" + "</TD><TD>" + singletonClassName + "</TD></TR>");
+		
+		if (streamingOutputClassName != null) 
+			sb.append("<TR><TD>" + "Streaming Output Class " + "</TD><TD>"  + streamingOutputClassName + "</TD></TR>");
+
+		sb.append("</TABLE>");
+
+		return sb.toString();
+	}
 }

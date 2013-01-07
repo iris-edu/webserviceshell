@@ -112,7 +112,7 @@ public class WebUtils {
 	   	return null;
 	}
 	
-	public static String getCrazyHostPort(HttpServletRequest request) {
+	public static String getHost(HttpServletRequest request) {
     	String hostname = "";
 		try {
 			hostname = java.net.InetAddress.getLocalHost().getHostName();
@@ -127,13 +127,13 @@ public class WebUtils {
 		} catch (Exception e) {
 			hostname = "unk";
 		}
-		
+		return hostname;
+	}
+	
+	public static String getPort(HttpServletRequest request) {
     	int portNum = request.getServerPort();
     	String portStr = Integer.toString(portNum);
-    	if (portStr.length() >= 4) {
-    		portStr = portStr.substring(2, 4);
-    	}
 		
-		return hostname + ":" + portStr;
+		return portStr;
 	}
 }

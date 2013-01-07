@@ -36,6 +36,31 @@ public class Wedge {
     	TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}	
 	
+	@Path("status")
+	@GET
+	public String cfg() {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+
+    	StringBuilder sb = new StringBuilder();
+		sb.append("<HTML><BODY>");
+		sb.append("<TABLE BORDER=2 cellpadding='2' style='width: 600px'>");
+		sb.append("<TR><TH COLSPAN=\"2\">Servlet Environment</TH></TR>");
+		sb.append("<TR><TD>" + "URL" + "</TD><TD>" + request.getRequestURI() + "</TD></TR>");
+		sb.append("<TR><TD>" + "Host" + "</TD><TD>" + WebUtils.getHost(request) + "</TD></TR>");
+		sb.append("<TR><TD>" + "Port" + "</TD><TD>" + WebUtils.getPort(request) + "</TD></TR>");
+		sb.append("</TABLE>");
+
+		sb.append("<br/>");
+    	sb.append(ri.sw.statsKeeper.toHtmlString());
+
+    	sb.append("<br/>");
+    	sb.append(ri.appConfig.toHtmlString());
+
+    	sb.append("</BODY></HTML>");
+
+		return sb.toString();
+	}
+	
 	@Path("204")
 	@GET
 	public Response foo() {
@@ -119,6 +144,8 @@ public class Wedge {
     	
 		if (! ri.appConfig.getPostEnabled()) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+		
+		ri.statsKeeper.logAuthPost();
 		return processQuery();
 	}
 	 
@@ -130,6 +157,8 @@ public class Wedge {
     	
 		if (! ri.appConfig.getPostEnabled()) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+		
+		ri.statsKeeper.logPost();
 		return processQuery();
 	}
 		
@@ -138,6 +167,7 @@ public class Wedge {
 	public Response queryAuth() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
 
+    	ri.statsKeeper.logAuthGet();
 		return processQuery();
 	}
 	
@@ -145,7 +175,8 @@ public class Wedge {
 	@Path("query")
 	public Response query() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-
+    
+    	ri.statsKeeper.logGet();
 		return processQuery();
 	}
 
@@ -182,9 +213,13 @@ public class Wedge {
     			logger.fatal(err);
     			throw new RuntimeException(err);
     		} catch (InstantiationException e) {
-    			logger.fatal("Could not instantiate class: " + className);
+    			String err = "Could not instantiate class: " + className;
+    			logger.fatal(err);
+    			throw new RuntimeException(err);
     		} catch (IllegalAccessException e) {
-    			logger.fatal("Illegal access while instantiating class: " + className);
+    			String err = "Illegal access while instantiating class: " + className;
+    			logger.fatal(err);
+    			throw new RuntimeException(err);
     		}
 			
 			iso.setRequestInfo(ri);
@@ -222,10 +257,10 @@ public class Wedge {
 			shellException(Status.BAD_REQUEST, e.getMessage());
 		}
 		
-		logger.info("CMD: " + cmd);
-		for (String key: ri.request.getParameterMap().keySet()) {
-			logger.info("PM; Key: " + key + " Val: " + ri.request.getParameter(key));
-		}
+//		logger.info("CMD: " + cmd);
+//		for (String key: ri.request.getParameterMap().keySet()) {
+//			logger.info("PM; Key: " + key + " Val: " + ri.request.getParameter(key));
+//		}
 		
 				
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -241,7 +276,10 @@ public class Wedge {
 		
 		// Wait for an exit code, the start of data transmission or a timeout.
 		Status status = iso.getResponse();
-		if (status != Status.OK) {
+		if (status == Status.NO_CONTENT) {
+			logger.info("Exit val = " + iso.getExitVal());
+			ServiceShellException.logAndThrowException(ri, status, null);
+		} else if (status != Status.OK) {
 			logger.info("Exit val = " + iso.getExitVal());
 			shellException(status, "Command exit code: " + iso.getExitVal() + "  " + iso.getErrorString());
 		}

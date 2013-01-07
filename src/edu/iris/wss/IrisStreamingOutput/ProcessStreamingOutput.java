@@ -20,8 +20,6 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.sc.seis.seisFile.mseed.*;
 
-//import javax.ws.rs.core.Response.Status;
-
 
 public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
@@ -101,7 +99,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    is = process.getInputStream();
 	    
 	    if (ri.postBody != null) {
-	    	logger.info("PB not null");
 	    	try{ 
 	    		process.getOutputStream().write(ri.postBody.getBytes());
 	    		process.getOutputStream().close();
@@ -152,9 +149,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	public static Status processExitVal(Integer exitVal, RequestInfo ri) {
 		
-		if (exitVal == 0) {
-			return Status.OK;
-		} else if (exitVal == 1) {
+		// An exit value of '0' here indicates an 'OK' return, but obv.
+		// with no data.  Therefore, interpret it as 204.
+		if ((exitVal == 0) ||  (exitVal == 1)) {
 			if (ri.appConfig.getUse404For204())
 				return Status.NOT_FOUND;
 			else
@@ -275,7 +272,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Got Generic Exception: " + e.getMessage());
 		
 		} finally {	
-			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");			
+			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");	
+    		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -376,6 +374,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
+    		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			logUsageMessage(ri, totalBytesTransmitted, (new Date()).getTime()- startTime.getTime(),
 					null, Status.OK, null);

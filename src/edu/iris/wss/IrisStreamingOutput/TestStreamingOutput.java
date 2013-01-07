@@ -62,7 +62,7 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 
 			logUsageMessage(ri, totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
 					null, Status.OK, null);
-    		
+    		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
     		try {
     			output.close();
     		} catch (IOException ioe) {
