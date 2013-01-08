@@ -8,7 +8,8 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 
-    private static final String configFilePath = "META-INF/service.cfg";
+    private static final String configFileName = "META-INF/service.cfg";
+    private static final String userConfigFileName = "userService.cfg";
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
 	public static enum OutputType { XML, JSON, TEXT, SEED, TEXTTREE };
@@ -104,16 +105,24 @@ public class AppConfigurator {
 	public String getJndiUrl() 							{ return jndiUrl; }
 	public void setJndiUrl(String s)					{ jndiUrl = s; }
 	
-
 	// Other query parameters.
 	
 	public void loadConfigFile() throws Exception {
 		
 		Properties configurationProps = new Properties();
+		Boolean userConfig = false;
 
-		// This configuration rather than .getResourceAsStream() avoids caching.
-		configurationProps.load(this.getClass().getClassLoader().getResource(configFilePath).openStream());
-		
+		// Try to read the user config first from somewhere in the CLASSPATH.  If not found,
+		// an exception will be thrown.
+		try {	
+			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(userConfigFileName));
+			userConfig = true;
+		} catch (Exception e) {	}
+
+		if (!userConfig) {
+			// This configuration requires a restart of the application to pick up the changes to the file.
+			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(configFileName));
+		}
 		String configStr;		
 		configStr = configurationProps.getProperty("handlerProgram");
 		if (isOkString(configStr))

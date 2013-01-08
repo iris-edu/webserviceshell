@@ -121,7 +121,7 @@ public class Wedge {
 	
     @Path("wssversion")
 	@GET
-	public String getWssVersion() {
+	public String getWssVersion() throws IOException {
     	return "0.5.4";
 	}
 	

@@ -11,7 +11,8 @@ import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
 
 public class ParamConfigurator {
 
-    private static final String configFilePath = "META-INF/param.cfg";
+    private static final String configFileName = "META-INF/param.cfg";
+    private static final String userConfigFileName = "userParam.cfg";
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
 	public static class ConfigParam {
@@ -53,12 +54,19 @@ public class ParamConfigurator {
 	
 	public void loadConfigFile() throws Exception {		
 		Properties configurationProps = new Properties();
+		Boolean userConfig = false;
 
-		// This configuration rather than .getResourceAsStream() avoids caching.  Or so we orig. thought.
-//		configurationProps.load(this.getClass().getClassLoader().getResource(configFilePath).openStream());
-		
-		// This configuration has caching and requires a restart of the application to pick up the changes to the file.
-		configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(configFilePath));
+		// Try to read the user config first from somewhere in the CLASSPATH.  If not found,
+		// an exception will be thrown.
+		try {	
+			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(userConfigFileName));
+			userConfig = true;
+		} catch (Exception e) {	}
+
+		if (!userConfig) {
+			// This configuration requires a restart of the application to pick up the changes to the file.
+			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(configFileName));
+		}
 				
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		List<String> tmpKeys = new ArrayList(configurationProps.keySet());

@@ -4,6 +4,8 @@ package edu.iris.wss.framework;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
+import edu.iris.wss.framework.FdsnStatus.Status;
+
 public  class RequestInfo {
 
 	public UriInfo uriInfo;
@@ -29,5 +31,12 @@ public  class RequestInfo {
 		this.appConfig = sw.appConfig;
 		this.paramConfig = sw.paramConfig;
 		this.statsKeeper = sw.statsKeeper;
+		
+		if ((this.appConfig.getHandlerProgram() == null) && 
+				(this.appConfig.getStreamingOutputClassName() == null)) {
+			ServiceShellException.logAndThrowException(this, Status.INTERNAL_SERVER_ERROR, 
+					"Service Configuration Problem");
+
+		}
 	}	
 }
