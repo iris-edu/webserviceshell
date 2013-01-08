@@ -24,6 +24,7 @@ public class ParameterTranslator {
 	public final static String outputControlSignature = "output";
 	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
+	public final static String postSignature = "STDIN";
 	public static final Logger logger = Logger.getLogger(ParameterTranslator.class);
 
 	public static  void parseQueryParams(ArrayList<String> cmd, RequestInfo ri) throws Exception {
@@ -57,7 +58,7 @@ public class ParameterTranslator {
 			cmd.add(username);
 		}
 		
-		// Check for the nodata query parameer and the app config setting appropriately.
+		// Check for the nodata query parameter and the app config setting appropriately.
 		String nodataVal = qps.getFirst(nodataSignature);
 		if (isOkString(nodataVal)) { 
 			qps.remove(nodataSignature);
@@ -69,6 +70,10 @@ public class ParameterTranslator {
 			} else {
 				throw new Exception("Invalid value for " + nodataSignature + ": " + nodataVal);
 			}
+		}
+		
+		if (ri.postBody != null) {
+			cmd.add("--" + postSignature);
 		}
 		
 		// Since the query parameters aren't going to come out of the Map structure in any meaningful 

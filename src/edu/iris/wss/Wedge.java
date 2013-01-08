@@ -122,7 +122,7 @@ public class Wedge {
     @Path("wssversion")
 	@GET
 	public String getWssVersion() {
-    	return "0.52";
+    	return "0.5.4";
 	}
 	
 	@Path("version")

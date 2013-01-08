@@ -110,13 +110,14 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    
 	    // Wait for data, error or timeout.
 	    while (true) {
+	    	Boolean gotExitValue = false;
 	    	
 	    	// Check for process finished.  If error (exitVal != 0), exit with an error.
 	    	try {
 	    		exitVal = process.exitValue();
-//	    		logger.info("Got exitval : " + exitVal);
+	    		logger.info("Got exitval : " + exitVal);
+	    		gotExitValue = true;
 	    		rt.cancel();
-    			return processExitVal(exitVal, ri);		    		
 	    	} catch (IllegalThreadStateException itse) {
 	    		// Nothing to catch here.  When the process isn't done, this call always
 	    		// throws this type of exception.
@@ -124,7 +125,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	   	 		    	
 	    	try {    		
 		    	if (is.available() > 0) {
-//		    		logger.info("Got data");
+		    		logger.info("Got data");
 		    		rt.cancel();
 		    		return Status.OK;
 		    	} else {
@@ -137,7 +138,12 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    		// during the next cycle through the loop.
 	    		logger.error("IO Exception while waiting for data: " + ioe.getMessage());
 	    	}
-	    		    	
+	    	
+	    	// Exit here on getting an exit value so that any data that is in the system
+	    	// which would change the response from 'NO_DATA' to 'OK' is read in the section above.
+	    	if (gotExitValue)
+	    		return processExitVal(exitVal, ri);		    		
+	
 	    	// Sleep for a little while.
 	    	try {
 	    		Thread.sleep(responseThreadDelayMsec);
@@ -151,6 +157,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		
 		// An exit value of '0' here indicates an 'OK' return, but obv.
 		// with no data.  Therefore, interpret it as 204.
+//		if (exitVal == 0) 
+//			return Status.OK;
+		
 		if ((exitVal == 0) ||  (exitVal == 1)) {
 			if (ri.appConfig.getUse404For204())
 				return Status.NOT_FOUND;
