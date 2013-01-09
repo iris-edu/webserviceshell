@@ -16,7 +16,7 @@ public class ParamConfigurator {
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
 	public static class ConfigParam {
-		public static enum ParamType { TEXT, DATE, NUMBER, BOOLEAN };
+		public static enum ParamType { TEXT, DATE, NUMBER, BOOLEAN, NONE };
 
 		public String name;
 		public ParamType type;

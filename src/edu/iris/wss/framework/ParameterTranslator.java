@@ -25,6 +25,7 @@ public class ParameterTranslator {
 	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
 	public final static String postSignature = "STDIN";
+	
 	public static final Logger logger = Logger.getLogger(ParameterTranslator.class);
 
 	public static  void parseQueryParams(ArrayList<String> cmd, RequestInfo ri) throws Exception {
@@ -107,6 +108,12 @@ public class ParameterTranslator {
 			
 			// Test if param type is OK.  DATE, NUMBERS, LATs and LONs
 			switch (cp.type) {
+			case NONE:
+				if (isOkString(cp.value)) {
+					throw new Exception("No parameter permitted for " + key + " Found parameter: " + cp.value);
+				}
+				break;
+				
 			case DATE:
 
 				if (fdsnDateParse(cp.value) == null) {
@@ -128,7 +135,9 @@ public class ParameterTranslator {
 				break;
 			
 			case TEXT:
-				// Text is, well, just text
+				if (!isOkString(cp.value)) {
+					throw new Exception("No valid parameter for " + key);
+				}
 				break;
 			}		
 			
