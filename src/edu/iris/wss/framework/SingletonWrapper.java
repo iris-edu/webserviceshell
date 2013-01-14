@@ -1,35 +1,45 @@
 package edu.iris.wss.framework;
 
-
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
+import edu.iris.wss.utils.WebUtils;
 
 public class SingletonWrapper {
-    @Context	ServletContext context;
-    
+//	public ServletContext context;
+
 	public AppConfigurator appConfig = new AppConfigurator();
 	public ParamConfigurator paramConfig = new ParamConfigurator();
 	public StatsKeeper statsKeeper = new StatsKeeper();
 	public IrisSingleton singleton = null;
 	
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
+
+	// Will be loaded in application scope via the AppScope class.  
+	// This is essentially, a singleton.  But nothing happens until the configure method is 
+	// called from the AppScope class which can only occur once the AppScope class has
+	// the servlet context.
 	
-	// Will be loaded in application scope via the AppScope class.  This is essentially, a singleton
-	public SingletonWrapper()  {	
+	public SingletonWrapper()  {}
+	
+	public void configure(ServletContext context) {
+		
+		String appName = null;
+		if (context != null) {
+			appName = WebUtils.getWebAppName(context);
+		}
 		
     	try {
-    		appConfig.loadConfigFile();
+    		appConfig.loadConfigFile(appName);
     	} catch (Exception e) {
     		logger.fatal("Invalid application config file: " + e.getMessage());
     		return;
     	}
     	
     	try {
-    		paramConfig.loadConfigFile();
+    		paramConfig.loadConfigFile(appName);
     	} catch (Exception e) {
     		logger.fatal("Invalid parameter config file: " + e.getMessage());
     	}

@@ -10,6 +10,7 @@
     userRoleTable="view_roles" roleNameCol="role_name" /> 
 -->
 
+<!--
 <Realm className="org.apache.catalina.realm.JDBCRealm" 
     digest="MD5"
     driverName="org.postgresql.Driver" 
@@ -19,7 +20,7 @@
     userRoleTable="view_roles" roleNameCol="role_name" /> 
 
 
-
+-->
 <!--        <Realm className="org.apache.catalina.realm.UserDatabaseRealm" digest="MD5" resourceName="UserDatabase"/> -->
 
  <!--       <Realm className="edu.iris.wedge.framework.CustomRealm"/> -->

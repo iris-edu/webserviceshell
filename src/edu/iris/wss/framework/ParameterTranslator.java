@@ -115,7 +115,6 @@ public class ParameterTranslator {
 				break;
 				
 			case DATE:
-
 				if (fdsnDateParse(cp.value) == null) {
 					throw new Exception("Bad date value for " + key + ": " + cp.value);
 				}

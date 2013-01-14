@@ -61,21 +61,6 @@ public class Wedge {
 		return sb.toString();
 	}
 	
-	@Path("204")
-	@GET
-	public Response foo() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-    	
-		ArrayList<String> cmd = new ArrayList<String>();
-		try {
-			ParameterTranslator.parseQueryParams(cmd, ri);
-		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, e.getMessage());
-		}
-
-		return Response.status(ProcessStreamingOutput.processExitVal(1,  ri)).build();
-	}
-	
 	// [region] Root path documentation handler and version handler
 	
     @Path("/")
@@ -248,7 +233,6 @@ public class Wedge {
     	
     	// The handler program string from the config file may contain multiple space-delimited
     	// text. These need to be split and added to the cmd collection
-		logger.info("CMD: " + ri.appConfig.getHandlerProgram());
 		ArrayList<String> cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));
 		
 		try {
@@ -257,11 +241,10 @@ public class Wedge {
 			shellException(Status.BAD_REQUEST, e.getMessage());
 		}
 		
-//		logger.info("CMD: " + cmd);
+		logger.info("CMD array: " + cmd);
 //		for (String key: ri.request.getParameterMap().keySet()) {
 //			logger.info("PM; Key: " + key + " Val: " + ri.request.getParameter(key));
-//		}
-		
+//		}		
 				
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(context.getRealPath(ri.appConfig.getWorkingDirectory())));    
@@ -277,10 +260,10 @@ public class Wedge {
 		// Wait for an exit code, the start of data transmission or a timeout.
 		Status status = iso.getResponse();
 		if (status == Status.NO_CONTENT) {
-			logger.info("Exit val = " + iso.getExitVal());
+//			logger.info("Exit val = " + iso.getExitVal());
 			ServiceShellException.logAndThrowException(ri, status, null);
 		} else if (status != Status.OK) {
-			logger.info("Exit val = " + iso.getExitVal());
+//			logger.info("Exit val = " + iso.getExitVal());
 			shellException(status, "Command exit code: " + iso.getExitVal() + "  " + iso.getErrorString());
 		}
 		
@@ -289,7 +272,6 @@ public class Wedge {
 		builder.header("Content-Disposition", "inline; filename=" + ri.appConfig.getOutputFilename());	
 		return builder.build();
 	}
-
 	
 	private void shellException(Status badRequest, String s) {
 		ServiceShellException.logAndThrowException(ri, badRequest, s);

@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import javax.xml.bind.DatatypeConverter;
@@ -23,6 +24,24 @@ public class WebUtils {
 			hostname = "unknown";
 		}
 		return hostname;
+	}
+	
+	public static String getContextPath(HttpServletRequest request) {
+		return request.getContextPath();
+	}
+	
+	// Returns only the last part after the '/' character of the context path
+	// which may include slash characters, etc.
+	public static String getWebAppName(HttpServletRequest request) {
+		String cp = getContextPath(request);
+		int index = cp.lastIndexOf('/');
+		return cp.substring(index + 1);
+	}
+	
+	public static String getWebAppName(ServletContext context) {
+		String cp = context.getContextPath();
+		int index = cp.lastIndexOf('/');
+		return cp.substring(index + 1);
 	}
 	
 	public static String getUserAgent(HttpServletRequest request) {

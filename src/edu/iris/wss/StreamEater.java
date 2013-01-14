@@ -10,6 +10,7 @@ public class StreamEater implements Runnable  {
 	InputStream inputStream;
 
 	boolean     done    = false;
+	static final int stringSizeLimit = 20000;
 
 	String      output = null;
 	IOException ioException = null;
@@ -58,7 +59,8 @@ public class StreamEater implements Runnable  {
 		try {
 			int nRead;
 			while ((nRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
-				sb.append(new String(buffer, 0, nRead));
+				if (sb.length() + nRead <= stringSizeLimit)
+					sb.append(new String(buffer, 0, nRead));
 			}
 			output = sb.toString();
 

@@ -49,6 +49,8 @@ public class ServiceShellException extends WebApplicationException {
         logAndThrowException(ri, Status.fromStatusCode(wae.getResponse().getStatus()), message, null);
     }
 
+    public static final String usageDetailsSignature = "Usage Details ...";
+    
     public static void logAndThrowException(RequestInfo ri, Status status, String message, Exception e) {
     	ri.statsKeeper.logError();
     	
@@ -59,7 +61,13 @@ public class ServiceShellException extends WebApplicationException {
     	SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
     	StringBuilder sb = new StringBuilder();
     	sb.append("Error " + status.getStatusCode());
-    	sb.append(": " + message);
+    	
+    	int index = message.indexOf(usageDetailsSignature);
+    	if (index == -1)
+   			sb.append(": " + message);
+    	else 
+    		sb.append(": " + message.substring(0, index));
+    	
     	if (e != null) sb.append("\n" + getErrorString(e));
     	
     	sb.append("\n\n" + "Request:\n");

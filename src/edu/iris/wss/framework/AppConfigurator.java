@@ -1,5 +1,6 @@
 package edu.iris.wss.framework;
 
+import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
@@ -7,11 +8,15 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 public class AppConfigurator {
+	private static final String wssConfigDirSignature = "wssConfigDir";
 
-    private static final String configFileName = "META-INF/service.cfg";
-    private static final String userConfigFileName = "userService.cfg";
+    private static final String defaultConfigFileName = "META-INF/service.cfg";
+    private static final String userParamConfigSuffix = "Service.cfg";
+    
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
+	private Boolean isLoaded = false;
+	
 	public static enum OutputType { XML, JSON, TEXT, SEED, TEXTTREE };
 	public static enum LoggingType { LOG4J, JMS };
 	
@@ -107,22 +112,40 @@ public class AppConfigurator {
 	
 	// Other query parameters.
 	
-	public void loadConfigFile() throws Exception {
+	public void loadConfigFile(String appName) throws Exception {
+		
+		// Depending on the way the servlet context starts, this can be called multiple
+		// times via SingletonWrapper class.
+		if (isLoaded) return;
+		isLoaded = true;
 		
 		Properties configurationProps = new Properties();
 		Boolean userConfig = false;
 
-		// Try to read the user config first from somewhere in the CLASSPATH.  If not found,
-		// an exception will be thrown.
-		try {	
-			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(userConfigFileName));
-			userConfig = true;
-		} catch (Exception e) {	}
-
-		if (!userConfig) {
-			// This configuration requires a restart of the application to pick up the changes to the file.
-			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(configFileName));
+		// Initially to read a user config file from the location specified by the
+		// wssConfigDir property concatenated with the web application name (last part
+		// of context path), e.g. 'station' or 'webserviceshell'
+		String configFileName = null;
+		try {
+			String wssConfigDir = System.getProperty(wssConfigDirSignature);
+			if (isOkString(wssConfigDir) && isOkString(appName)) {
+				if (!wssConfigDir.endsWith("/")) 
+					wssConfigDir += "/";
+				configFileName = wssConfigDir + appName + userParamConfigSuffix;				
+	    		configurationProps.load(new FileInputStream(configFileName));
+	    		userConfig = true;
+	    		logger.info("Loaded Parameter configuration file from: " + configFileName);
+			}
+		} catch (Exception e) {
+//			logger.error("Failed to load service config file from: " + configFileName);
 		}
+		
+		// If no user config was successfully loaded, load the default config file
+		// Exception at this point should propagate up.
+		if (!userConfig) {
+			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(defaultConfigFileName));
+		}
+		
 		String configStr;		
 		configStr = configurationProps.getProperty("handlerProgram");
 		if (isOkString(configStr))

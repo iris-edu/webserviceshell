@@ -115,7 +115,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    	// Check for process finished.  If error (exitVal != 0), exit with an error.
 	    	try {
 	    		exitVal = process.exitValue();
-	    		logger.info("Got exitval : " + exitVal);
 	    		gotExitValue = true;
 	    		rt.cancel();
 	    	} catch (IllegalThreadStateException itse) {
@@ -160,17 +159,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 //		if (exitVal == 0) 
 //			return Status.OK;
 		
-		if ((exitVal == 0) ||  (exitVal == 1)) {
+		if ((exitVal == 0) ||  (exitVal == 2)) {
 			if (ri.appConfig.getUse404For204())
 				return Status.NOT_FOUND;
 			else
 				return Status.NO_CONTENT;
-		} else if (exitVal == 2) {
-			return Status.BAD_REQUEST;
-		} else if (exitVal == 3) {
-			return Status.REQUEST_ENTITY_TOO_LARGE;
-		} else if (exitVal == 4) {
+		} else if (exitVal == 1) {
 			return Status.INTERNAL_SERVER_ERROR;
+		} else if (exitVal == 3) {
+			return Status.BAD_REQUEST;
+		} else if (exitVal == 4) {
+			return Status.REQUEST_ENTITY_TOO_LARGE;
 		}
 		
 		
