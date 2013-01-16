@@ -84,7 +84,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			process = processBuilder.start();
 		} catch (IOException ioe) {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Failure starting process\n" + ioe.getMessage());
+					"IO Error starting service process");
 		}
 
 		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
@@ -124,7 +124,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	   	 		    	
 	    	try {    		
 		    	if (is.available() > 0) {
-		    		logger.info("Got data");
+//		    		logger.info("Got data");
 		    		rt.cancel();
 		    		return Status.OK;
 		    	} else {

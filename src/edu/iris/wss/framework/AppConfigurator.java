@@ -1,8 +1,10 @@
 package edu.iris.wss.framework;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -187,9 +189,31 @@ public class AppConfigurator {
 		if (isOkString(configStr)) 
 			this.setLoggingType(configStr);
 		
+		// Load the configuration for the working directory and substiute 
+		// System properties and environment properties.
 		configStr = configurationProps.getProperty("handlerWorkingDirectory");
-		if (isOkString(configStr))
-			this.workingDirectory = configStr;
+		if (isOkString(configStr)) {
+			
+			if (!configStr.matches("/.*|.*\\$\\{.*\\}.*")){
+				this.workingDirectory = configStr;
+			} else {
+			    Properties props = System.getProperties();
+			    for(Object key: props.keySet()) {
+			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", props.getProperty(key.toString()));
+			    }
+			    Map<String, String>map = System.getenv();
+			    for(String key: map.keySet()) {
+			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", map.get(key));
+			    }    
+			}
+			
+			File f = new File(this.workingDirectory);
+			if (!f.exists()) 
+				throw new Exception("Working Directory: " + this.workingDirectory + " does not exist");
+			
+			if (!f.canWrite() || !f.canRead()) 
+				throw new Exception("Improper permissions on working Directory: " + this.workingDirectory );
+		}
 		
 		configStr = configurationProps.getProperty("handlerTimeout");
 		if (isOkString(configStr)) 

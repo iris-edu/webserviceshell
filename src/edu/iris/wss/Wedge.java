@@ -146,7 +146,15 @@ public class Wedge {
 		ri.statsKeeper.logPost();
 		return processQuery();
 	}
+	@GET
+	@Path("tt")
+	public String foo() throws Exception {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+
+		return "Working dir: " + ri.appConfig.getWorkingDirectory();
 		
+	}
+
 	@GET
 	@Path("queryauth")
 	public Response queryAuth() throws Exception {

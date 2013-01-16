@@ -15,10 +15,9 @@
     digest="MD5"
     driverName="org.postgresql.Driver" 
     connectionURL="jdbc:postgresql://localhost:5432/postgres" 
-    connectionName="postgres" connectionPassword="groggy33" 
+    connectionName="postgres" connectionPassword="pAkid3rM" 
     userTable="view_users" userNameCol="user_name" userCredCol="user_pass" 
     userRoleTable="view_roles" roleNameCol="role_name" /> 
-
 
 -->
 <!--        <Realm className="org.apache.catalina.realm.UserDatabaseRealm" digest="MD5" resourceName="UserDatabase"/> -->
