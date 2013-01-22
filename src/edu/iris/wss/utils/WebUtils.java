@@ -4,6 +4,8 @@ import java.io.StringReader;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -30,18 +32,37 @@ public class WebUtils {
 		return request.getContextPath();
 	}
 	
-	// Returns only the last part after the '/' character of the context path
-	// which may include slash characters, etc.
-	public static String getWebAppName(HttpServletRequest request) {
-		String cp = getContextPath(request);
-		int index = cp.lastIndexOf('/');
-		return cp.substring(index + 1);
-	}
+//	// Returns only the last part after the '/' character of the context path
+//	// which may include slash characters, etc.
+//	public static String getWebAppName(HttpServletRequest request) {
+//		String cp = getContextPath(request);
+//		int index = cp.lastIndexOf('/');
+//		return cp.substring(index + 1);
+//	}
 	
-	public static String getWebAppName(ServletContext context) {
-		String cp = context.getContextPath();
-		int index = cp.lastIndexOf('/');
-		return cp.substring(index + 1);
+	public static String getConfigFileBase(ServletContext context) {
+		String base = context.getContextPath();
+		String version = null;
+		// Looking for a 'Version' part of the context path. We're going to remove it if it exists
+		// and use it later in constructing the  'base' of the config file names.
+		
+		// Look for final '/' a number and end of line.  If found, store the number as version
+		// and remove the entire match to get the full context path, minus version.
+		Pattern pat = Pattern.compile("/([0-9])$");
+		Matcher mat = pat.matcher(base);
+		if (mat.find()) {
+			version = mat.group(1);
+			base = base.substring(0, mat.start());
+		}
+				
+		// Get everything at the end up to the last '/' character. I.e. the 'base'
+		base = base.substring(base.lastIndexOf('/') + 1);
+	
+		
+		if (version != null) {
+			base += "-" + version;
+		} 
+		return base;
 	}
 	
 	public static String getUserAgent(HttpServletRequest request) {

@@ -16,7 +16,7 @@ public class ParamConfigurator {
 	private static final String wssConfigDirSignature = "wssConfigDir";
 	
     private static final String defaultConfigFileName = "META-INF/param.cfg";
-    private static final String userParamConfigSuffix = "Param.cfg";
+    private static final String userParamConfigSuffix = "-param.cfg";
     
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 
@@ -52,7 +52,7 @@ public class ParamConfigurator {
 		else return cp.value;
 	}
 	
-	public void loadConfigFile(String appName) throws Exception {		
+	public void loadConfigFile(String configBase) throws Exception {		
 		
 		// Depending on the way the servlet context starts, this can be called multiple
 		// times via SingletonWrapper class.
@@ -68,16 +68,18 @@ public class ParamConfigurator {
 		String configFileName = null;
 		try {
 			String wssConfigDir = System.getProperty(wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(appName)) {
+			if (isOkString(wssConfigDir) && isOkString(configBase)) {
 				if (!wssConfigDir.endsWith("/")) 
 					wssConfigDir += "/";
-				configFileName = wssConfigDir + appName + userParamConfigSuffix;				
+				
+				configFileName = wssConfigDir + configBase + userParamConfigSuffix;			
+	    		logger.info("Attempting to load parameter configuration file from: " + configFileName);
+	    		
 	    		configurationProps.load(new FileInputStream(configFileName));
 	    		userConfig = true;
-	    		logger.info("Loaded Parameter configuration file from: " + configFileName);
 			}
 		} catch (Exception e) {
-//			logger.info("Failed to load service config file from: " + configFileName);
+			logger.info("Failure loading parameter config file from: " + configFileName);
 		}
 
 		// If no user config was successfully loaded, load the default config file

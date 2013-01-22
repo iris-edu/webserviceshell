@@ -86,7 +86,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
 					"IO Error starting service process");
 		}
-// foo boo
 		
 		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(killIt);
@@ -281,7 +280,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Got Generic Exception: " + e.getMessage());
 		
 		} finally {	
-			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");	
+//			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");	
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
@@ -305,7 +304,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			
 			ri.appConfig.setAppName(oldAppName);
 
-			long total = 0;
+//			long total = 0;
 			for (String key: logHash.keySet()) {
 					
 				logUsageMessage(ri, logHash.get(key), processingTime,
@@ -314,11 +313,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 						LogKey.getChannel(key), LogKey.getQuality(key), 
 						startDate, endDate, quality);
 							
-						total += logHash.get(key);		
-				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
+//				total += logHash.get(key);		
+//				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
 			
 			}
-			logger.info("Hash total: :" + total);
+//			logger.info("Hash total: :" + total);
     		rt.cancel();
     		
     		try {

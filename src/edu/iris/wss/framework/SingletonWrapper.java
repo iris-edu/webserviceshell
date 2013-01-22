@@ -26,20 +26,20 @@ public class SingletonWrapper {
 	
 	public void configure(ServletContext context) {
 		
-		String appName = null;
+		String configFileBase = null;
 		if (context != null) {
-			appName = WebUtils.getWebAppName(context);
+			configFileBase = WebUtils.getConfigFileBase(context);
 		}
 		
     	try {
-    		appConfig.loadConfigFile(appName, context);
+    		appConfig.loadConfigFile(configFileBase, context);
     	} catch (Exception e) {
     		logger.fatal("Invalid application config file: " + e.getMessage());
     		return;
     	}
     	
     	try {
-    		paramConfig.loadConfigFile(appName);
+    		paramConfig.loadConfigFile(configFileBase);
     	} catch (Exception e) {
     		logger.fatal("Invalid parameter config file: " + e.getMessage());
     	}
