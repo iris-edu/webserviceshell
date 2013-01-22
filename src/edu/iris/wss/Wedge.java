@@ -271,7 +271,8 @@ public class Wedge {
 		
 		ResponseBuilder builder = Response.status(status)
 				.type(ri.appConfig.getMimeType()).entity(iso);
-		builder.header("Content-Disposition", "inline; filename=" + ri.appConfig.getOutputFilename());	
+		builder.header("Content-Disposition", ri.appConfig.getContentDispositionType() + 
+				"; filename=" + ri.appConfig.getOutputFilename());	
 		return builder.build();
 	}
 	

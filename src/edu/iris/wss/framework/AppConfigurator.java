@@ -300,6 +300,16 @@ public class AppConfigurator {
 		}
 	}
 	
+	public String getContentDispositionType() {
+		switch (this.getOutputType()) {
+		case SEED:
+			return "attachment"; 
+		default: 
+			return "inline";
+		}
+	}
+	
+	
 	public String getOutputFilename() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return this.appName + "_" + sdf.format(new Date()) + this.getExtension();
