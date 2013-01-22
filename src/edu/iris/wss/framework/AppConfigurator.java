@@ -12,6 +12,8 @@ import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 
 public class AppConfigurator {
+	
+	public static final String wssVersion ="0.6.7";
 	private static final String wssConfigDirSignature = "wssConfigDir";
 
     private static final String defaultConfigFileName = "META-INF/service.cfg";
@@ -326,6 +328,8 @@ public class AppConfigurator {
 		StringBuilder sb = new StringBuilder();
 		sb.append("WSS Service Configuration" + "\n");
 
+		sb.append(strAppend("WSS Version") + wssVersion + "\n");
+
 		sb.append(strAppend("Root Service Path") + rootServicePath + "\n");
 		sb.append(strAppend("Root Service Doc") +  rootServiceDoc + "\n");
 		
@@ -377,6 +381,8 @@ public class AppConfigurator {
 
 		sb.append("<TR><TH colspan=\"2\" >" + "WSS Service Configuration" + "</TH></TR>");
 		
+		sb.append("<TR><TD>" + "WSS Version" + "</TD><TD>" + wssVersion + "</TD></TR>");
+
 		sb.append("<TR><TD>" + "Root Service Path" + "</TD><TD>" + rootServicePath + "</TD></TR>");
 		sb.append("<TR><TD>" + "Root Service Doc" + "</TD><TD>" + rootServiceDoc + "</TD></TR>");
 		
