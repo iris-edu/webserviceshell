@@ -146,14 +146,6 @@ public class Wedge {
 		ri.statsKeeper.logPost();
 		return processQuery();
 	}
-	@GET
-	@Path("tt")
-	public String foo() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-
-		return "Working dir: " + ri.appConfig.getWorkingDirectory();
-		
-	}
 
 	@GET
 	@Path("queryauth")
@@ -176,7 +168,9 @@ public class Wedge {
 	// [end region]
 
 	private Response processQuery() {
-    	
+		if (!ri.appConfig.isValid())
+			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
+
 		if (ri.appConfig.getStreamingOutputClassName() != null) {
 			return runJava();
 		} else {

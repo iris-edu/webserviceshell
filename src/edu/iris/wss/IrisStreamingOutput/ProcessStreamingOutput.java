@@ -86,7 +86,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
 					"IO Error starting service process");
 		}
-
+// foo boo
+		
 		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(killIt);
 		

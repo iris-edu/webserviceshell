@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.servlet.ServletContext;
+
 import org.apache.log4j.Logger;
 
 public class AppConfigurator {
@@ -18,6 +20,7 @@ public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
 	private Boolean isLoaded = false;
+	private Boolean isValid = false;
 	
 	public static enum OutputType { XML, JSON, TEXT, SEED, TEXTTREE };
 	public static enum LoggingType { LOG4J, JMS };
@@ -112,9 +115,11 @@ public class AppConfigurator {
 	public String getJndiUrl() 							{ return jndiUrl; }
 	public void setJndiUrl(String s)					{ jndiUrl = s; }
 	
-	// Other query parameters.
+	// Other Getters.
 	
-	public void loadConfigFile(String appName) throws Exception {
+	public Boolean isValid() 							{ return isValid; }
+	
+	public void loadConfigFile(String appName, ServletContext context) throws Exception {
 		
 		// Depending on the way the servlet context starts, this can be called multiple
 		// times via SingletonWrapper class.
@@ -139,7 +144,7 @@ public class AppConfigurator {
 	    		logger.info("Loaded Parameter configuration file from: " + configFileName);
 			}
 		} catch (Exception e) {
-//			logger.error("Failed to load service config file from: " + configFileName);
+//			logger.info("Failed to load service config file from: " + configFileName);
 		}
 		
 		// If no user config was successfully loaded, load the default config file
@@ -189,32 +194,6 @@ public class AppConfigurator {
 		if (isOkString(configStr)) 
 			this.setLoggingType(configStr);
 		
-		// Load the configuration for the working directory and substiute 
-		// System properties and environment properties.
-		configStr = configurationProps.getProperty("handlerWorkingDirectory");
-		if (isOkString(configStr)) {
-			
-			if (!configStr.matches("/.*|.*\\$\\{.*\\}.*")){
-				this.workingDirectory = configStr;
-			} else {
-			    Properties props = System.getProperties();
-			    for(Object key: props.keySet()) {
-			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", props.getProperty(key.toString()));
-			    }
-			    Map<String, String>map = System.getenv();
-			    for(String key: map.keySet()) {
-			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", map.get(key));
-			    }    
-			}
-			
-			File f = new File(this.workingDirectory);
-			if (!f.exists()) 
-				throw new Exception("Working Directory: " + this.workingDirectory + " does not exist");
-			
-			if (!f.canWrite() || !f.canRead()) 
-				throw new Exception("Improper permissions on working Directory: " + this.workingDirectory );
-		}
-		
 		configStr = configurationProps.getProperty("handlerTimeout");
 		if (isOkString(configStr)) 
 			this.timeoutSeconds = Integer.parseInt(configStr);
@@ -246,6 +225,44 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("singletonClassName");
 		if (isOkString(configStr)) 
 			this.singletonClassName = configStr;
+		
+		// Load the configuration for the working directory and substiute 
+		// System properties and environment properties.
+		configStr = configurationProps.getProperty("handlerWorkingDirectory");
+		if (isOkString(configStr)) {
+			
+			File f = null;
+			if (!configStr.matches("/.*|.*\\$\\{.*\\}.*")){
+				this.workingDirectory = configStr;
+			} else {
+			    Properties props = System.getProperties();
+			    for(Object key: props.keySet()) {
+			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", props.getProperty(key.toString()));
+			    }
+			    Map<String, String>map = System.getenv();
+			    for(String key: map.keySet()) {
+			        this.workingDirectory = configStr.replaceAll("\\$\\{"+key+"\\}", map.get(key));
+			    }    
+			}
+			
+			// If the working directory is and absolute path then just use it
+			// If it's relative, then reference it to the servlet context.  
+			if (this.workingDirectory.matches("/.*")) {
+				f = new File(this.workingDirectory);
+			} else {
+				f = new File(context.getRealPath(this.workingDirectory));
+			}
+
+			logger.info("WD: " + f.getAbsolutePath());
+			if (!f.exists()) 
+				throw new Exception("Working Directory: " + this.workingDirectory + " does not exist");
+			
+			if (!f.canWrite() || !f.canRead()) 
+				throw new Exception("Improper permissions on working Directory: " + this.workingDirectory );
+		}
+		
+		// Finished w/o problems.
+		this.isValid = true;
 	}
 	
 	public String getMimeType() {

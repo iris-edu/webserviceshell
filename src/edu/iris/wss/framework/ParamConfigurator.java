@@ -77,7 +77,7 @@ public class ParamConfigurator {
 	    		logger.info("Loaded Parameter configuration file from: " + configFileName);
 			}
 		} catch (Exception e) {
-			logger.error("Failed to load service config file from: " + configFileName);
+//			logger.info("Failed to load service config file from: " + configFileName);
 		}
 
 		// If no user config was successfully loaded, load the default config file
