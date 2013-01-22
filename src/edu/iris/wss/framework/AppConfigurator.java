@@ -265,6 +265,7 @@ public class AppConfigurator {
 		
 		// Finished w/o problems.
 		this.isValid = true;
+		logger.info(this.toString());
 	}
 	
 	public String getMimeType() {
@@ -321,11 +322,60 @@ public class AppConfigurator {
 		return ((s != null) && !s.isEmpty());
 	}	
 	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("WSS Service Configuration" + "\n");
+
+		sb.append(strAppend("Root Service Path") + rootServicePath + "\n");
+		sb.append(strAppend("Root Service Doc") +  rootServiceDoc + "\n");
+		
+		sb.append(strAppend("Application Name") + appName + "\n");
+		sb.append(strAppend("Version") +  version + "\n");
+
+		sb.append(strAppend("Handler Working Directory") + workingDirectory + "\n");
+		sb.append(strAppend("Handler Program") + handlerProgram + "\n");
+		sb.append(strAppend("Handler Timeout") + timeoutSeconds + "\n");
+		
+		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
+		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
+		
+		sb.append(strAppend("Output Type") + outputType + "\n");
+		    
+		sb.append(strAppend("Logging Method") + loggingType + "\n");
+
+		if (jndiUrl != null) 
+			sb.append(strAppend("JNDI URL") + jndiUrl + "\n");
+
+		if (connectionFactory != null) 
+			sb.append(strAppend("Connection Factory") + connectionFactory + "\n");
+		
+		if (topicDestination != null) 
+			sb.append(strAppend("Topic Destination") + topicDestination + "\n");
+		
+		if (singletonClassName != null) 
+			sb.append(strAppend("Singleton ClassName") + singletonClassName + "\n");
+		
+		if (streamingOutputClassName != null) 
+			sb.append(strAppend("Streaming Output Class ")  + streamingOutputClassName + "\n");
+
+		return sb.toString();
+	}
+	
+	private final int colSize = 30;
+	private String strAppend(String s) {
+		int len = s.length();
+		for (int i=0; i < colSize - len; i++) {
+			s += " ";
+		}
+		return s;
+	}
+	
 	public String toHtmlString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<TABLE border=2 style='width: 600px'>");
+		sb.append("<col style='width: 30%' />");
 
-		sb.append("<TR><TH colspan=\"2\" >" + "Web Service Shell Configuration" + "</TH></TR>");
+		sb.append("<TR><TH colspan=\"2\" >" + "WSS Service Configuration" + "</TH></TR>");
 		
 		sb.append("<TR><TD>" + "Root Service Path" + "</TD><TD>" + rootServicePath + "</TD></TR>");
 		sb.append("<TR><TD>" + "Root Service Doc" + "</TD><TD>" + rootServiceDoc + "</TD></TR>");

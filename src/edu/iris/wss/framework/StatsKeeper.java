@@ -33,6 +33,7 @@ public class StatsKeeper {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 		sb.append("<TABLE border=2 style='width: 600px'>");
+		sb.append("<col style='width: 30%' />");
 
 		sb.append("<TR><TH colspan=\"2\" >" + "Web Service Shell Usage" + "</TH></TR>");
 		

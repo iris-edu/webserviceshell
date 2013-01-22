@@ -107,9 +107,46 @@ public class ParamConfigurator {
 			paramMap.put(key, new ConfigParam(key, paramType)); 
 			configurationProps.remove(key);	
 		}
+		logger.info(this.toString());
 	}
 
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}		
+	
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("WSS Parameter Configuration\n");
+
+		for (String key: paramMap.keySet()) {	
+			ConfigParam cp = paramMap.get(key);
+			sb.append(strAppend(cp.name) + cp.type + "\n");
+		}
+		return sb.toString();
+	}
+	
+	private final int colSize = 30;
+	private String strAppend(String s) {
+		int len = s.length();
+		for (int i=0; i < colSize - len; i++) {
+			s += " ";
+		}
+		return s;
+	}
+	
+	public String toHtmlString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<TABLE border=2 style='width: 600px'>");
+		sb.append("<col style='width: 30%' />");
+		sb.append("<TR><TH colspan=\"2\" >" + "WSS Parameter Configuration" + "</TH></TR>");
+
+		for (String key: paramMap.keySet()) {	
+			ConfigParam cp = paramMap.get(key);
+			sb.append("<TR><TD>" + cp.name + "</TD><TD>" + cp.type + "</TD></TR>");
+		}
+
+		sb.append("</TABLE>");
+
+		return sb.toString();
+	}
 }

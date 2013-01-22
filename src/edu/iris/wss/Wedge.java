@@ -44,6 +44,7 @@ public class Wedge {
     	StringBuilder sb = new StringBuilder();
 		sb.append("<HTML><BODY>");
 		sb.append("<TABLE BORDER=2 cellpadding='2' style='width: 600px'>");
+		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH COLSPAN=\"2\">Servlet Environment</TH></TR>");
 		sb.append("<TR><TD>" + "URL" + "</TD><TD>" + request.getRequestURI() + "</TD></TR>");
 		sb.append("<TR><TD>" + "Host" + "</TD><TD>" + WebUtils.getHost(request) + "</TD></TR>");
@@ -55,6 +56,9 @@ public class Wedge {
 
     	sb.append("<br/>");
     	sb.append(ri.appConfig.toHtmlString());
+    	
+    	sb.append("<br/>");
+    	sb.append(ri.paramConfig.toHtmlString());
 
     	sb.append("</BODY></HTML>");
 
