@@ -56,9 +56,6 @@ public class AppConfigurator {
 	public String getRootServicePath() 					{ return rootServicePath; }
 	public void setRootServicePath(String s)			{ rootServicePath = s; }
 	
-	public String getRootServiceDoc() 					{ return rootServiceDoc; }
-	public void setRootServiceDoc(String s)				{ rootServiceDoc = s; }
-	
 	public String getAppName() 							{ return appName; }
 	public void setAppName(String s)					{ appName = s; }
 	
@@ -76,6 +73,7 @@ public class AppConfigurator {
 			throw new Exception("Unrecognized output format: " + s);
 		}
 	}
+	
 	
 	public LoggingType getLoggingType() 				{ return loggingType; }
 	public void setLoggingType(LoggingType e)			{ loggingType = e; }
@@ -98,6 +96,9 @@ public class AppConfigurator {
 	public void setUse404For204(Boolean b) 				{ use404For204 = b; }
 	
 	// Not required.  Might be defaulted elsewhere.
+	
+	public String getRootServiceDoc() 					{ return rootServiceDoc; }
+	public void setRootServiceDoc(String s)				{ rootServiceDoc = s; }
 	
 	public Integer getTimeoutSeconds() 					{ return timeoutSeconds; }
 	public void setTimeoutSeconds(Integer i)			{ timeoutSeconds = i; }	
@@ -137,11 +138,11 @@ public class AppConfigurator {
 		String configFileName = null;
 		try {
 			String wssConfigDir = System.getProperty(wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(appName)) {
+			if (isOkString(wssConfigDir) && isOkString(configBase)) {
 				if (!wssConfigDir.endsWith("/")) 
 					wssConfigDir += "/";
 				
-				configFileName = wssConfigDir + appName + userParamConfigSuffix;		
+				configFileName = wssConfigDir + configBase + userParamConfigSuffix;		
 	    		logger.info("Attempting to load application configuration file from: " + configFileName);
 
 				configurationProps.load(new FileInputStream(configFileName));
@@ -164,12 +165,6 @@ public class AppConfigurator {
 		else 
 			throw new Exception("Missing handler program configuration");
 		
-		configStr = configurationProps.getProperty("rootServicePath");
-		if (isOkString(configStr))
-			this.rootServicePath = configStr;
-		else 
-			throw new Exception("Missing rootServicePath configuration");
-		
 		configStr = configurationProps.getProperty("rootServiceDoc");
 		if (isOkString(configStr))
 			this.rootServiceDoc = configStr;
@@ -189,6 +184,10 @@ public class AppConfigurator {
 			throw new Exception("Missing version configuration");
 		
 		//------------------------------------------------------------------
+		
+		configStr = configurationProps.getProperty("rootServicePath");
+		if (isOkString(configStr))
+			this.rootServicePath = configStr;
 		
 		configStr = configurationProps.getProperty("outputType");
 		if (isOkString(configStr)) 
@@ -235,7 +234,6 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("handlerWorkingDirectory");
 		if (isOkString(configStr)) {
 			
-			File f = null;
 			if (!configStr.matches("/.*|.*\\$\\{.*\\}.*")){
 				this.workingDirectory = configStr;
 			} else {
@@ -251,13 +249,11 @@ public class AppConfigurator {
 			
 			// If the working directory is and absolute path then just use it
 			// If it's relative, then reference it to the servlet context.  
-			if (this.workingDirectory.matches("/.*")) {
-				f = new File(this.workingDirectory);
-			} else {
-				f = new File(context.getRealPath(this.workingDirectory));
+			if (!this.workingDirectory.matches("/.*")) {
+				this.workingDirectory = context.getRealPath(this.workingDirectory);
 			}
 
-			logger.info("WD: " + f.getAbsolutePath());
+			File f = new File(this.workingDirectory);
 			if (!f.exists()) 
 				throw new Exception("Working Directory: " + this.workingDirectory + " does not exist");
 			

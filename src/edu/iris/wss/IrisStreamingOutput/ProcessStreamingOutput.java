@@ -1,6 +1,5 @@
 package edu.iris.wss.IrisStreamingOutput;
 
-
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +83,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			process = processBuilder.start();
 		} catch (IOException ioe) {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"IO Error starting service process");
+					"IO Error starting service process" + ioe.getMessage());
 		}
 		
 		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
@@ -212,7 +211,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		
 		// Must be bigger (and a multiple) of maxSeedRecordSize 
 		byte [] buffer = new byte[32768];	 
-		
+				
 		HashMap<String, Long> logHash = new HashMap<String, Long>();	
 
 		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
@@ -228,13 +227,16 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				
 				// Read bytes, keep a running total and write them to the output.
 				bytesRead = is.read(buffer, 0, buffer.length);
-				if (bytesRead < 0) break;
+				if (bytesRead < 0) { break;}
 				
 				totalBytesTransmitted += bytesRead;
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 				
 				// All the below is only for logging.
+
+//				cbb.getOutputStream().write(buffer, 0, bytesRead);				
+//				cbb.getInputStream().read(buffer, 0, bytesRead);
 				
 				// Write the newly read data into the circular buffer.
 				cbb.getOutputStream().write(buffer, 0, bytesRead);				
@@ -242,13 +244,12 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// We're going to parse SEED records out of the circular buffer until the remaining
 				// bytes in the buffer get below maxSeedBlockSize (max seed record size).
 				while (cbb.getAvailable() >= maxSeedRecordSize) {
-					try {						
+					try {				
 						sr = SeedRecord.read(dis);
 					} catch (Exception e) {
 						logger.error("Caught exception in seed parse: " + e.getMessage());
 						break;
 					}
-					if (sr == null) break;
 					
 					// Parse and log the data header for logging.
 					this.processRecord(sr, cbb, logHash);			
@@ -260,16 +261,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			
 			// Finally clear anything out in the buffer.  There might be data left in the circular
 			// buffer whose length will be less than maxSeedRecordSize.
-			while (cbb.getAvailable() > 0) {
+			// SeedRecord.read will return happily w/ a broken SEED record and will reset the stream.
+			// So it's important to only try to decode the remaining data if it could be a full SEED
+			// record.
+			while (cbb.getAvailable() >= maxSeedRecordSize) {
 				try {
+					sr = null;
 					sr = SeedRecord.read(dis);
+					this.processRecord(sr, cbb, logHash);					
 				} catch (Exception e) {
 					logger.error("Caught exception in seed parse: " + e.getMessage());
 					break;
-				}
-			
-				if (sr != null) {
-					this.processRecord(sr, cbb, logHash);					
 				}
 			}
 		}
@@ -279,7 +281,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		catch (Exception e) {
 			logger.error("Got Generic Exception: " + e.getMessage());
 		
-		} finally {	
+		}
+		finally {	
 //			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");	
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
@@ -330,7 +333,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}	
 	}
 	
-	private int processRecord(SeedRecord sr, CircularByteBuffer cbb, HashMap<String, Long> logHash) {
+	private void processRecord(SeedRecord sr, CircularByteBuffer cbb, HashMap<String, Long> logHash) {
 		if (sr  instanceof DataRecord) {
 			
 			DataRecord dr = (DataRecord) sr;
@@ -347,9 +350,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			} else {
 				logHash.put(key, (long) dr.getRecordSize());
 			}
-			return dr.getRecordSize();
+//			return dr.getRecordSize();
 		}
-		return 0;
+//		return 0;
 	}
 	
 	public void writeNonSeed(OutputStream output) {
@@ -421,6 +424,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}		
 	}
 
+	// [region] Process killing utilities
+	
 	private Runnable killIt = new Runnable() {
 		public void run() {
 			stopProcess(process);
@@ -478,4 +483,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Couldn't kill process w/ PID: " + pid + ": " + e.getMessage());
 		}		
 	}
+	
+	// [end region]
 }

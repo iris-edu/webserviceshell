@@ -19,6 +19,8 @@ package com.Ostermiller.util;
  
 import java.io.*;
 
+import org.apache.log4j.Logger;
+
  
 /**
  * Implements the Circular Buffer producer/consumer model for bytes.
@@ -40,7 +42,8 @@ import java.io.*;
  * @since ostermillerutils 1.00.00
  */
 public class CircularByteBuffer {
- 
+	public static final Logger logger = Logger.getLogger(CircularByteBuffer.class);
+
     /**
      * The default size for a circular byte buffer.
      *
@@ -513,7 +516,7 @@ public class CircularByteBuffer {
                     }
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1);
                 } catch(Exception x){
                     throw new IOException("Blocking read operation interrupted.");
                 }
@@ -576,7 +579,7 @@ public class CircularByteBuffer {
                     }
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1);
                 } catch(Exception x){
                     throw new IOException("Blocking read operation interrupted.");
                 }
@@ -636,7 +639,7 @@ public class CircularByteBuffer {
                     }
                 }
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1);
                 } catch(Exception x){
                     throw new IOException("Blocking read operation interrupted.");
                 }
@@ -724,7 +727,7 @@ public class CircularByteBuffer {
          */
         @Override public void write(byte[] cbuf, int off, int len) throws IOException {
             while (len > 0){
-                synchronized (CircularByteBuffer.this){
+                synchronized (CircularByteBuffer.this) {
                     if (outputStreamClosed) throw new IOException("OutputStream has been closed; cannot write to a closed OutputStream.");
                     if (inputStreamClosed) throw new IOException("Buffer closed by InputStream; cannot write to a closed buffer.");
                     int spaceLeft = spaceLeft();
@@ -737,6 +740,7 @@ public class CircularByteBuffer {
                     int firstLen = Math.min(realLen, buffer.length - writePosition);
                     int secondLen = Math.min(realLen - firstLen, buffer.length - markPosition - 1);
                     int written = firstLen + secondLen;
+                    
                     if (firstLen > 0){
                         System.arraycopy(cbuf, off, buffer, writePosition, firstLen);
                     }
@@ -749,12 +753,14 @@ public class CircularByteBuffer {
                     if (writePosition == buffer.length) {
                         writePosition = 0;
                     }
+                    
+                    
                     off += written;
                     len -= written;
                 }
                 if (len > 0){
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(1);
                     } catch(Exception x){
                         throw new IOException("Waiting for available space in buffer interrupted.");
                     }
@@ -799,7 +805,7 @@ public class CircularByteBuffer {
                 }
                 if (!written){
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(1);
                     } catch(Exception x){
                         throw new IOException("Waiting for available space in buffer interrupted.");
                     }

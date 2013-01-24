@@ -66,20 +66,40 @@ public class Wedge {
 	}
 	
 	// [region] Root path documentation handler and version handler
+
+	private String defDoc() {
+						
+		return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">" + 
+				"<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=US-ASCII\">" +
+				"<title>Welcome to the Web Service Shell</title></head>" +
+				"<body><h2>Welcome to the Web Service Shell</h2>" + 
+				"<p> Configure what to return here instead of this text by using the <b>rootServiceDoc</b> option." + 
+				"</body></html>";
+	}
+	
+	private static boolean isOkString(String s) {
+		return ((s != null) && !s.isEmpty());
+	}
 	
     @Path("/")
     @GET
     public Response ok() {
-    	if (sw == null) logger.info("It's null");
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
 
+    	String docUrl = ri.appConfig.getRootServiceDoc();
+    	
+    	// Dump some default text if no good Service Doc Config
+    	if (!isOkString(docUrl))  
+    		return  Response.status(Status.OK).entity(defDoc()).type("text/html").build();
+    	
+    	
       	InputStream is = null;
       	URL url = null;
     	try {    		
-    		url = new URL(ri.appConfig.getRootServiceDoc());    		
+    		url = new URL(docUrl);    		
     		is = url.openStream();
     	} catch (Exception e) {
-    		String err = "Can't find root documentation page: " + url.toString();
+    		String err = "Can't find root documentation page: " + docUrl;
         	return  Response.status(Status.OK).entity(err).type("text/plain").build();
     	}
     	
@@ -119,6 +139,13 @@ public class Wedge {
 	public String getVersion() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
     	return ri.appConfig.getVersion();
+	}
+	
+	@Path("whoami")
+	@GET
+	public String getwho() {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	return request.getRemoteAddr();
 	}
 	
 	// [end region]
@@ -253,7 +280,7 @@ public class Wedge {
 //		}		
 				
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
-	    pb.directory(new File(context.getRealPath(ri.appConfig.getWorkingDirectory())));    
+	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    
 	   
 	    pb.environment().put("REQUESTURL", WebUtils.getUrl(request));
 	    pb.environment().put("USERAGENT", WebUtils.getUserAgent(request));

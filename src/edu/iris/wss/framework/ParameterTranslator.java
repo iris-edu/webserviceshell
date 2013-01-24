@@ -98,11 +98,11 @@ public class ParameterTranslator {
 
 			ConfigParam cp = ri.paramConfig.paramMap.get(key);
 			if (cp == null) {
-				throw new Exception("Unknown query key: " + key);
+				throw new Exception("Unknown query parameter: " + key);
 			}
 			
 			if (qps.get(key).size() > 1)
-				throw new Exception("Duplicate query key: " + key);
+				throw new Exception("Duplicate query parameter: " + key);
 
 			cp.value = qps.getFirst(key);
 			
@@ -110,7 +110,7 @@ public class ParameterTranslator {
 			switch (cp.type) {
 			case NONE:
 				if (isOkString(cp.value)) {
-					throw new Exception("No parameter permitted for " + key + " Found parameter: " + cp.value);
+					throw new Exception("No value permitted for " + key + " Found value: " + cp.value);
 				}
 				break;
 				
@@ -135,7 +135,7 @@ public class ParameterTranslator {
 			
 			case TEXT:
 				if (!isOkString(cp.value)) {
-					throw new Exception("No valid parameter for " + key);
+					throw new Exception("No valid value for " + key);
 				}
 				break;
 			}		
