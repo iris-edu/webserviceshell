@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 	
-	public static final String wssVersion ="0.6.9";
+	public static final String wssVersion ="0.7.1";
 	private static final String wssConfigDirSignature = "wssConfigDir";
 
     private static final String defaultConfigFileName = "META-INF/service.cfg";
@@ -165,12 +165,12 @@ public class AppConfigurator {
 		else 
 			throw new Exception("Missing handler program configuration");
 		
-		configStr = configurationProps.getProperty("rootServiceDoc");
+		configStr = configurationProps.getProperty("rootServicePath");
 		if (isOkString(configStr))
-			this.rootServiceDoc = configStr;
+			this.rootServicePath = configStr;
 		else 
-			throw new Exception("Missing rootServiceDoc configuration");
-		
+			throw new Exception("Missing rootServicePath configuration");
+
 		configStr = configurationProps.getProperty("appName");
 		if (isOkString(configStr))
 			this.appName = configStr;
@@ -184,10 +184,9 @@ public class AppConfigurator {
 			throw new Exception("Missing version configuration");
 		
 		//------------------------------------------------------------------
-		
-		configStr = configurationProps.getProperty("rootServicePath");
+		configStr = configurationProps.getProperty("rootServiceDoc");
 		if (isOkString(configStr))
-			this.rootServicePath = configStr;
+			this.rootServiceDoc = configStr;
 		
 		configStr = configurationProps.getProperty("outputType");
 		if (isOkString(configStr)) 

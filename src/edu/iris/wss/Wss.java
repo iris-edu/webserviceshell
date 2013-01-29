@@ -111,9 +111,8 @@ public class Wss {
     			BufferedWriter writer = new BufferedWriter (new OutputStreamWriter(outputStream));
     			String inputLine = null ;
     			while ((inputLine = br.readLine()) != null) {
-    				inputLine = inputLine.replace("VERSIONHOST", 
-    							"<div id=\"version\"><pre>Version: " + ri.appConfig.getVersion() 
-    							+ "</pre></div>");
+    				inputLine = inputLine.replace("VERSION",ri.appConfig.getVersion()); 
+    				inputLine = inputLine.replace("HOST", WebUtils.getHostname()); 
     				inputLine = inputLine.replace("BASEURL", ri.appConfig.getRootServicePath());
     				writer.write(inputLine);
     				writer.newLine();
