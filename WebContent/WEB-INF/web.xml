@@ -2,16 +2,22 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
   <display-name>webserviceshell</display-name>
   <servlet>
-    <servlet-name>Jersey REST Service</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <servlet-name>log4j-init</servlet-name>
+    <servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
+  <servlet>
+    <servlet-name>Jersey REST Service</servlet-name>
+    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  
   <servlet-mapping>
     <servlet-name>Jersey REST Service</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
   
-  <!--
+  
   <filter>
     <filter-name>Remote Address Filter</filter-name>
     <filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
@@ -24,7 +30,7 @@
     <filter-name>Remote Address Filter</filter-name>
     <url-pattern>/status</url-pattern>
   </filter-mapping>
-  -->
+  
   <security-role>
     <role-name>authenticated</role-name>
   </security-role>

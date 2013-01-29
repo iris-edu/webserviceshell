@@ -19,7 +19,7 @@ import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
 
 @Path ("/")
-public class Wedge {
+public class Wss {
 	 
 	@Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
@@ -30,9 +30,9 @@ public class Wedge {
     
     private RequestInfo ri;
     
-	public static final Logger logger = Logger.getLogger(Wedge.class);
+	public static final Logger logger = Logger.getLogger(Wss.class);
 	
-	public Wedge()  {
+	public Wss()  {
     	TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}	
 	
