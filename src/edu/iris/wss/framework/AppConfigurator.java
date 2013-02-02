@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 	
-	public static final String wssVersion ="0.7.1";
+	public static final String wssVersion ="0.7.2";
 	private static final String wssConfigDirSignature = "wssConfigDir";
 
     private static final String defaultConfigFileName = "META-INF/service.cfg";
@@ -73,8 +73,7 @@ public class AppConfigurator {
 			throw new Exception("Unrecognized output format: " + s);
 		}
 	}
-	
-	
+		
 	public LoggingType getLoggingType() 				{ return loggingType; }
 	public void setLoggingType(LoggingType e)			{ loggingType = e; }
 	

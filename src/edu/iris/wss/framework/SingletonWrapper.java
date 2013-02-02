@@ -24,7 +24,11 @@ public class SingletonWrapper {
 	
 	public SingletonWrapper()  {}
 	
-	public void configure(ServletContext context) {
+	public void configure(ServletContext context) {		
+		// If we've already configured the application, don't do it again.
+		if (appConfig.isValid() ) {
+			return;
+		}
 		
 		String configFileBase = null;
 		if (context != null) {

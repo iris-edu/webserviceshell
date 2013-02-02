@@ -294,20 +294,33 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			ri.appConfig.setAppName(oldAppName + "_summary");
 			Date startDate = null, endDate = null;
 			String quality = null;
-			
+				
+			quality =   ri.paramConfig.getValue("quality");
 			try {
-				quality =   ri.paramConfig.getValue("quality");
-				startDate = sdf.parse(ri.paramConfig.getValue("starttime"));
-				endDate =   sdf.parse(ri.paramConfig.getValue("endtime"));
+				String s = null;
+				s = ri.paramConfig.getValue("starttime");
+				if (s != null) startDate = sdf.parse(s);
 			} catch (Exception e) {
-				; // Do nothing
+				// Do nothing. Failure to parse. 
 			}
 			
-			logUsageMessage(ri, totalBytesTransmitted, processingTime,
-					null, Status.OK, null);
+			try {
+				String e = null;
+				e = ri.paramConfig.getValue("endtime");
+				if (e != null) endDate =   sdf.parse(e);
+			} catch (Exception e) {
+				// Do nothing. Failure to parse. 
+			}
 			
-			ri.appConfig.setAppName(oldAppName);
-
+			try {
+				logUsageMessage(ri, totalBytesTransmitted, processingTime,
+						null, Status.OK, null);
+			} catch (Exception e) {
+				logger.error("Error logging SEED response");
+			} finally {
+				ri.appConfig.setAppName(oldAppName);
+			}
+			
 //			long total = 0;
 			for (String key: logHash.keySet()) {
 					

@@ -26,7 +26,7 @@ public class AppScope extends SingletonTypeInjectableProvider<Context, Singleton
 	// Therefore we call the configure method of the SingletonWrapper object in the method 
 	// below when this setter is called.
 	@Context
-	public void setServleContext(ServletContext context) {
+	public void setServletContext(ServletContext context) {
 		this.getValue().configure(context);
 	}
 }
