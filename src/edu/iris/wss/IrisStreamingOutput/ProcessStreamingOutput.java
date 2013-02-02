@@ -448,7 +448,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	private static void stopProcess(Process process)  {
     	// Send a SIGTERM (friendly-like) via the destroy() method.  
-    	// Wait 100msec, then terminate with SIGKILL.
+    	// Wait 100 msec, then terminate with SIGKILL.
     	try {
     		process.destroy();
     		Thread.sleep(100);
