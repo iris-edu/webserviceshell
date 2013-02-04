@@ -33,22 +33,6 @@ public class ParameterTranslator {
 		
 		MultivaluedMap<String, String> qps = ri.uriInfo.getQueryParameters();
 		
-		// Special 'query parameter', output.  This is treated completely separately
-		
-		// Search for the output format.  If present AND valid, change the config class's mime type
-		// so that the overall service's output format will change.  Don't remove this parameter; it
-		// will be used by the called routine.
-		
-		String outputVal = qps.getFirst(outputControlSignature);
-		if (isOkString(outputVal)) { 
-			ri.appConfig.setOutputType(outputVal);
-
-			cmd.add("--" + outputControlSignature);
-			cmd.add(outputVal);
-
-			qps.remove(outputControlSignature);
-		}			
-		
 		// Special 'username' cli argument will be added if present
 		
 		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
@@ -104,7 +88,7 @@ public class ParameterTranslator {
 
 			cp.value = qps.getFirst(key);
 			
-			// Test if param type is OK.  DATE, NUMBERS, LATs and LONs
+			// Test if param type is OK.  DATE, NUMBER, TEXT, BOOLEAN
 			switch (cp.type) {
 			case NONE:
 				if (isOkString(cp.value)) {
@@ -135,6 +119,13 @@ public class ParameterTranslator {
 				}
 				break;
 			}		
+						
+			// Check to see if this was the 'output' parameter. If present AND valid, change the config class's 
+			// output mime type so that the overall service's output format will change.  
+			
+			if (key.equalsIgnoreCase(outputControlSignature)) {
+				ri.appConfig.setOutputType(cp.value);
+			}					
 			
 			// Add key and also value if valid.
 			cmd.add("--" + key);
@@ -158,15 +149,15 @@ public class ParameterTranslator {
 	
 	private static Boolean isValidFdsnDate(String dateString) {
 		for (String regexp: regexpStrings) {
-			if (dateString.matches(regexp))
+			if (dateString.trim().matches(regexp))
 				return true;
 		}
 		return false;
 	}
 	
 	private static Boolean isValidFdsnDecimal(String decString) {
-		String regexp ="^\\d*\\.?\\d*$";
-		if (decString.matches(regexp))
+		String regexp ="^[-+]?\\d*\\.?\\d*$";
+		if (decString.trim().matches(regexp))
 				return true;
 		
 		return false;
