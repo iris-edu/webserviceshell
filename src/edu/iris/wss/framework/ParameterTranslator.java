@@ -1,9 +1,7 @@
 package edu.iris.wss.framework;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -115,21 +113,19 @@ public class ParameterTranslator {
 				break;
 				
 			case DATE:
-				if (fdsnDateParse(cp.value) == null) {
+				if (!isValidFdsnDate(cp.value)) {
 					throw new Exception("Bad date value for " + key + ": " + cp.value);
 				}
 				break;
 				
 			case NUMBER:
-				try {
-					Float.parseFloat(cp.value);
-				} catch (Exception e) {
+				if (!isValidFdsnDecimal(cp.value)) {
 					throw new Exception("Bad numeric value for " + key + ": " + cp.value);
 				}					
 				break;
 				
 			case BOOLEAN:
-				if (!cp.value.equalsIgnoreCase("true") && !cp.value.equals("false"))
+				if (!cp.value.equalsIgnoreCase("true") && !cp.value.equalsIgnoreCase("false"))
 					throw new Exception("Bad boolean value for " + key + ": " + cp.value);
 				break;
 			
@@ -154,22 +150,29 @@ public class ParameterTranslator {
 //		logger.info("CMD: " + cmd);
 	}
 	
-	private static String[] formatStrings = {
-		"yyyy-MM-dd'T'HH:mm:ss.SSS",
-		"yyyy-MM-dd'T'HH:mm:ss",
-		"yyyy-MM-dd",
+	private static String[] regexpStrings = {
+		"^\\d{4}-[01]\\d-[0-3]\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+(Z)?$",
+		"^\\d{4}-[01]\\d-[0-3]\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d(Z)?$",
+		"^\\d{4}-[01]\\d-[0-3]\\d(Z)?$"
 	};
 	
-	private static Date fdsnDateParse(String dateString) {
-		for (String format: formatStrings) {
-			try {
-				SimpleDateFormat sdf = new SimpleDateFormat(format);
-				sdf.setLenient(false);
-				return sdf.parse(dateString);
-			} catch (ParseException e) {}
+	private static Boolean isValidFdsnDate(String dateString) {
+		for (String regexp: regexpStrings) {
+			if (dateString.matches(regexp))
+				return true;
 		}
-		return null;
+		return false;
 	}
+	
+	private static Boolean isValidFdsnDecimal(String decString) {
+		String regexp ="^\\d*\\.?\\d*$";
+		if (decString.matches(regexp))
+				return true;
+		
+		return false;
+	}
+	
+
 	
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
