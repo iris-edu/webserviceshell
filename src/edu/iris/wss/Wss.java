@@ -65,7 +65,8 @@ public class Wss {
 		return sb.toString();
 	}
 	
-	// [region] Root path documentation handler and version handler
+	// [region] Root path documentation handler, version handler and WADL
+
 
 	private String defDoc() {
 						
@@ -147,6 +148,45 @@ public class Wss {
     	return request.getRemoteAddr();
 	}
 	
+	
+	
+	@Path("application.wadl")
+	@GET @Produces ("application/xml")
+	public Response getWadl() {
+		
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+
+		// Try to read a user WADL file from the location specified by the
+		// wssConfigDir property concatenated with the web application name (last part
+		// of context path), e.g. 'station' or 'webserviceshell'
+		String wadlFileName = null;
+		String configBase = WebUtils.getConfigFileBase(context);
+		FileInputStream wadlStream = null;
+		try {
+			String wssConfigDir = System.getProperty(AppConfigurator.wssConfigDirSignature);
+			if (isOkString(wssConfigDir) && isOkString(configBase)) {
+				if (!wssConfigDir.endsWith("/")) 
+					wssConfigDir += "/";
+				
+				wadlFileName = wssConfigDir + configBase + "-application.wadl";		
+				
+				File wadl = new File(wadlFileName);
+				if (wadl.exists()) {
+					logger.info("Attempting to load wadl file from: " + wadlFileName);
+
+					wadlStream = new FileInputStream(wadlFileName);
+					return Response.status(Status.OK).entity(wadlStream).build();
+				}
+			}
+		} catch (Exception e) {
+			logger.info("Failure loading wadl file from: " + wadlFileName);
+			
+		}
+
+		return Response.status(Status.NOT_FOUND).build();
+
+	}
+	
 	// [end region]
 
 	// [region] Main query entry points GET, POST
@@ -195,7 +235,6 @@ public class Wss {
 		return processQuery();
 	}
 
-	// [end region]
 
 	private Response processQuery() {
 		if (!ri.appConfig.isValid())
@@ -208,6 +247,8 @@ public class Wss {
 		}
 	}
 	
+	// [end region]
+
 	private Response runJava() {
 		
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
