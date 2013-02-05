@@ -234,20 +234,20 @@ public class Wss {
 	}
 	
 	@GET 
-	@Path("catalog")
+	@Path("catalogs")
 	public Response catalog() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-    	ri.callType = CallType.CATALOG;
-    logger.info("Cat");
+    	ri.callType = CallType.CATALOGS;
+
     	ri.statsKeeper.logGet();
 		return processQuery();
 	}
 	
 	@GET 
-	@Path("contributor")
+	@Path("contributors")
 	public Response contributor() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-    	ri.callType = CallType.CONTRIBUTOR;
+    	ri.callType = CallType.CONTRIBUTORS;
 
     	ri.statsKeeper.logGet();
 		return processQuery();
@@ -334,16 +334,16 @@ public class Wss {
 					shellException(Status.BAD_REQUEST, e.getMessage());
 				}
 				break;
-			case CATALOG:
-				String catalogHandlerString = ri.appConfig.getCatalogHandlerProgram();
+			case CATALOGS:
+				String catalogHandlerString = ri.appConfig.getCatalogsHandlerProgram();
 				if (!isOkString(catalogHandlerString))
 					shellException(Status.NOT_FOUND, null);
 
 				cmd = new ArrayList<String>(Arrays.asList(catalogHandlerString.split(" ")));
 				break;
 				
-			case CONTRIBUTOR:
-				String contributorHandlerString = ri.appConfig.getContributorHandlerProgram();
+			case CONTRIBUTORS:
+				String contributorHandlerString = ri.appConfig.getContributorsHandlerProgram();
 
 				if (!isOkString(contributorHandlerString))
 					shellException(Status.NOT_FOUND, null);

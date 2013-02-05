@@ -34,8 +34,8 @@ public class AppConfigurator {
     
 	private String workingDirectory = "/";
 	private String handlerProgram;
-	private String catalogHandlerProgram;
-	private String contributorHandlerProgram;
+	private String catalogsHandlerProgram;
+	private String contributorsHandlerProgram;
 	
 	private String appName;
 	private String version;
@@ -122,11 +122,11 @@ public class AppConfigurator {
 	
 	// Other Getters.  Not defaulted 
 	
-	public String getCatalogHandlerProgram() 			{ return catalogHandlerProgram; }
-	public void setCatalogHandlerProgram(String s)		{ catalogHandlerProgram = s; }
+	public String getCatalogsHandlerProgram() 			{ return catalogsHandlerProgram; }
+	public void setCatalogsHandlerProgram(String s)		{ catalogsHandlerProgram = s; }
 	
-	public String getContributorHandlerProgram() 		{ return contributorHandlerProgram; }
-	public void setContributorHandlerProgram(String s)	{ contributorHandlerProgram = s; }
+	public String getContributorsHandlerProgram() 		{ return contributorsHandlerProgram; }
+	public void setContributorsHandlerProgram(String s)	{ contributorsHandlerProgram = s; }
 	
 	public Boolean isValid() 							{ return isValid; }
 	
@@ -236,13 +236,13 @@ public class AppConfigurator {
 		if (isOkString(configStr)) 
 			this.singletonClassName = configStr;
 		
-		configStr = configurationProps.getProperty("catalogHandlerProgram");
+		configStr = configurationProps.getProperty("catalogsHandlerProgram");
 		if (isOkString(configStr))
-			this.catalogHandlerProgram = configStr;
+			this.catalogsHandlerProgram = configStr;
 		
-		configStr = configurationProps.getProperty("contributorHandlerProgram");
+		configStr = configurationProps.getProperty("contributorsHandlerProgram");
 		if (isOkString(configStr))
-			this.contributorHandlerProgram = configStr;
+			this.contributorsHandlerProgram = configStr;
 		
 		// Load the configuration for the working directory and substitute 
 		// System properties and environment properties.
@@ -351,8 +351,8 @@ public class AppConfigurator {
 		sb.append(strAppend("Handler Program") + handlerProgram + "\n");
 		sb.append(strAppend("Handler Timeout") + timeoutSeconds + "\n");
 
-		sb.append(strAppend("Catalog Handler Program") + catalogHandlerProgram + "\n");
-		sb.append(strAppend("Contributor Handler Program") + contributorHandlerProgram + "\n");
+		sb.append(strAppend("Catalog Handler Program") + catalogsHandlerProgram + "\n");
+		sb.append(strAppend("Contributor Handler Program") + contributorsHandlerProgram + "\n");
 		
 		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
 		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
@@ -407,8 +407,8 @@ public class AppConfigurator {
 		sb.append("<TR><TD>" + "Handler Program" + "</TD><TD>" + handlerProgram + "</TD></TR>");
 		sb.append("<TR><TD>" + "Handler Timeout" + "</TD><TD>" + timeoutSeconds + "</TD></TR>");
 
-		sb.append("<TR><TD>" + "Catalog Handler Program" + "</TD><TD>" + catalogHandlerProgram + "</TD></TR>");
-		sb.append("<TR><TD>" + "Contributor Handler Program" + "</TD><TD>" + contributorHandlerProgram + "</TD></TR>");
+		sb.append("<TR><TD>" + "Catalog Handler Program" + "</TD><TD>" + catalogsHandlerProgram + "</TD></TR>");
+		sb.append("<TR><TD>" + "Contributor Handler Program" + "</TD><TD>" + contributorsHandlerProgram + "</TD></TR>");
 
 		sb.append("<TR><TD>" + "Post Enabled" + "</TD><TD>" + postEnabled + "</TD></TR>");
 		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204 + "</TD></TR>");
