@@ -10,6 +10,7 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.framework.RequestInfo.CallType;
 
 import org.apache.log4j.Logger;
 
@@ -91,8 +92,7 @@ public class Wss {
     	
     	// Dump some default text if no good Service Doc Config
     	if (!isOkString(docUrl))  
-    		return  Response.status(Status.OK).entity(defDoc()).type("text/html").build();
-    	
+    		return  Response.status(Status.OK).entity(defDoc()).type("text/html").build(); 	
     	
       	InputStream is = null;
       	URL url = null;
@@ -129,26 +129,24 @@ public class Wss {
     }
 	
     @Path("wssversion")
-	@GET
+	@GET @Produces("text/plain")
 	public String getWssVersion() throws IOException {
     	return AppConfigurator.wssVersion;
 	}
 	
 	@Path("version")
-	@GET
+	@GET @Produces("text/plain")
 	public String getVersion() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
     	return ri.appConfig.getVersion();
 	}
 	
 	@Path("whoami")
-	@GET
+	@GET @Produces("text/plain")
 	public String getwho() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
     	return request.getRemoteAddr();
-	}
-	
-	
+	}	
 	
 	@Path("application.wadl")
 	@GET @Produces ("application/xml")
@@ -234,7 +232,26 @@ public class Wss {
     	ri.statsKeeper.logGet();
 		return processQuery();
 	}
+	
+	@GET 
+	@Path("catalog")
+	public Response catalog() throws Exception {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.callType = CallType.CATALOG;
+    logger.info("Cat");
+    	ri.statsKeeper.logGet();
+		return processQuery();
+	}
+	
+	@GET 
+	@Path("contributor")
+	public Response contributor() throws Exception {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.callType = CallType.CONTRIBUTOR;
 
+    	ri.statsKeeper.logGet();
+		return processQuery();
+	}	
 
 	private Response processQuery() {
 		if (!ri.appConfig.isValid())
@@ -306,13 +323,35 @@ public class Wss {
     	
     	// The handler program string from the config file may contain multiple space-delimited
     	// text. These need to be split and added to the cmd collection
-		ArrayList<String> cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));
-		
-		try {
-			ParameterTranslator.parseQueryParams(cmd, ri);
-		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, e.getMessage());
+		ArrayList<String> cmd = null;
+		switch (ri.callType) {
+			case NORMAL:
+				// Handler string can't be NULL per configuration requirements in AppConfigurator
+				cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));			
+				try {
+					ParameterTranslator.parseQueryParams(cmd, ri);
+				} catch (Exception e) {
+					shellException(Status.BAD_REQUEST, e.getMessage());
+				}
+				break;
+			case CATALOG:
+				String catalogHandlerString = ri.appConfig.getCatalogHandlerProgram();
+				if (!isOkString(catalogHandlerString))
+					shellException(Status.NOT_FOUND, null);
+
+				cmd = new ArrayList<String>(Arrays.asList(catalogHandlerString.split(" ")));
+				break;
+				
+			case CONTRIBUTOR:
+				String contributorHandlerString = ri.appConfig.getContributorHandlerProgram();
+
+				if (!isOkString(contributorHandlerString))
+					shellException(Status.NOT_FOUND, null);
+				
+				cmd = new ArrayList<String>(Arrays.asList(contributorHandlerString.split(" ")));
+				break;
 		}
+
 		
 		logger.info("CMD array: " + cmd);
 //		for (String key: ri.request.getParameterMap().keySet()) {

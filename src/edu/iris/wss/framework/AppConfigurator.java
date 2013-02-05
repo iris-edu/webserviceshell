@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 	
-	public static final String wssVersion ="0.7.5";
+	public static final String wssVersion ="0.7.7";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
     private static final String defaultConfigFileName = "META-INF/service.cfg";
@@ -34,6 +34,9 @@ public class AppConfigurator {
     
 	private String workingDirectory = "/";
 	private String handlerProgram;
+	private String catalogHandlerProgram;
+	private String contributorHandlerProgram;
+	
 	private String appName;
 	private String version;
 	
@@ -117,7 +120,13 @@ public class AppConfigurator {
 	public String getJndiUrl() 							{ return jndiUrl; }
 	public void setJndiUrl(String s)					{ jndiUrl = s; }
 	
-	// Other Getters.
+	// Other Getters.  Not defaulted 
+	
+	public String getCatalogHandlerProgram() 			{ return catalogHandlerProgram; }
+	public void setCatalogHandlerProgram(String s)		{ catalogHandlerProgram = s; }
+	
+	public String getContributorHandlerProgram() 		{ return contributorHandlerProgram; }
+	public void setContributorHandlerProgram(String s)	{ contributorHandlerProgram = s; }
 	
 	public Boolean isValid() 							{ return isValid; }
 	
@@ -227,7 +236,15 @@ public class AppConfigurator {
 		if (isOkString(configStr)) 
 			this.singletonClassName = configStr;
 		
-		// Load the configuration for the working directory and substiute 
+		configStr = configurationProps.getProperty("catalogHandlerProgram");
+		if (isOkString(configStr))
+			this.catalogHandlerProgram = configStr;
+		
+		configStr = configurationProps.getProperty("contributorHandlerProgram");
+		if (isOkString(configStr))
+			this.contributorHandlerProgram = configStr;
+		
+		// Load the configuration for the working directory and substitute 
 		// System properties and environment properties.
 		configStr = configurationProps.getProperty("handlerWorkingDirectory");
 		if (isOkString(configStr)) {
@@ -333,6 +350,9 @@ public class AppConfigurator {
 		sb.append(strAppend("Handler Working Directory") + workingDirectory + "\n");
 		sb.append(strAppend("Handler Program") + handlerProgram + "\n");
 		sb.append(strAppend("Handler Timeout") + timeoutSeconds + "\n");
+
+		sb.append(strAppend("Catalog Handler Program") + catalogHandlerProgram + "\n");
+		sb.append(strAppend("Contributor Handler Program") + contributorHandlerProgram + "\n");
 		
 		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
 		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
@@ -386,7 +406,10 @@ public class AppConfigurator {
 		sb.append("<TR><TD>" + "Handler Working Directory" + "</TD><TD>" + workingDirectory + "</TD></TR>");
 		sb.append("<TR><TD>" + "Handler Program" + "</TD><TD>" + handlerProgram + "</TD></TR>");
 		sb.append("<TR><TD>" + "Handler Timeout" + "</TD><TD>" + timeoutSeconds + "</TD></TR>");
-		
+
+		sb.append("<TR><TD>" + "Catalog Handler Program" + "</TD><TD>" + catalogHandlerProgram + "</TD></TR>");
+		sb.append("<TR><TD>" + "Contributor Handler Program" + "</TD><TD>" + contributorHandlerProgram + "</TD></TR>");
+
 		sb.append("<TR><TD>" + "Post Enabled" + "</TD><TD>" + postEnabled + "</TD></TR>");
 		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204 + "</TD></TR>");
 		
