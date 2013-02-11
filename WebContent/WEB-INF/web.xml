@@ -53,6 +53,6 @@
   </security-constraint>
   <login-config>
     <auth-method>DIGEST</auth-method>
-    <realm-name>IRIS</realm-name>
+    <realm-name>FDSN</realm-name>
   </login-config>
 </web-app>

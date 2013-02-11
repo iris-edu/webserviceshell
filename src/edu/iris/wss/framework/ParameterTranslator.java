@@ -19,7 +19,13 @@ public class ParameterTranslator {
 	// alone w/o a 'option'.
 	
 	public final static String rawKeySignature = "ARG";
+	
+	// Output is being deprecated, but will be allowable for now.
+	// Since they perform the same function, the last seen entry in the param config
+	// will be used.
 	public final static String outputControlSignature = "output";
+	public final static String formatControlSignature = "format";
+
 	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
 	public final static String postSignature = "STDIN";
@@ -121,11 +127,16 @@ public class ParameterTranslator {
 			}		
 						
 			// Check to see if this was the 'output' parameter. If present AND valid, change the config class's 
-			// output mime type so that the overall service's output format will change.  
-			
+			// output mime type so that the overall service's output format will change.  			
 			if (key.equalsIgnoreCase(outputControlSignature)) {
 				ri.appConfig.setOutputType(cp.value);
-			}					
+			}
+			
+			// Check to see if this was the 'format' parameter. If present AND valid, change the config class's 
+			// output mime type so that the overall service's output format will change.  			
+			if (key.equalsIgnoreCase(formatControlSignature)) {
+				ri.appConfig.setOutputType(cp.value);
+			}
 			
 			// Add key and also value if valid.
 			cmd.add("--" + key);

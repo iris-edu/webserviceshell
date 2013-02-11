@@ -395,8 +395,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Got IOE: " + ioe.getMessage());
 		}
 		catch (Exception e) {
-			logger.error("Got Generic Exception: " + e.getMessage());
-		
+			logger.error("Got Generic Exception: " + e.getMessage());		
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
