@@ -160,6 +160,20 @@ public class WebUtils {
 			if (index != -1) 
 				hostname = hostname.substring(0, index);
 
+		} catch (Exception e) {
+			hostname = "Unknown";
+		}
+		return hostname;
+	}
+	
+	public static String getObfuscatedHost(HttpServletRequest request) {
+    	String hostname = "";
+		try {
+			hostname = java.net.InetAddress.getLocalHost().getHostName();
+			int index = hostname.indexOf('.');
+			if (index != -1) 
+				hostname = hostname.substring(0, index);
+
 			if (hostname.length() > 4) {
 				hostname = hostname.substring(2, 4) + hostname.substring(hostname.length() - 1);
 			}
