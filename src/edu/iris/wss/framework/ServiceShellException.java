@@ -56,7 +56,7 @@ public class ServiceShellException extends WebApplicationException {
     	
     	logger.error(message + ": " + getErrorString(e));
     	
-   		LoggerUtils.logMessage(ri, 0L, 0L, message, status.getStatusCode(), null);
+   		LoggerUtils.logMessage(ri, null, 0L, 0L, message, status.getStatusCode(), null);
 		
     	SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
     	StringBuilder sb = new StringBuilder();

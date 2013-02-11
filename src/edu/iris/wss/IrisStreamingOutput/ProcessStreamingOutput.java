@@ -290,8 +290,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			long processingTime = (new Date()).getTime() - startTime.getTime();
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-			String oldAppName = ri.appConfig.getAppName();	
-			ri.appConfig.setAppName(oldAppName + "_summary");
 			Date startDate = null, endDate = null;
 			String quality = null;
 				
@@ -313,18 +311,19 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			}
 			
 			try {
-				logUsageMessage(ri, totalBytesTransmitted, processingTime,
+				logUsageMessage(ri, "_summary",
+						totalBytesTransmitted, processingTime,
 						null, Status.OK, null);
 			} catch (Exception e) {
 				logger.error("Error logging SEED response");
-			} finally {
-				ri.appConfig.setAppName(oldAppName);
 			}
+
 			
 //			long total = 0;
 			for (String key: logHash.keySet()) {
 					
-				logUsageMessage(ri, logHash.get(key), processingTime,
+				logUsageMessage(ri, null,
+						logHash.get(key), processingTime,
 						null, Status.OK, null,
 						LogKey.getNetwork(key), LogKey.getStation(key), LogKey.getLocation(key),
 						LogKey.getChannel(key), LogKey.getQuality(key), 
@@ -400,7 +399,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-			logUsageMessage(ri, totalBytesTransmitted, (new Date()).getTime()- startTime.getTime(),
+			logUsageMessage(ri, null,
+					totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
 					null, Status.OK, null);
     		rt.cancel();
     		

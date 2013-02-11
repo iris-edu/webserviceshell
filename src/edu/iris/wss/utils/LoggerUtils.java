@@ -13,26 +13,33 @@ public class LoggerUtils {
 	public static final Logger logger = Logger.getLogger(LoggerUtils.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 	
-	public static void logMessage(RequestInfo ri, Long dataSize, Long processTime,
+	public static void logMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText) {
-		logMessage(ri, dataSize, processTime, errorType, httpStatusCode, extraText,
+		logMessage(ri, appSuffix, dataSize, processTime, errorType, httpStatusCode, extraText,
 				null, null, null, null, null, null, null, null);
 	}
 	
-	public static void logMessage(RequestInfo ri, Long dataSize, Long processTime,
+	public static void logMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText,
 			String network, String station, String location, String channel, String quality,
 			Date startTime, Date endTime, String duration) {
 		
 		if (ri.appConfig.getLoggingType() == LoggingType.LOG4J) {
-			usageLogger.info(makeUsageLogString(ri, dataSize, processTime,
+			usageLogger.info(makeUsageLogString(ri, appSuffix, 
+					dataSize, processTime,
 					errorType, httpStatusCode, extraText,
 					network, station, location, channel, quality,
 					startTime, endTime, duration));
 			return;
 		}
 		
-		if (ri.appConfig.getLoggingType() == LoggingType.JMS)
+		if (ri.appConfig.getLoggingType() == LoggingType.JMS) {
+			
+			String fullAppName = ri.appConfig.getAppName();
+			if (appSuffix != null) fullAppName += appSuffix;
+			
 			try {
 				WsStatsWriter wsw = new WsStatsWriter(
 						ri.appConfig.getConnectionFactory(),
@@ -40,7 +47,7 @@ public class LoggerUtils {
 						ri.appConfig.getJndiUrl());
 
 				wsw.sendUsageMessage(
-					ri.appConfig.getAppName(), 
+					fullAppName, 
 					WebUtils.getHostname(),
 					new Date(),  // Access time
 					WebUtils.getClientName(ri.request),
@@ -59,24 +66,21 @@ public class LoggerUtils {
 			} catch (Exception e) {
 				logger.error("Error while logging via JMS: " + e.getMessage());
 			}
+		}
 	}
 	
-	public static String makeUsageLogString(RequestInfo ri,  
+	public static String makeUsageLogString(RequestInfo ri,  String appSuffix,
 			long dataLength, long processTime,
 			String errorType, Integer httpStatus, String extra) {
-	
-//		ri.paramConfig.dump();
-		String lat= ri.paramConfig.getValue("-lat");
-		if (lat  != null) 
-			logger.info("lat: "+ lat);
 		
-		return makeUsageLogString(ri, dataLength, processTime,
+		return makeUsageLogString(ri, appSuffix, 
+				dataLength, processTime,
 				errorType, httpStatus, extra,
 				null, null, null, null, null, 
 				null, null, null);
 	}
 	
-	public static String makeUsageLogString(RequestInfo ri, 
+	public static String makeUsageLogString(RequestInfo ri, String appSuffix,
 			Long dataLength, Long processTime,
 			String errorType, Integer httpStatus, String extra,
 			String network, String station, String channel, String location, String quality,
@@ -85,7 +89,11 @@ public class LoggerUtils {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 		StringBuffer sb = new StringBuffer();
-		append(sb, ri.appConfig.getAppName());
+		
+		String fullAppName = ri.appConfig.getAppName();
+		if (appSuffix != null) fullAppName += appSuffix;
+		
+		append(sb, fullAppName);
 		append(sb, WebUtils.getHostname());
 		append(sb, sdf.format(new Date()));
 		append(sb, WebUtils.getClientName(ri.request));

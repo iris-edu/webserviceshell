@@ -13,21 +13,23 @@ import edu.iris.wss.utils.LoggerUtils;
 
 public abstract class IrisStreamingOutput implements StreamingOutput {
 
-	public static void logUsageMessage(RequestInfo ri, Long dataSize, Long processTime,
+	public static void logUsageMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
 			String errorType, Status httpStatus, String extraText,
 			String network, String station, String location, String channel, String quality,
 			Date startTime, Date endTime, String duration) {
 	
-		LoggerUtils.logMessage(ri, dataSize, processTime,
+		LoggerUtils.logMessage(ri, appSuffix, dataSize, processTime,
 			errorType, httpStatus.getStatusCode(), extraText,
 			network, station, location, channel, quality,
 			startTime, endTime, duration);
 	}
 	
-	public static void logUsageMessage(RequestInfo ri, Long dataSize, Long processTime,
+	public static void logUsageMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
 			String errorType, Status httpStatus, String extraText) {
 	
-		LoggerUtils.logMessage(ri, dataSize, processTime,
+		LoggerUtils.logMessage(ri, appSuffix, dataSize, processTime,
 			errorType, httpStatus.getStatusCode(), extraText);
 	}
 	

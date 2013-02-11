@@ -60,7 +60,7 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 
-			logUsageMessage(ri, totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
+			logUsageMessage(ri, null, totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
 					null, Status.OK, null);
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
     		try {
