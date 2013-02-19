@@ -428,16 +428,16 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	private Runnable killIt = new Runnable() {
 		public void run() {
-			stopProcess(process);
+			stopProcess(process, ri.appConfig.getSigkillDelay());
 		}
 	};
 	
-	private static void stopProcess(Process process)  {
+	private static void stopProcess(Process process, Integer sigkillDelay)  {
     	// Send a SIGTERM (friendly-like) via the destroy() method.  
-    	// Wait 100 msec, then terminate with SIGKILL.
+    	// Wait for sigkillDelay msec, then terminate with SIGKILL.
     	try {
     		process.destroy();
-    		Thread.sleep(100);
+    		Thread.sleep(sigkillDelay);
     	} catch (InterruptedException ie) {
     		logger.error("TimeoutTask thread got interrrupted.");
     	}

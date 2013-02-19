@@ -42,6 +42,8 @@ public class AppConfigurator {
 	
 	private Boolean postEnabled = false;
 	private Boolean use404For204 = false;
+	private Integer sigkillDelay = 100;				// 100 msec delay from SIGTERM to SIGKILL
+
 	private Integer timeoutSeconds = null;
     
 	private LoggingType loggingType = LoggingType.LOG4J;
@@ -96,6 +98,9 @@ public class AppConfigurator {
 	
 	public Boolean getUse404For204()					{ return use404For204; }
 	public void setUse404For204(Boolean b) 				{ use404For204 = b; }
+	
+	public Integer getSigkillDelay() 					{ return sigkillDelay; }
+	public void setSigkillDelay(Integer i)				{ sigkillDelay = i; }
 	
 	// Not required.  Might be defaulted elsewhere.
 	
@@ -215,6 +220,10 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("use404For204");
 		if (isOkString(configStr)) 
 			this.use404For204 = Boolean.parseBoolean(configStr);
+		
+		configStr = configurationProps.getProperty("sigkillDelay");
+		if (isOkString(configStr)) 
+			this.sigkillDelay = Integer.parseInt(configStr);
 				
 		configStr = configurationProps.getProperty("connectionFactory");
 		if (isOkString(configStr)) 
