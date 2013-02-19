@@ -45,7 +45,11 @@ public class StreamEater implements Runnable  {
 			}
 		}
 			
-		if( ioException != null ) throw ioException;
+		// Probably timed out if an IO exception has occurred
+		if( ioException != null )  {
+			// throw ioException;
+			return "Request time out.";
+		}
 		return output;
 	}
 

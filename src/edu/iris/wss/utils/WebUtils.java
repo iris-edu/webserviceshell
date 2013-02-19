@@ -108,8 +108,17 @@ public class WebUtils {
 		final String authSig = "authorization";
 		final String basicSig = "Basic ";
 		final String digestSig = "Digest ";
-	   	List <String> entries = requestHeaders.getRequestHeader(authSig);
-	   	
+		
+		if (requestHeaders == null) return null;
+		
+		List <String> entries = null;
+		try {
+			entries = requestHeaders.getRequestHeader(authSig);
+		} catch (Exception e) {
+			logger.error("Failed to get request headers!");
+			return null;
+		}
+		
 	   	if ((entries == null) || (entries.size() == 0))
 	   		return null;
 

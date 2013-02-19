@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 	
-	public static final String wssVersion ="0.8.4";
+	public static final String wssVersion ="0.8.5";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
     private static final String defaultConfigFileName = "META-INF/service.cfg";

@@ -67,7 +67,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		try {
 			return se.getOutputString();
 		} catch (IOException ioe) {
-			return "No valid error text";
+			return "No error description available";
 		}
 	}
 	
@@ -124,7 +124,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	   	 		    	
 	    	try {    		
 		    	if (is.available() > 0) {
-//		    		logger.info("Got data");
 		    		rt.cancel();
 		    		return Status.OK;
 		    	} else {
@@ -155,10 +154,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	public static Status processExitVal(Integer exitVal, RequestInfo ri) {
 		
 		// An exit value of '0' here indicates an 'OK' return, but obv.
-		// with no data.  Therefore, interpret it as 204.
-//		if (exitVal == 0) 
-//			return Status.OK;
-		
+		// with no data.  Therefore, interpret it as 204.		
 		if ((exitVal == 0) ||  (exitVal == 2)) {
 			if (ri.appConfig.getUse404For204())
 				return Status.NOT_FOUND;
@@ -172,22 +168,21 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			return Status.REQUEST_ENTITY_TOO_LARGE;
 		}
 		
-		
 		// These below are for timeouts and other weird errors that shouldn't 
 		// really generate errors through this mechanism.
 		if (exitVal == 9 + 128) {
 			// SIGKILL
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Timeout or unexpected termination with prejudice of worker");
+					"Enforced timeout or unexpected termination of handler");
 		}
 		else if (exitVal == 15 + 128) {
 			// SIGTERM
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Timeout or unexpected termination of worker");
+					"Timeout or unexpected termination of handler");
 		}
 		else {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Termination of worker with unknown exit code: " + exitVal);
+					"Termination of handler with unknown exit code: " + exitVal);
 		}
 		return Status.OK;		// Won't get here.
 	}
@@ -235,9 +230,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				output.flush();
 				
 				// All the below is only for logging.
-
-//				cbb.getOutputStream().write(buffer, 0, bytesRead);				
-//				cbb.getInputStream().read(buffer, 0, bytesRead);
 				
 				// Write the newly read data into the circular buffer.
 				cbb.getOutputStream().write(buffer, 0, bytesRead);				
@@ -284,7 +276,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		
 		}
 		finally {	
-//			logger.info("Done:  Wrote direct " + totalBytesTransmitted + " bytes\n");	
+			// Logged the total
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
@@ -317,8 +309,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			} catch (Exception e) {
 				logger.error("Error logging SEED response");
 			}
-
-			
+	
 //			long total = 0;
 			for (String key: logHash.keySet()) {
 					
@@ -351,8 +342,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			
 			DataRecord dr = (DataRecord) sr;
 			DataHeader dh = dr.getHeader();
-//			logger.info("Read data record: " + dr.getRecordSize());
-//			logger.info("Remaining in CBB: " + cbb.getAvailable());
 			
 			String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh.getStationIdentifier().trim(),
 					dh.getLocationIdentifier().trim(), dh.getChannelIdentifier().trim(),
@@ -363,9 +352,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			} else {
 				logHash.put(key, (long) dr.getRecordSize());
 			}
-//			return dr.getRecordSize();
 		}
-//		return 0;
 	}
 	
 	public void writeNonSeed(OutputStream output) {
