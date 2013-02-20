@@ -27,8 +27,7 @@
     <servlet-name>Jersey REST Service</servlet-name>
     <url-pattern>/*</url-pattern>
   </servlet-mapping>
-  
-  
+    
   <filter>
     <filter-name>Remote Address Filter</filter-name>
     <filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
@@ -45,6 +44,7 @@
   <security-role>
     <role-name>authenticated</role-name>
   </security-role>
+  
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>MySecureResource</web-resource-name>
@@ -56,8 +56,9 @@
       <role-name>authenticated</role-name>
     </auth-constraint>
   </security-constraint>
+
   <login-config>
     <auth-method>DIGEST</auth-method>
-    <realm-name>FDSN</realm-name>
+	<realm-name>${wss.digest.realmname}</realm-name>
   </login-config>
 </web-app>
