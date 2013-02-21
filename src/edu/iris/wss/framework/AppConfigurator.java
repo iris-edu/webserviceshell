@@ -16,7 +16,9 @@ public class AppConfigurator {
 	public static final String wssVersion ="0.9.0";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
-    private static final String defaultConfigFileName = "META-INF/service.cfg";
+	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
+
+	private static final String defaultConfigFileName = "META-INF/service.cfg";
     private static final String userParamConfigSuffix = "-service.cfg";
     
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
@@ -42,6 +44,7 @@ public class AppConfigurator {
 	
 	private Boolean postEnabled = false;
 	private Boolean use404For204 = false;
+	
 	private Integer sigkillDelay = 100;				// 100 msec delay from SIGTERM to SIGKILL
 
 	private Integer timeoutSeconds = null;
@@ -145,7 +148,7 @@ public class AppConfigurator {
 		Properties configurationProps = new Properties();
 		Boolean userConfig = false;
 
-		// Initially to read a user config file from the location specified by the
+		// Now try to read a user config file from the location specified by the
 		// wssConfigDir property concatenated with the web application name (last part
 		// of context path), e.g. 'station' or 'webserviceshell'
 		String configFileName = null;

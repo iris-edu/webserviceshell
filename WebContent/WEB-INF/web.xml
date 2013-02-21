@@ -19,7 +19,7 @@
 		<param-name>com.sun.jersey.config.feature.Redirect</param-name>
 	 	<param-value>true</param-value>
 	</init-param> 
-  
+
     <load-on-startup>2</load-on-startup>
   </servlet>
   
