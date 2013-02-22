@@ -268,12 +268,13 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				}
 			}
 		}
-		catch (IOException ioe) {			
-			logger.error("Got IOE: " + ioe.getMessage());
+		catch (IOException ioe) {
+			logger.error("Got IOE (probable client disconnect): " + ioe.getMessage() + ioe);
+			stopProcess(process, ri.appConfig.getSigkillDelay());
 		}
 		catch (Exception e) {
 			logger.error("Got Generic Exception: " + e.getMessage());
-		
+			stopProcess(process, ri.appConfig.getSigkillDelay());
 		}
 		finally {	
 			// Logged the total
@@ -378,10 +379,12 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 
 		catch (IOException ioe) {			
-			logger.error("Got IOE: " + ioe.getMessage());
+			logger.error("Got IOE (probable client disconnect): " + ioe.getMessage() + ioe);
+			stopProcess(process, ri.appConfig.getSigkillDelay());
 		}
 		catch (Exception e) {
 			logger.error("Got Generic Exception: " + e.getMessage());		
+			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
@@ -428,6 +431,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	private Runnable killIt = new Runnable() {
 		public void run() {
+			logger.info("Killit ran");
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		}
 	};
@@ -437,6 +441,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     	// Wait for sigkillDelay msec, then terminate with SIGKILL.
     	try {
     		process.destroy();
+    		logger.info("term");
     		Thread.sleep(sigkillDelay);
     	} catch (InterruptedException ie) {
     		logger.error("TimeoutTask thread got interrrupted.");
