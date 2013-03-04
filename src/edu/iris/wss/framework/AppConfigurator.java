@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 	
-	public static final String wssVersion ="0.9.0";
+	public static final String wssVersion ="0.9.1";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
@@ -57,9 +57,15 @@ public class AppConfigurator {
 	private String streamingOutputClassName = null;
 	private String singletonClassName = null;
 	
-	// Required configuration entries.  Failure to find these will result in an exception.
+	// Either a handler program or a Streaming Output Class is required.
+	
 	public String getHandlerProgram() 					{ return handlerProgram; }
 	public void setHandlerProgram(String s)				{ handlerProgram = s; }
+	
+	public String getStreamingOutputClassName() 		{ return streamingOutputClassName; }
+	public void setStreamingOutputClassName(String s)	{ streamingOutputClassName = s; }
+	
+	// Required configuration entries.  Failure to find these will result in an exception.
 	
 	public String getRootServicePath() 					{ return rootServicePath; }
 	public void setRootServicePath(String s)			{ rootServicePath = s; }
@@ -112,9 +118,6 @@ public class AppConfigurator {
 	
 	public Integer getTimeoutSeconds() 					{ return timeoutSeconds; }
 	public void setTimeoutSeconds(Integer i)			{ timeoutSeconds = i; }	
-	
-	public String getStreamingOutputClassName() 		{ return streamingOutputClassName; }
-	public void setStreamingOutputClassName(String s)	{ streamingOutputClassName = s; }
 	
 	public String getSingletonClassName() 				{ return singletonClassName; }
 	public void setSingletonClassName(String s)			{ singletonClassName = s; }	
@@ -174,13 +177,25 @@ public class AppConfigurator {
 			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(defaultConfigFileName));
 		}
 		
-		String configStr;		
-		configStr = configurationProps.getProperty("handlerProgram");
-		if (isOkString(configStr))
-			this.handlerProgram = configStr;
-		else 
+		// Only allow one of handler program or streaming output class
+		String handlerStr = configurationProps.getProperty("handlerProgram");
+		String soStr = configurationProps.getProperty("streamingOutputClassName");
+
+		if (!isOkString(handlerStr) && !isOkString(soStr))
 			throw new Exception("Missing handler program configuration");
+
+		if (isOkString(handlerStr) && isOkString(soStr))
+			throw new Exception("Handler program _AND_ StreamingOutput class specified.  Only one allowed.");
+
+		if (isOkString(handlerStr))
+			this.handlerProgram = handlerStr;
 		
+		if (isOkString(soStr)) 
+			this.streamingOutputClassName = soStr;
+		//------------------------------------------------------
+		
+		String configStr;	
+
 		configStr = configurationProps.getProperty("rootServicePath");
 		if (isOkString(configStr))
 			this.rootServicePath = configStr;
@@ -239,10 +254,6 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("jndiUrl");
 		if (isOkString(configStr)) 
 			this.jndiUrl = configStr;
-		
-		configStr = configurationProps.getProperty("streamingOutputClassName");
-		if (isOkString(configStr)) 
-			this.streamingOutputClassName = configStr;
 		
 		configStr = configurationProps.getProperty("singletonClassName");
 		if (isOkString(configStr)) 
