@@ -69,6 +69,7 @@ public class StreamEater implements Runnable  {
 			output = sb.toString();
 
 		} catch(IOException e ) {
+			logger.info("Got IO exception in stream eater");
 			ioException = e;
 		} finally {
 			synchronized (this) {

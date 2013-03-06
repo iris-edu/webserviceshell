@@ -151,7 +151,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	    }		
 	}
 	
-	public static Status processExitVal(Integer exitVal, RequestInfo ri) {
+	public  Status processExitVal(Integer exitVal, RequestInfo ri) {
 		
 		// An exit value of '0' here indicates an 'OK' return, but obv.
 		// with no data.  Therefore, interpret it as 204.		
@@ -168,22 +168,29 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			return Status.REQUEST_ENTITY_TOO_LARGE;
 		}
 		
+		logger.info("MESS: " + this.getErrorString());
+
+		
 		// These below are for timeouts and other weird errors that shouldn't 
 		// really generate errors through this mechanism.
 		if (exitVal == 9 + 128) {
 			// SIGKILL
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Enforced timeout or unexpected termination of handler");
+					"Enforced timeout or unexpected termination of handler" +
+							this.getErrorString());
 		}
 		else if (exitVal == 15 + 128) {
 			// SIGTERM
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Timeout or unexpected termination of handler");
+					"Enforced timeout or unexpected termination of handler" +
+							this.getErrorString());
 		}
 		else {
 			logMessage(ri, Status.INTERNAL_SERVER_ERROR, 
-					"Termination of handler with unknown exit code: " + exitVal);
+					"Termination of handler with unknown exit code: " + exitVal +
+					this.getErrorString());
 		}
+					
 		return Status.OK;		// Won't get here.
 	}
 	
@@ -204,6 +211,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		// Hopefully this is the largest logical record size we'll see.  Used in terminating
 		// SeedRecord processing when the circular buffer holds less than this many bytes.
 		final int maxSeedRecordSize = 4096;
+		final int minSeedRecordSize = 512;
 		
 		// Must be bigger (and a multiple) of maxSeedRecordSize 
 		byte [] buffer = new byte[32768];	 
@@ -245,7 +253,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					}
 					
 					// Parse and log the data header for logging.
-					this.processRecord(sr, cbb, logHash);			
+					this.processRecord(sr, logHash);			
 				}	
 				
 				// Reset the timeout timer
@@ -256,15 +264,27 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			// buffer whose length will be less than maxSeedRecordSize.
 			// SeedRecord.read will return happily w/ a broken SEED record and will reset the stream.
 			// So it's important to only try to decode the remaining data if it could be a full SEED
-			// record.
-			while (cbb.getAvailable() >= maxSeedRecordSize) {
+			// record.  
+			
+			// That said, a corrupt or truncated piece of SEED will hang the SeisFile decoder and a
+			// time out will occur.
+			long lastAvailable = cbb.getAvailable();
+			while (cbb.getAvailable() >= minSeedRecordSize) {
 				try {
 					sr = null;
 					sr = SeedRecord.read(dis);
-					this.processRecord(sr, cbb, logHash);					
+					this.processRecord(sr, logHash);					
 				} catch (Exception e) {
 					logger.error("Caught exception in seed parse: " + e.getMessage());
 					break;
+				} finally {
+					if (cbb.getAvailable() == lastAvailable) {
+						// Nothing got parsed.  Get the hell out of here.
+						logger.info("Bad seed found during logging");
+						break;
+					} else {
+						lastAvailable = cbb.getAvailable();
+					}
 				}
 			}
 		}
@@ -303,6 +323,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// Do nothing. Failure to parse. 
 			}
 			
+			logger.info("Total bytes: " + totalBytesTransmitted);
 			try {
 				logUsageMessage(ri, "_summary",
 						totalBytesTransmitted, processingTime,
@@ -311,7 +332,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				logger.error("Error logging SEED response");
 			}
 	
-//			long total = 0;
+			long total = 0;
 			for (String key: logHash.keySet()) {
 					
 				logUsageMessage(ri, null,
@@ -321,11 +342,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 						LogKey.getChannel(key), LogKey.getQuality(key), 
 						startDate, endDate, quality);
 							
-//				total += logHash.get(key);		
-//				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
+				total += logHash.get(key);		
+				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
 			
 			}
-//			logger.info("Hash total: :" + total);
+			logger.info("Hash total: :" + total);
     		rt.cancel();
     		
     		try {
@@ -338,7 +359,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}	
 	}
 	
-	private void processRecord(SeedRecord sr, CircularByteBuffer cbb, HashMap<String, Long> logHash) {
+	private void processRecord(SeedRecord sr, HashMap<String, Long> logHash) {
 		if (sr  instanceof DataRecord) {
 			
 			DataRecord dr = (DataRecord) sr;
@@ -441,7 +462,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     	// Wait for sigkillDelay msec, then terminate with SIGKILL.
     	try {
     		process.destroy();
-    		logger.info("term");
     		Thread.sleep(sigkillDelay);
     	} catch (InterruptedException ie) {
     		logger.error("TimeoutTask thread got interrrupted.");
