@@ -33,7 +33,7 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 			errorType, httpStatus.getStatusCode(), extraText);
 	}
 	
-	public static void logMessage(RequestInfo ri, Status httpStatus, String message) {
+	public static void logAndThrowException(RequestInfo ri, Status httpStatus, String message) {
 		ServiceShellException.logAndThrowException(ri, httpStatus, message);
 	}	
 	

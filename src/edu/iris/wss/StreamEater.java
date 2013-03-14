@@ -66,12 +66,11 @@ public class StreamEater implements Runnable  {
 				if (sb.length() + nRead <= stringSizeLimit)
 					sb.append(new String(buffer, 0, nRead));
 			}
-			output = sb.toString();
-
 		} catch(IOException e ) {
 			logger.info("Got IO exception in stream eater");
 			ioException = e;
 		} finally {
+			output = sb.toString();
 			synchronized (this) {
 				// Set done and notify any waiting threads.  Typically, somebody calling getOutputString()
 				done = true;
