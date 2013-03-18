@@ -12,7 +12,7 @@ public  class RequestInfo {
 	public javax.servlet.http.HttpServletRequest request;
 	public HttpHeaders requestHeaders;
 	
-	public static enum CallType { NORMAL, CATALOGS, CONTRIBUTORS };
+	public static enum CallType { NORMAL, CATALOGS, CONTRIBUTORS, COUNTS };
 	public CallType callType = CallType.NORMAL;
 	
 	public String postBody = null;

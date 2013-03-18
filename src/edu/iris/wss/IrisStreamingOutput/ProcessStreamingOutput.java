@@ -1,6 +1,5 @@
 package edu.iris.wss.IrisStreamingOutput;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -196,7 +195,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	@Override
 	public void write(OutputStream output) {
-		if (this.ri.appConfig.getOutputType() == OutputType.SEED) {
+		if (this.ri.appConfig.getOutputType() == OutputType.MSEED) {
 			writeSeed(output);
 		} else {
 			writeNonSeed(output);
@@ -248,7 +247,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// IMPORTANT: The SeedRecord.read() call blocks, so we def. do _NOT_ want to allow that to 
 				// happen.  Therefore we _only_ call this when we have at least 1 block of miniSeed.
 				while (cbb.getAvailable() >= maxSeedRecordSize) {
-					logger.info("Availa: " + dis.available());
 					try {				
 						sr = SeedRecord.read(dis);
 					} catch (Exception e) {

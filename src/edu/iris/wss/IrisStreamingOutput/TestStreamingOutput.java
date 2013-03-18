@@ -33,7 +33,7 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 	public Status getResponse()  {
 		
 		startTime = new Date();
-		return Status.OK;
+		return Status.NO_CONTENT;
 //		return Status.BAD_REQUEST;		
 	}
 	

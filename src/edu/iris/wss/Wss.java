@@ -235,7 +235,7 @@ public class Wss {
 	
 	@GET 
 	@Path("catalogs")
-	public Response catalog() throws Exception {
+	public Response catalogs() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
     	ri.callType = CallType.CATALOGS;
 
@@ -245,9 +245,19 @@ public class Wss {
 	
 	@GET 
 	@Path("contributors")
-	public Response contributor() throws Exception {
+	public Response contributors() throws Exception {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
     	ri.callType = CallType.CONTRIBUTORS;
+
+    	ri.statsKeeper.logGet();
+		return processQuery();
+	}	
+	
+	@GET 
+	@Path("counts")
+	public Response counts() throws Exception {
+    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri.callType = CallType.COUNTS;
 
     	ri.statsKeeper.logGet();
 		return processQuery();
@@ -320,7 +330,7 @@ public class Wss {
 			return builder.build();
 	}
 		
-	private Response runCommand() {
+	private Response runCommand()  {
 
     	// Create the 'command' array by first adding on the program to 
     	// be invoked.  Then parse the query parameters.  These are appended
@@ -340,20 +350,38 @@ public class Wss {
 				}
 				break;
 			case CATALOGS:
-				String catalogHandlerString = ri.appConfig.getCatalogsHandlerProgram();
-				if (!isOkString(catalogHandlerString))
+				String catalogsHandlerString = ri.appConfig.getCatalogsHandlerProgram();
+				if (!isOkString(catalogsHandlerString))
 					shellException(Status.NOT_FOUND, null);
 
-				cmd = new ArrayList<String>(Arrays.asList(catalogHandlerString.split(" ")));
+				cmd = new ArrayList<String>(Arrays.asList(catalogsHandlerString.split(" ")));
+				try {
+					ri.appConfig.setOutputType("TEXT");
+				} catch (Exception e) { ; }
 				break;
 				
 			case CONTRIBUTORS:
-				String contributorHandlerString = ri.appConfig.getContributorsHandlerProgram();
+				String contributorsHandlerString = ri.appConfig.getContributorsHandlerProgram();
 
-				if (!isOkString(contributorHandlerString))
+				if (!isOkString(contributorsHandlerString))
 					shellException(Status.NOT_FOUND, null);
 				
-				cmd = new ArrayList<String>(Arrays.asList(contributorHandlerString.split(" ")));
+				cmd = new ArrayList<String>(Arrays.asList(contributorsHandlerString.split(" ")));
+				try {
+					ri.appConfig.setOutputType("TEXT");
+				} catch (Exception e) { ; }
+				break;
+				
+			case COUNTS:
+				String countsHandlerString = ri.appConfig.getCountsHandlerProgram();
+
+				if (!isOkString(countsHandlerString))
+					shellException(Status.NOT_FOUND, null);
+				
+				cmd = new ArrayList<String>(Arrays.asList(countsHandlerString.split(" ")));
+				try {
+					ri.appConfig.setOutputType("TEXT");
+				} catch (Exception e) { ; }
 				break;
 		}
 
@@ -383,7 +411,7 @@ public class Wss {
 		}
 		
 		ResponseBuilder builder = Response.status(status)
-				.type(ri.appConfig.getMimeType()).entity(iso);
+				.type(ri.appConfig.getMimeType()).entity(iso);    
 		builder.header("Content-Disposition", ri.appConfig.getContentDispositionType() + 
 				"; filename=" + ri.appConfig.getOutputFilename());	
 		return builder.build();
