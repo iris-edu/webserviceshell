@@ -380,7 +380,7 @@ public class Wss {
 				
 				cmd = new ArrayList<String>(Arrays.asList(countsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("TEXT");
+					ri.appConfig.setOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 		}
