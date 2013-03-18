@@ -356,7 +356,7 @@ public class Wss {
 
 				cmd = new ArrayList<String>(Arrays.asList(catalogsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("TEXT");
+					ri.appConfig.setOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 				
@@ -368,7 +368,7 @@ public class Wss {
 				
 				cmd = new ArrayList<String>(Arrays.asList(contributorsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("TEXT");
+					ri.appConfig.setOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 				
