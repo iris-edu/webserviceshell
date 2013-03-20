@@ -53,9 +53,9 @@ public class ParameterTranslator {
 			qps.remove(nodataSignature);
 			
 			if (nodataVal.equals("204")) {
-				ri.appConfig.setUse404For204(false);
+				ri.perRequestUse404for204 = false;
 			} else if (nodataVal.equals("404")) {
-				ri.appConfig.setUse404For204(true);
+				ri.perRequestUse404for204 = true;
 			} else {
 				throw new Exception("Invalid value for " + nodataSignature + ": " + nodataVal);
 			}

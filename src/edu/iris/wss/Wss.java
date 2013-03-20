@@ -314,7 +314,7 @@ public class Wss {
 			if (status == null) {
 				shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
 			} else if (status == Status.NO_CONTENT) {
-				if (ri.appConfig.getUse404For204()) {
+				if (ri.perRequestUse404for204) {
 					status = Status.NOT_FOUND;
 					shellException(status, status.toString() + ": " +  iso.getErrorString());
 				} else {
@@ -405,7 +405,12 @@ public class Wss {
 		// Wait for an exit code, the start of data transmission or a timeout.
 		Status status = iso.getResponse();
 		if (status == Status.NO_CONTENT) {
-			ServiceShellException.logAndThrowException(ri, status, null);
+			if (ri.perRequestUse404for204) {
+				status = Status.NOT_FOUND;
+				shellException(status, status.toString() + ": " +  iso.getErrorString());
+			} else {
+				shellException(status, null);
+			}
 		} else if (status != Status.OK) {
 			shellException(status, "Command exit code: " + iso.getExitVal() + "  " + iso.getErrorString());
 		}

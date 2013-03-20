@@ -15,6 +15,8 @@ public  class RequestInfo {
 	public static enum CallType { NORMAL, CATALOGS, CONTRIBUTORS, COUNTS };
 	public CallType callType = CallType.NORMAL;
 	
+	public boolean perRequestUse404for204 = false;
+	
 	public String postBody = null;
 	
 	public AppConfigurator appConfig;
