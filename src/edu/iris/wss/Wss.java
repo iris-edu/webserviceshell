@@ -83,7 +83,6 @@ public class Wss {
 		return ((s != null) && !s.isEmpty());
 	}
 	
-    @Path("/")
     @GET
     public Response ok() {
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
