@@ -69,6 +69,7 @@ public class AppConfigurator {
 
 	private Boolean postEnabled = false;
 	private Boolean use404For204 = false;
+	private Boolean allowCors = false;
 
 	private Integer sigkillDelay = 100; // 100 msec delay from SIGTERM to
 										// SIGKILL
@@ -183,6 +184,14 @@ public class AppConfigurator {
 
 	public void setUse404For204(Boolean b) {
 		use404For204 = b;
+	}
+	
+	public Boolean getAllowCors() {
+		return allowCors;
+	}
+
+	public void setAllowCors(Boolean b) {
+		allowCors = b;
 	}
 
 	public Integer getSigkillDelay() {
@@ -383,6 +392,10 @@ public class AppConfigurator {
 		if (isOkString(configStr))
 			this.use404For204 = Boolean.parseBoolean(configStr);
 
+		configStr = configurationProps.getProperty("allowCors");
+		if (isOkString(configStr))
+			this.allowCors = Boolean.parseBoolean(configStr);
+		
 		configStr = configurationProps.getProperty("sigkillDelay");
 		if (isOkString(configStr))
 			this.sigkillDelay = Integer.parseInt(configStr);

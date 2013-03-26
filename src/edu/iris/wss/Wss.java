@@ -344,7 +344,17 @@ public class Wss {
 			
 			ResponseBuilder builder = Response.status(status)
 					.type(ri.appConfig.getMimeType()).entity(iso);
+			
 			builder.header("Content-Disposition", "inline; filename=" + ri.appConfig.getOutputFilename());	
+			
+			// Insert CORS header elements. 
+			if (ri.appConfig.getAllowCors()) {
+			    builder.header("Access-Control-Allow-Origin", "*");
+			    builder.header("Access-Control-Allow-Credentials", "true");
+			    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+			    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+			}
+		    
 			return builder.build();
 	}
 		
@@ -437,6 +447,15 @@ public class Wss {
 				.type(ri.appConfig.getMimeType()).entity(iso);    
 		builder.header("Content-Disposition", ri.appConfig.getContentDispositionType() + 
 				"; filename=" + ri.appConfig.getOutputFilename());	
+		
+		// Insert CORS header elements. 
+		if (ri.appConfig.getAllowCors()) {
+		    builder.header("Access-Control-Allow-Origin", "*");
+		    builder.header("Access-Control-Allow-Credentials", "true");
+		    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+		    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+		}
+	    
 		return builder.build();
 	}
 	
