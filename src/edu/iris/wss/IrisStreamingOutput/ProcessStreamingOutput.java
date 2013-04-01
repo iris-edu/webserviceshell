@@ -230,6 +230,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		// SeedRecord processing when the circular buffer holds less than this many bytes.
 		final int maxSeedRecordSize = 4096;
 		final int minSeedRecordSize = 256;
+		final int defaultSeedRecordSize = 4096;
 		
 		// Must be bigger (and a multiple) of maxSeedRecordSize 
 		byte [] buffer = new byte[32768];	 
@@ -243,6 +244,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		DataInputStream dis = new DataInputStream(cbb.getInputStream());
 		
 		SeedRecord sr = null;
+		
+		boolean badSeedParsingLogged = false;
 
 		try {
 			while (true) {
@@ -254,7 +257,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				totalBytesTransmitted += bytesRead;
 				output.write(buffer, 0, bytesRead);
 				output.flush();
-				
+								
 				// All the below is only for logging.
 				
 				// Write the newly read data into the circular buffer.
@@ -267,15 +270,23 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// happen.  Therefore we _only_ call this when we have at least 1 block of miniSeed.
 				while (cbb.getAvailable() >= maxSeedRecordSize) {
 					try {				
-						sr = SeedRecord.read(dis);
+						sr = SeedRecord.read(dis, defaultSeedRecordSize);
 					} catch (Exception e) {
-						logger.error("Caught exception in seed parse: " + e.getMessage());
+						if (!badSeedParsingLogged) {
+							badSeedParsingLogged = true;
+							logger.error("SEED format exception in seed parse: " + e.getMessage());
+						}
+						
+						// The parser barfed.  Skip ahead through the remainder of this buffer.
+						
+						byte[] trash = new byte[cbb.getAvailable() - maxSeedRecordSize];
+						dis.read(trash, 0, cbb.getAvailable() - maxSeedRecordSize);
 						break;
-					}
-					
+					} 			
 					// Parse and log the data header for logging.
 					this.processRecord(sr, logHash);			
 				}	
+				
 				
 				// Reset the timeout timer
 				rt.reschedule();
