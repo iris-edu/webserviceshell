@@ -171,6 +171,42 @@ public class Wss {
 	public Response getWadl() {
 		
     	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	
+    	// First check if wadlPath configuration is set.  If so, then stream from that URL.
+    	
+    	String wadlPath = ri.appConfig.getWadlPath();
+    	if ((wadlPath != null) && (!wadlPath.isEmpty())) {
+        	InputStream is = null;
+          	URL url = null;
+        	try {    		
+        		url = new URL(wadlPath);    		
+        		is = url.openStream();
+        	} catch (Exception e) {
+        		String err = "Can't find root documentation page: " + wadlPath;
+            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
+        	}
+        	
+        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
+
+        	StreamingOutput so = new StreamingOutput() {
+        		@Override
+    			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+        			BufferedWriter writer = new BufferedWriter (new OutputStreamWriter(outputStream));
+        			String inputLine = null ;
+        			while ((inputLine = br.readLine()) != null) {
+        				writer.write(inputLine);
+        				writer.newLine();
+        			}
+        			writer.flush();
+        			br.close();
+        			writer.close();
+    			}
+        	};
+
+        	ResponseBuilder builder = Response.status(Status.OK).entity(so).type("application/xml");
+    		return builder.build();
+    	}
+    	logger.info("boo");
 
 		// Try to read a user WADL file from the location specified by the
 		// wssConfigDir property concatenated with the web application name (last part
@@ -185,7 +221,7 @@ public class Wss {
 					wssConfigDir += "/";
 				
 				wadlFileName = wssConfigDir + configBase + "-application.wadl";		
-				
+			
 				File wadl = new File(wadlFileName);
 				if (wadl.exists()) {
 					logger.info("Attempting to load wadl file from: " + wadlFileName);
@@ -195,8 +231,9 @@ public class Wss {
 				}
 			}
 		} catch (Exception e) {
+			;
+		} finally  {
 			logger.info("Failure loading wadl file from: " + wadlFileName);
-			
 		}
 
 		return Response.status(Status.NOT_FOUND).build();

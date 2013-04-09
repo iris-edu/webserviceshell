@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 
-	public static final String wssVersion = "1.0.1";
+	public static final String wssVersion = "1.0.2";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
@@ -57,6 +57,7 @@ public class AppConfigurator {
 
 	private String rootServicePath;
 	private String rootServiceDoc;
+	private String wadlPath;
 
 	private String workingDirectory = "/";
 	private String handlerProgram;
@@ -210,6 +211,14 @@ public class AppConfigurator {
 
 	public void setRootServiceDoc(String s) {
 		rootServiceDoc = s;
+	}
+	
+	public String getWadlPath() {
+		return wadlPath;
+	}
+
+	public void setWadlPath(String s) {
+		wadlPath = s;
 	}
 
 	public Integer getTimeoutSeconds() {
@@ -372,6 +381,10 @@ public class AppConfigurator {
 		if (isOkString(configStr))
 			this.rootServiceDoc = configStr;
 
+		configStr = configurationProps.getProperty("wadlPath");
+		if (isOkString(configStr))
+			this.wadlPath = configStr;
+		
 		configStr = configurationProps.getProperty("outputType");
 		if (isOkString(configStr))
 			this.setOutputType(configStr);
@@ -533,6 +546,7 @@ public class AppConfigurator {
 
 		sb.append(strAppend("Root Service Path") + rootServicePath + "\n");
 		sb.append(strAppend("Root Service Doc") + rootServiceDoc + "\n");
+		sb.append(strAppend("WADL Path") + wadlPath + "\n");
 
 		sb.append(strAppend("Application Name") + appName + "\n");
 		sb.append(strAppend("Version") + version + "\n");
@@ -600,6 +614,8 @@ public class AppConfigurator {
 				+ rootServicePath + "</TD></TR>");
 		sb.append("<TR><TD>" + "Root Service Doc" + "</TD><TD>"
 				+ rootServiceDoc + "</TD></TR>");
+		sb.append("<TR><TD>" + "WADL Path" + "</TD><TD>"
+				+ wadlPath + "</TD></TR>");
 
 		sb.append("<TR><TD>" + "Application Name" + "</TD><TD>" + appName
 				+ "</TD></TR>");
