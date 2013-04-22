@@ -333,24 +333,34 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
 
 			Date startDate = null, endDate = null;
 			String quality = null;
 				
 			quality =   ri.paramConfig.getValue("quality");
+			
+			// Parse the dates. Use the more lax format first.
 			try {
 				String s = null;
 				s = ri.paramConfig.getValue("starttime");
-				if (s != null) startDate = sdf.parse(s);
+				if (s != null) {
+					startDate = sdf2.parse(s);
+					startDate = sdf1.parse(s);
+				}
 			} catch (Exception e) {
 				// Do nothing. Failure to parse. 
 			}
 			
+		
 			try {
 				String e = null;
 				e = ri.paramConfig.getValue("endtime");
-				if (e != null) endDate =   sdf.parse(e);
+				if (e != null) {
+					endDate = sdf2.parse(e);
+					endDate = sdf1.parse(e);
+				}
 			} catch (Exception e) {
 				// Do nothing. Failure to parse. 
 			}

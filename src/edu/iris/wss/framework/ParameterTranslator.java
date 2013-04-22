@@ -177,7 +177,7 @@ public class ParameterTranslator {
 		"^\\d{4}-[01]\\d-[0-3]\\d(Z)?$"
 	};
 	
-	private static Boolean isValidFdsnDate(String dateString) {
+	public static Boolean isValidFdsnDate(String dateString) {
 		for (String regexp: regexpStrings) {
 			if (dateString.trim().matches(regexp))
 				return true;
