@@ -32,13 +32,14 @@ import edu.iris.wss.utils.LoggerUtils;
 
 public abstract class IrisStreamingOutput implements StreamingOutput {
 
+	// These are helper routines as part of the basic interface IrisStreamingOutput
 	public static void logUsageMessage(RequestInfo ri, String appSuffix,
 			Long dataSize, Long processTime,
 			String errorType, Status httpStatus, String extraText,
 			String network, String station, String location, String channel, String quality,
 			Date startTime, Date endTime, String duration) {
 	
-		LoggerUtils.logMessage(ri, appSuffix, dataSize, processTime,
+		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
 			errorType, httpStatus.getStatusCode(), extraText,
 			network, station, location, channel, quality,
 			startTime, endTime, duration);
@@ -48,7 +49,7 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 			Long dataSize, Long processTime,
 			String errorType, Status httpStatus, String extraText) {
 	
-		LoggerUtils.logMessage(ri, appSuffix, dataSize, processTime,
+		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
 			errorType, httpStatus.getStatusCode(), extraText);
 	}
 	

@@ -22,6 +22,7 @@ package edu.iris.wss.utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.iris.StatsWriter.WsStatsWriter;
@@ -29,28 +30,75 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.AppConfigurator.LoggingType;
 
 public class LoggerUtils {
+
+
 	public static final Logger logger = Logger.getLogger(LoggerUtils.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 	
-	public static void logMessage(RequestInfo ri, String appSuffix,
+	public static void logWssUsageError(RequestInfo ri, String appSuffix,
 			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText) {
-		logMessage(ri, appSuffix, dataSize, processTime, errorType, httpStatusCode, extraText,
+
+		logWssUsageMessage(Level.ERROR, ri, 
+				appSuffix, dataSize, processTime,
+				errorType, httpStatusCode, extraText,
+				null, null, null, null, null,
+				null, null, null);
+	}
+	
+	// Usage helper functions for 'INFO' level messages.  I.e. normal ones.	
+	
+	public static void logWssUsageMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
+			String errorType, Integer httpStatusCode, String extraText) {
+		logWssUsageMessage(ri, appSuffix, dataSize, processTime, errorType, httpStatusCode, extraText,
 				null, null, null, null, null, null, null, null);
 	}
 	
-	public static void logMessage(RequestInfo ri, String appSuffix,
+	public static void logWssUsageMessage(RequestInfo ri, 
+			String appSuffix, Long dataSize, Long processTime,
+			String errorType, Integer httpStatusCode, String extraText,
+			String network, String station, String location, String channel, String quality,
+			Date startTime, Date endTime, String duration) {
+		logWssUsageMessage(Level.INFO, ri, 
+				appSuffix, dataSize, processTime,
+				errorType, httpStatusCode, extraText,
+				network, station, location, channel, quality,
+				startTime, endTime, duration);
+	}
+	
+		
+	public static void logWssUsageMessage(Level level, RequestInfo ri, String appSuffix,
 			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText,
 			String network, String station, String location, String channel, String quality,
 			Date startTime, Date endTime, String duration) {
 		
 		if (ri.appConfig.getLoggingType() == LoggingType.LOG4J) {
-			usageLogger.info(makeUsageLogString(ri, appSuffix, 
-					dataSize, processTime,
-					errorType, httpStatusCode, extraText,
-					network, station, location, channel, quality,
-					startTime, endTime, duration));
+			switch (level.toInt()) {
+			case Level.ERROR_INT:
+				usageLogger.error(makeUsageLogString(ri, appSuffix, 
+						dataSize, processTime,
+						errorType, httpStatusCode, extraText,
+						network, station, location, channel, quality,
+						startTime, endTime, duration));
+				break;
+			case Level.INFO_INT:
+				usageLogger.info(makeUsageLogString(ri, appSuffix, 
+						dataSize, processTime,
+						errorType, httpStatusCode, extraText,
+						network, station, location, channel, quality,
+						startTime, endTime, duration));
+				break;		
+			default:
+				usageLogger.debug(makeUsageLogString(ri, appSuffix, 
+						dataSize, processTime,
+						errorType, httpStatusCode, extraText,
+						network, station, location, channel, quality,
+						startTime, endTime, duration));
+				break;	
+			}
+
 			return;
 		}
 		
