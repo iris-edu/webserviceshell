@@ -54,6 +54,8 @@ public class ServiceShellException extends WebApplicationException {
     // [end region] 
     
     public static void logAndThrowException(RequestInfo ri, Status status) {
+   		LoggerUtils.logWssUsageError(ri, null, 0L, 0L, null, status.getStatusCode(), null);
+   		
 		throw new ServiceShellException(status);
 	}
     
