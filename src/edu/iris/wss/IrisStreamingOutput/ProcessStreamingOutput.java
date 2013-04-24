@@ -286,8 +286,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					// Parse and log the data header for logging.
 					this.processRecord(sr, logHash);			
 				}	
-				
-				
+								
 				// Reset the timeout timer
 				rt.reschedule();
 			}
@@ -342,26 +341,31 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			quality =   ri.paramConfig.getValue("quality");
 			
 			// Parse the dates. Use the more lax format first.
+			// Sadly we need to look for starttime _OR_ start
+			
+			String s = ri.paramConfig.getValue("starttime");
+			if (s == null) 
+				s = ri.paramConfig.getValue("start");
+
 			try {
-				String s = null;
-				s = ri.paramConfig.getValue("starttime");
 				if (s != null) {
 					startDate = sdf2.parse(s);
 					startDate = sdf1.parse(s);
 				}
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				// Do nothing. Failure to parse. 
 			}
 			
-		
+			String e = ri.paramConfig.getValue("endtime");
+			if (e == null) 
+				e = ri.paramConfig.getValue("end");
+			
 			try {
-				String e = null;
-				e = ri.paramConfig.getValue("endtime");
 				if (e != null) {
 					endDate = sdf2.parse(e);
 					endDate = sdf1.parse(e);
 				}
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				// Do nothing. Failure to parse. 
 			}
 			
@@ -370,7 +374,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				logUsageMessage(ri, "_summary",
 						totalBytesTransmitted, processingTime,
 						null, Status.OK, null);
-			} catch (Exception e) {
+			} catch (Exception ex) {
 				logger.error("Error logging SEED response");
 			}
 	
