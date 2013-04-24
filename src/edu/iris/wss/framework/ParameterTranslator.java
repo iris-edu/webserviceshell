@@ -43,7 +43,6 @@ public class ParameterTranslator {
 	// Since they perform the same function, the last seen entry in the param config
 	// will be used.
 	public final static String outputControlSignature = "output";
-	public final static String formatControlSignature = "format";
 
 	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
@@ -144,17 +143,11 @@ public class ParameterTranslator {
 				}
 				break;
 			}		
-						
-			// Check to see if this was the 'output' parameter. If present AND valid, change the config class's 
-			// output mime type so that the overall service's output format will change.  			
-			if (key.equalsIgnoreCase(outputControlSignature)) {
-				ri.appConfig.setOutputType(cp.value);
-			}
 			
 			// Check to see if this was the 'format' parameter. If present AND valid, change the config class's 
 			// output mime type so that the overall service's output format will change.  			
-			if (key.equalsIgnoreCase(formatControlSignature)) {
-				ri.appConfig.setOutputType(cp.value);
+			if (key.equalsIgnoreCase(outputControlSignature)) {
+				ri.setPerRequestOutputType(cp.value);
 			}
 			
 			// Add key and also value if valid.
@@ -192,8 +185,6 @@ public class ParameterTranslator {
 		
 		return false;
 	}
-	
-
 	
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());

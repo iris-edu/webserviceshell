@@ -23,6 +23,7 @@ package edu.iris.wss.framework;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
+import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 
 public  class RequestInfo {
@@ -35,6 +36,7 @@ public  class RequestInfo {
 	public CallType callType = CallType.NORMAL;
 	
 	public boolean perRequestUse404for204 = false;
+	public AppConfigurator.OutputType perRequestOutputType = null;
 	
 	public String postBody = null;
 	
@@ -63,4 +65,12 @@ public  class RequestInfo {
 
 		}
 	}	
+	
+	public void setPerRequestOutputType(String s) throws Exception {
+		try {
+			this.perRequestOutputType = OutputType.valueOf(s.toUpperCase());
+		} catch (Exception e) {
+			throw new Exception("Unrecognized output format: " + s);
+		}
+	}
 }

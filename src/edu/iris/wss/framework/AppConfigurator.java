@@ -484,9 +484,9 @@ public class AppConfigurator {
 		logger.info(this.toString());
 	}
 
-	public String getMimeType() {
+	public static String getMimeType(OutputType type) {
 
-		switch (this.getOutputType()) {
+		switch (type) {
 		case XML:
 			return "application/xml";
 		case TEXT:
@@ -502,8 +502,8 @@ public class AppConfigurator {
 		}
 	}
 
-	public String getExtension() {
-		switch (this.getOutputType()) {
+	public static String getExtension(OutputType type) {
+		switch (type) {
 		case XML:
 			return ".xml";
 		case TEXT:
@@ -519,8 +519,8 @@ public class AppConfigurator {
 		}
 	}
 
-	public String getContentDispositionType() {
-		switch (this.getOutputType()) {
+	public static String getContentDispositionType(OutputType type) {
+		switch (type) {
 		case MSEED:
 			return "attachment";
 		default:
@@ -528,10 +528,10 @@ public class AppConfigurator {
 		}
 	}
 
-	public String getOutputFilename() {
+	public String getOutputFilename(OutputType type) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return this.appName + "_" + sdf.format(new Date())
-				+ this.getExtension();
+				+ getExtension(type);
 	}
 
 	private static boolean isOkString(String s) {

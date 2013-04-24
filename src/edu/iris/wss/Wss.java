@@ -28,6 +28,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo.CallType;
 
@@ -379,10 +380,18 @@ public class Wss {
 				shellException(status, status.toString() + ": " +  iso.getErrorString());
 			}
 			
-			ResponseBuilder builder = Response.status(status)
-					.type(ri.appConfig.getMimeType()).entity(iso);
+			OutputType outputType = ri.appConfig.getOutputType();
 			
-			builder.header("Content-Disposition", "inline; filename=" + ri.appConfig.getOutputFilename());	
+			if (ri.perRequestOutputType != null) {
+				outputType = ri.perRequestOutputType;
+			}
+			
+			ResponseBuilder builder = Response.status(status)
+					.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
+			builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
+					"; filename=" + ri.appConfig.getOutputFilename(outputType));	
+			
+			
 			
 			// Insert CORS header elements. 
 			if (ri.appConfig.getAllowCors()) {
@@ -451,10 +460,7 @@ public class Wss {
 		}
 
 		
-		logger.info("CMD array: " + cmd);
-//		for (String key: ri.request.getParameterMap().keySet()) {
-//			logger.info("PM; Key: " + key + " Val: " + ri.request.getParameter(key));
-//		}		
+		logger.info("CMD array: " + cmd);		
 				
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    
@@ -480,10 +486,16 @@ public class Wss {
 			shellException(status, "Command exit code: " + iso.getExitVal() + "  " + iso.getErrorString());
 		}
 		
+		OutputType outputType = ri.appConfig.getOutputType();
+		
+		if (ri.perRequestOutputType != null) {
+			outputType = ri.perRequestOutputType;
+		}
+		
 		ResponseBuilder builder = Response.status(status)
-				.type(ri.appConfig.getMimeType()).entity(iso);    
-		builder.header("Content-Disposition", ri.appConfig.getContentDispositionType() + 
-				"; filename=" + ri.appConfig.getOutputFilename());	
+				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
+		builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
+				"; filename=" + ri.appConfig.getOutputFilename(outputType));	
 		
 		// Insert CORS header elements. 
 		if (ri.appConfig.getAllowCors()) {
