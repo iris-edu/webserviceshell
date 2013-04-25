@@ -207,7 +207,6 @@ public class Wss {
         	ResponseBuilder builder = Response.status(Status.OK).entity(so).type("application/xml");
     		return builder.build();
     	}
-    	logger.info("boo");
 
 		// Try to read a user WADL file from the location specified by the
 		// wssConfigDir property concatenated with the web application name (last part
