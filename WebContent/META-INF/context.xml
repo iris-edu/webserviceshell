@@ -22,7 +22,7 @@
 -->
 <!--        <Realm className="org.apache.catalina.realm.UserDatabaseRealm" digest="MD5" resourceName="UserDatabase"/> -->
 
- <!--       <Realm className="edu.iris.wedge.framework.CustomRealm"/> -->  
+       <Realm className="edu.iris.authRealm.NulloRealm"/>  
   
 </Context>
  

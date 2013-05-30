@@ -336,9 +336,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
 
 			Date startDate = null, endDate = null;
-			String quality = null;
-				
-			quality =   ri.paramConfig.getValue("quality");
+			
+			// Not used anymore.  Was used for logging quality from the request rather
+			// than from the returned data.
+//			String quality = null;
+//			quality =   ri.paramConfig.getValue("quality");
 			
 			// Parse the dates. Use the more lax format first.
 			// Sadly we need to look for starttime _OR_ start
@@ -386,7 +388,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 						null, Status.OK, null,
 						LogKey.getNetwork(key), LogKey.getStation(key), LogKey.getLocation(key),
 						LogKey.getChannel(key), LogKey.getQuality(key), 
-						startDate, endDate, quality);
+						startDate, endDate, null);
 							
 //				total += logHash.get(key);		
 //				logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
