@@ -52,13 +52,14 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 	public Status getResponse()  {
 		
 		startTime = new Date();
-		return Status.NO_CONTENT;
+		return Status.OK;
+//		return Status.NO_CONTENT;
 //		return Status.BAD_REQUEST;		
 	}
 	
 	@Override
 	public void write(OutputStream output) {
-		
+
 		long totalBytesTransmitted = 0L;
 		
 		StringBuilder sb = new StringBuilder();

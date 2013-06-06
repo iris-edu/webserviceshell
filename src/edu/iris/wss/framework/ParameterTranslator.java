@@ -42,7 +42,8 @@ public class ParameterTranslator {
 	// Output is being deprecated, but will be allowable for now.
 	// Since they perform the same function, the last seen entry in the param config
 	// will be used.
-	public final static String outputControlSignature = "output";
+	public final static String outputControlSignature1 = "output";
+	public final static String outputControlSignature2 = "format";
 
 	public final static String nodataSignature = "nodata";
 	public final static String usernameSignature = "username";
@@ -146,7 +147,7 @@ public class ParameterTranslator {
 			
 			// Check to see if this was the 'format' parameter. If present AND valid, change the config class's 
 			// output mime type so that the overall service's output format will change.  			
-			if (key.equalsIgnoreCase(outputControlSignature)) {
+			if (key.equalsIgnoreCase(outputControlSignature1) || key.equalsIgnoreCase(outputControlSignature2)) {
 				ri.setPerRequestOutputType(cp.value);
 			}
 			
