@@ -5,10 +5,13 @@
         <dependent-module archiveName="StatsWriter.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/StatsWriter/StatsWriter">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="ExternalSOTest.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ExternalSOTest/ExternalSOTest">
+        <dependent-module archiveName="ExternalSOTest.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/FedRouteStreamingOutput/FedRouteStreamingOutput">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="FedRouteSchema.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/FedRouteSchema/FedRouteSchema">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/webserviceshell/bin"/>
-        <property name="context-root" value="dataselect/1"/>
+        <property name="context-root" value="routedataselect/1"/>
     </wb-module>
 </project-modules>
