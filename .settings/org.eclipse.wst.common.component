@@ -12,6 +12,6 @@
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/webserviceshell/bin"/>
-        <property name="context-root" value="routedataselect/1"/>
+        <property name="context-root" value="routestation/1"/>
     </wb-module>
 </project-modules>
