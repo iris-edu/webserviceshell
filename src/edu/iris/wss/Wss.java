@@ -344,63 +344,61 @@ public class Wss {
 		String className = ri.appConfig.getStreamingOutputClassName();
 		IrisStreamingOutput iso = null;
 		
-			try {
-        		Class<?> soClass;
-        		soClass = Class.forName(className);
-    			iso = (IrisStreamingOutput) soClass.newInstance();
-    		} catch (ClassNotFoundException e) {
-    			String err = "Could not find class with name: " + className;
-    			logger.fatal(err);
-    			throw new RuntimeException(err);
-    		} catch (InstantiationException e) {
-    			String err = "Could not instantiate class: " + className;
-    			logger.fatal(err);
-    			throw new RuntimeException(err);
-    		} catch (IllegalAccessException e) {
-    			String err = "Illegal access while instantiating class: " + className;
-    			logger.fatal(err);
-    			throw new RuntimeException(err);
-    		}
-			
-			iso.setRequestInfo(ri);
-			
-			// Wait for an exit code, the start of data transmission or a timeout.
-			Status status = iso.getResponse();
-			if (status == null) {
-				shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
-			} else if (status == Status.NO_CONTENT) {
-				if (ri.perRequestUse404for204) {
-					status = Status.NOT_FOUND;
-					shellException(status, status.toString() + ": " +  iso.getErrorString());
-				} else {
-					shellException(status, null);
-				}
-			} else if (status != Status.OK) {
+		try {
+    		Class<?> soClass;
+    		soClass = Class.forName(className);
+			iso = (IrisStreamingOutput) soClass.newInstance();
+		} catch (ClassNotFoundException e) {
+			String err = "Could not find class with name: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		} catch (InstantiationException e) {
+			String err = "Could not instantiate class: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		} catch (IllegalAccessException e) {
+			String err = "Illegal access while instantiating class: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		}
+		
+		iso.setRequestInfo(ri);
+		
+		// Wait for an exit code, the start of data transmission or a timeout.
+		Status status = iso.getResponse();
+		if (status == null) {
+			shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
+		} else if (status == Status.NO_CONTENT) {
+			if (ri.perRequestUse404for204) {
+				status = Status.NOT_FOUND;
 				shellException(status, status.toString() + ": " +  iso.getErrorString());
+			} else {
+				shellException(status, null);
 			}
-			
-			OutputType outputType = ri.appConfig.getOutputType();
-			
-			if (ri.perRequestOutputType != null) {
-				outputType = ri.perRequestOutputType;
-			}
-			
-			ResponseBuilder builder = Response.status(status)
-					.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
-			builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
-					"; filename=" + ri.appConfig.getOutputFilename(outputType));	
-			
-			
-			
-			// Insert CORS header elements. 
-			if (ri.appConfig.getAllowCors()) {
-			    builder.header("Access-Control-Allow-Origin", "*");
-			    builder.header("Access-Control-Allow-Credentials", "true");
-			    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-			    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-			}
-		    
-			return builder.build();
+		} else if (status != Status.OK) {
+			shellException(status, status.toString() + ": " +  iso.getErrorString());
+		}
+		
+		OutputType outputType = ri.appConfig.getOutputType();
+		
+		if (ri.perRequestOutputType != null) {
+			outputType = ri.perRequestOutputType;
+		}
+		
+		ResponseBuilder builder = Response.status(status)
+				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
+		builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
+				"; filename=" + ri.appConfig.getOutputFilename(outputType));			
+		
+		// Insert CORS header elements. 
+		if (ri.appConfig.getAllowCors()) {
+		    builder.header("Access-Control-Allow-Origin", "*");
+		    builder.header("Access-Control-Allow-Credentials", "true");
+		    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+		    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+		}
+	    
+		return builder.build();
 	}
 		
 	private Response runCommand()  {
@@ -458,8 +456,7 @@ public class Wss {
 				break;
 		}
 
-		
-		logger.info("CMD array: " + cmd);		
+//		logger.info("CMD array: " + cmd);		
 				
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    

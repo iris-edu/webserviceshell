@@ -19,14 +19,25 @@
 
 package edu.iris.wss.IrisStreamingOutput;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
 
@@ -36,10 +47,12 @@ import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.ServiceShellException;
 import edu.sc.seis.seisFile.mseed.*;
 
-
 public class ProcessStreamingOutput extends IrisStreamingOutput {
+	
+public static final String outputDirSignature = "outputdir";
 	
 	private static final int responseThreadDelayMsec = 50;
 	public static final Logger logger = Logger.getLogger(ProcessStreamingOutput.class);
@@ -53,6 +66,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	
 	private InputStream is = null;
 	private StreamEater se = null;
+	
+	// [region] Constructors and Getters
 	
 	public ProcessStreamingOutput() {}
 	
@@ -72,13 +87,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	}
 	
 	@Override
-	public void setRequestInfo(RequestInfo ri) {
-		this.ri = ri;
-	}
-	
-	public Integer getExitVal() {
-		return exitVal;
-	}
+	public void setRequestInfo(RequestInfo ri)			{ this.ri = ri; }
+	public Integer getExitVal()							{ return exitVal; }
 	
 	public String getErrorString() {
 		if (se == null) return null;
@@ -90,13 +100,35 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 	}
 	
-	public Status getResponse()  {
-		
+	// [end region]
+	
+	// [region] Response Method
+	
+	public Status getResponse()  {		
 		startTime = new Date();
 
 		if (processBuilder == null) {
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR, "No valid process found.");
 		}
+		
+		if (ri.appConfig.getOutputType() == OutputType.ZIP) {
+			// Create a sub-directory for the results based off of the working Directory
+			String wd = ri.appConfig.getWorkingDirectory();
+			try {
+				Path p = Paths.get(wd);
+				Path tempDir = Files.createTempDirectory(p, "wsszip");
+				ri.workingSubdirectory = tempDir.toString();
+				
+				processBuilder.command().add("--" + outputDirSignature);
+				processBuilder.command().add(ri.workingSubdirectory);
+	
+			} catch (IOException ioe) {
+				logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR, 
+						"Could not create temp directory in: " + wd);
+			}			
+		}
+		
+		logger.info("NEW CMD" + processBuilder.command());
 
 		try {
 			process = processBuilder.start();
@@ -187,7 +219,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			return Status.REQUEST_ENTITY_TOO_LARGE;
 		}
 		
-		logger.info("MESS: " + this.getErrorString());
+//		logger.info("MESS: " + this.getErrorString());
 		
 		// These below are for timeouts and other weird errors that shouldn't 
 		// really generate errors through this mechanism.
@@ -212,14 +244,22 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		return Status.OK;		// Won't get here.
 	}
 	
+	// [end region]
+	
 	@Override
 	public void write(OutputStream output) {
 		if (this.ri.appConfig.getOutputType() == OutputType.MSEED) {
 			writeSeed(output);
-		} else {
-			writeNonSeed(output);
+		} else if (this.ri.appConfig.getOutputType() == OutputType.ZIP) {
+			writeZip(output);
+		}
+		else {
+			writeNormal(output);
 		}
 	}
+	
+	
+	// [region] Seed writer
 	
 	public void writeSeed(OutputStream output) {
 
@@ -407,6 +447,30 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}	
 	}
 	
+	private static class LogKey {
+		
+		static String makeKey(String n, String s, String l, String c, Character q) {
+			return n + "_" + s + "_" + l + "_" + c + "_" + 	q;
+		}
+		
+		static String getNetwork(String key) {
+			return key.split("_")[0];
+		}
+		static String getStation(String key) {
+			return key.split("_")[1];
+		}
+		static String getLocation(String key) {
+			return key.split("_")[2];
+		}
+		static String getChannel(String key) {
+			return key.split("_")[3];
+		}
+		static String getQuality(String key) {
+			return key.split("_")[4];
+		}		
+	}
+	
+	
 	private void processRecord(SeedRecord sr, HashMap<String, Long> logHash) {
 		if (sr  instanceof DataRecord) {
 			
@@ -425,7 +489,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 	}
 	
-	public void writeNonSeed(OutputStream output) {
+	// [end region]
+	
+	// [region] Normal writer
+	
+	public void writeNormal(OutputStream output) {
 		
 		long totalBytesTransmitted = 0L;
 		int bytesRead;
@@ -473,28 +541,83 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}	
 	}
 	
-	private static class LogKey {
+	// [end region]
+	
+	// [region] Zip writer
+	
+	public void writeZip(OutputStream output) {
 		
-		static String makeKey(String n, String s, String l, String c, Character q) {
-			return n + "_" + s + "_" + l + "_" + c + "_" + 	q;
-		}
+		long totalBytesTransmitted = 0L;
+		int bytesRead;
+		byte[] buffer = new byte[32768];
+
+		ReschedulableTimer rt = new ReschedulableTimer(ri.appConfig.getTimeoutSeconds() * 1000);
+		rt.schedule(killIt);
+			
+		String line = null;
+		ZipOutputStream zipOutStream = new ZipOutputStream(output);		
+
+		// Read the InputStream is, a line at a time.  Each line should be a filename 	
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(is));
+
+			while((line = in.readLine()) != null) {
+				rt.reschedule();
+				line = line.trim();
+				String fname = getBaseFilename(line);
+				if (fname.trim().equals("")) continue;
+				logger.info("Line:#" + line + "# Filename: " + fname);
+				
+				// Read the file (if it exists and put it on the Zip output stream	
+				File inFile = new File(line);
+				FileInputStream fis = new FileInputStream(inFile);
+				BufferedInputStream bis = new BufferedInputStream(fis);
+
+				zipOutStream.putNextEntry(new ZipEntry(fname));
+				while ((bytesRead = bis.read(buffer)) > 0) {
+					totalBytesTransmitted += bytesRead;
+					zipOutStream.write(buffer, 0, bytesRead);
+				}
+				zipOutStream.flush();
+				zipOutStream.closeEntry();
+				if (bis != null) bis.close();
+				if (fis != null) fis.close();
+				deleteTempDirectory(inFile);
+			}
+		} catch (FileNotFoundException fnfe) {
+			logger.error("File not found: " + line);
+		} catch (IOException ioe) {			
+			logger.error("Got IOE (probable client disconnect): " + ioe.getMessage() + ioe);
+			stopProcess(process, ri.appConfig.getSigkillDelay());
+		} catch (Exception e) {
+			logger.error("Got Generic Exception: " + e.getMessage());		
+			stopProcess(process, ri.appConfig.getSigkillDelay());
+		} finally {
+			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
+    		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
+
+			logUsageMessage(ri, null,
+					totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
+					null, Status.OK, null);
+    		rt.cancel();
+    		
+    		try {
+    			zipOutStream.close();
+    			output.close();
+    			is.close();
+    		} catch (IOException ioe) {
+    			// What can one do?
+    		}
+		}	
 		
-		static String getNetwork(String key) {
-			return key.split("_")[0];
+		// Clean up any working subdirectory and files / subdirectories it may contain.
+		if (ri.workingSubdirectory  != null) {
+			deleteTempDirectory(new File(ri.workingSubdirectory));
 		}
-		static String getStation(String key) {
-			return key.split("_")[1];
-		}
-		static String getLocation(String key) {
-			return key.split("_")[2];
-		}
-		static String getChannel(String key) {
-			return key.split("_")[3];
-		}
-		static String getQuality(String key) {
-			return key.split("_")[4];
-		}		
-	}
+	}		
+	
+	// [end region]
+	
 
 	// [region] Process killing utilities
 	
@@ -558,4 +681,25 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	}
 	
 	// [end region]
+	
+    public static void deleteTempDirectory(File f) {
+    	
+    	try {
+    		if (f.isDirectory()) {
+    			for (File c: f.listFiles()) 
+    				deleteTempDirectory(c);
+    		}
+    		if (!f.delete()) 
+    			logger.error("Couldn't delete: " + f);
+    		
+    	} catch (Exception e) {
+    		logger.error("Exception in temporary directory cleaning: ", e);
+    	}
+    }    
+	
+	public static String getBaseFilename(String filename) {
+		int slashIndex = filename.lastIndexOf('/');
+		String  baseFilename = filename.substring(slashIndex + 1);
+		return baseFilename;
+	}
 }

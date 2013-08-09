@@ -46,6 +46,9 @@ public  class RequestInfo {
 	
 	public SingletonWrapper sw;
 	
+	// Used (set) by ProcessStreamingOutput class on ZIP output
+	public String workingSubdirectory = null;
+	
 	public RequestInfo(SingletonWrapper sw,
 			UriInfo uriInfo, 
 			javax.servlet.http.HttpServletRequest request,

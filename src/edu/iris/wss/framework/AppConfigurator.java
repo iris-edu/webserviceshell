@@ -46,7 +46,7 @@ public class AppConfigurator {
 	private Boolean isValid = false;
 
 	public static enum OutputType {
-		XML, JSON, TEXT, MSEED, TEXTTREE
+		XML, JSON, TEXT, MSEED, TEXTTREE, ZIP
 	};
 
 	public static enum LoggingType {
@@ -497,6 +497,8 @@ public class AppConfigurator {
 			return "application/json";
 		case MSEED:
 			return "application/vnd.fdsn.mseed";
+		case ZIP:
+			return "application/zip";
 		default:
 			return "text/plain";
 		}
@@ -514,6 +516,8 @@ public class AppConfigurator {
 			return ".json";
 		case MSEED:
 			return ".mseed";
+		case ZIP:
+			return ".zip";
 		default:
 			return null;
 		}

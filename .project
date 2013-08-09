@@ -4,8 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>StatsWriter</project>
-		<project>FedRouteStreamingOutput</project>
-		<project>FedRouteSchema</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
