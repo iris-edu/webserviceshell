@@ -231,9 +231,7 @@ public class Wss {
 				}
 			}
 		} catch (Exception e) {
-			;
-		} finally  {
-			logger.info("Failure loading wadl file from: " + wadlFileName);
+			logger.error("Failure loading wadl file from: " + wadlFileName);
 		}
 
 		return Response.status(Status.NOT_FOUND).build();
@@ -456,8 +454,16 @@ public class Wss {
 				break;
 		}
 
-//		logger.info("CMD array: " + cmd);		
-				
+		// Now run any Argument Preprocessor class if set.
+		if (ri.appConfig.getArgPreProcessorClassName() != null) {
+			try {
+				preProcess(ri, cmd);
+			} catch (Exception e) {
+				shellException(Status.BAD_REQUEST, e.getMessage());
+			}
+		}
+		//	logger.info("CMD array: " + cmd);	
+
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    
 	   
@@ -502,6 +508,32 @@ public class Wss {
 		}
 	    
 		return builder.build();
+	}
+	
+	private void preProcess(RequestInfo ri, List<String> cmd) throws Exception {
+		
+		String className = ri.appConfig.getArgPreProcessorClassName();
+		ArgPreProcessor argpp = null;
+		
+		try {
+    		Class<?> argppClass;
+    		argppClass = Class.forName(className);
+    		argpp = (ArgPreProcessor) argppClass.newInstance();
+		} catch (ClassNotFoundException e) {
+			String err = "Could not find class with name: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		} catch (InstantiationException e) {
+			String err = "Could not instantiate class: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		} catch (IllegalAccessException e) {
+			String err = "Illegal access while instantiating class: " + className;
+			logger.fatal(err);
+			throw new RuntimeException(err);
+		}
+		
+		argpp.process(ri,  cmd);
 	}
 	
 	private void shellException(Status badRequest, String s) {

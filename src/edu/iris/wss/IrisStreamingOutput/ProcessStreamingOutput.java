@@ -47,7 +47,6 @@ import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.ServiceShellException;
 import edu.sc.seis.seisFile.mseed.*;
 
 public class ProcessStreamingOutput extends IrisStreamingOutput {
@@ -543,7 +542,7 @@ public static final String outputDirSignature = "outputdir";
 	
 	// [end region]
 	
-	// [region] Zip writer
+	// [region] Zip writer and temp directory utils.
 	
 	public void writeZip(OutputStream output) {
 		
@@ -616,9 +615,28 @@ public static final String outputDirSignature = "outputdir";
 		}
 	}		
 	
+	public static void deleteTempDirectory(File f) {
+	    	
+	   	try {
+	   		if (f.isDirectory()) {
+	   			for (File c: f.listFiles()) 
+	   				deleteTempDirectory(c);
+	   		}
+	   		if (!f.delete()) 
+	  			logger.error("Couldn't delete: " + f);    		
+    	} catch (Exception e) {
+    		logger.error("Exception in temporary directory cleaning: ", e);
+    	}
+	}    
+	
+	public static String getBaseFilename(String filename) {
+		int slashIndex = filename.lastIndexOf('/');
+		String  baseFilename = filename.substring(slashIndex + 1);
+		return baseFilename;
+	}
+	
 	// [end region]
 	
-
 	// [region] Process killing utilities
 	
 	private Runnable killIt = new Runnable() {
@@ -681,25 +699,5 @@ public static final String outputDirSignature = "outputdir";
 	}
 	
 	// [end region]
-	
-    public static void deleteTempDirectory(File f) {
-    	
-    	try {
-    		if (f.isDirectory()) {
-    			for (File c: f.listFiles()) 
-    				deleteTempDirectory(c);
-    		}
-    		if (!f.delete()) 
-    			logger.error("Couldn't delete: " + f);
-    		
-    	} catch (Exception e) {
-    		logger.error("Exception in temporary directory cleaning: ", e);
-    	}
-    }    
-	
-	public static String getBaseFilename(String filename) {
-		int slashIndex = filename.lastIndexOf('/');
-		String  baseFilename = filename.substring(slashIndex + 1);
-		return baseFilename;
-	}
+
 }

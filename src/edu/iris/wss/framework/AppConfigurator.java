@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 
-	public static final String wssVersion = "1.0.6";
+	public static final String wssVersion = "1.1.0";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
@@ -72,8 +72,7 @@ public class AppConfigurator {
 	private Boolean use404For204 = false;
 	private Boolean allowCors = false;
 
-	private Integer sigkillDelay = 100; // 100 msec delay from SIGTERM to
-										// SIGKILL
+	private Integer sigkillDelay = 100; // 100 msec delay from SIGTERM to SIGKILL
 
 	private Integer timeoutSeconds = null;
 
@@ -84,6 +83,8 @@ public class AppConfigurator {
 
 	private String streamingOutputClassName = null;
 	private String singletonClassName = null;
+	
+	private String argPreProcessorClassName = null;
 
 	// Either a handler program or a Streaming Output Class is required.
 
@@ -237,6 +238,15 @@ public class AppConfigurator {
 		singletonClassName = s;
 	}
 
+	
+	public String getArgPreProcessorClassName() {
+		return argPreProcessorClassName;
+	}
+
+	public void setArgPreProcessorClassName(String s) {
+		argPreProcessorClassName = s;
+	}
+	
 	public String getConnectionFactory() {
 		return connectionFactory;
 	}
@@ -329,8 +339,7 @@ public class AppConfigurator {
 					+ configFileName);
 		}
 
-		// If no user config was successfully loaded, load the default config
-		// file
+		// If no user config was successfully loaded, load the default config file
 		// Exception at this point should propagate up.
 		if (!userConfig) {
 			configurationProps.load(this.getClass().getClassLoader()
@@ -428,6 +437,10 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("singletonClassName");
 		if (isOkString(configStr))
 			this.singletonClassName = configStr;
+		
+		configStr = configurationProps.getProperty("argPreProcessorClassName");
+		if (isOkString(configStr))
+			this.argPreProcessorClassName = configStr;
 
 		configStr = configurationProps.getProperty("catalogsHandlerProgram");
 		if (isOkString(configStr))
