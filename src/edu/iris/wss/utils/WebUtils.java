@@ -40,7 +40,8 @@ public class WebUtils {
 	public static String getHostname() {
 		String hostname = "";
 		try {
-			hostname = java.net.InetAddress.getLocalHost().getHostName();		
+			hostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();//.getHostName();	
+
 		} catch (Exception e) {
 			hostname = "unknown";
 		}
