@@ -464,6 +464,7 @@ public class Wss {
 		}
 		//	logger.info("CMD array: " + cmd);	
 
+
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    
 	   
