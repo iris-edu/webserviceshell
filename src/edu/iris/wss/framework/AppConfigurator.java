@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 
-	public static final String wssVersion = "1.1.2";
+	public static final String wssVersion = "1.1.3";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";

@@ -108,10 +108,10 @@ public class LoggerUtils {
 			if (appSuffix != null) fullAppName += appSuffix;
 			
 			try {
-				WsStatsWriter wsw = new WsStatsWriter(
+				WsStatsWriter wsw = WsStatsWriter.getInstance();/*new WsStatsWriter(
 						ri.appConfig.getConnectionFactory(),
 						ri.appConfig.getTopicDestination(),
-						ri.appConfig.getJndiUrl());
+						ri.appConfig.getJndiUrl());*/
 
 				wsw.sendUsageMessage(
 					fullAppName, 
