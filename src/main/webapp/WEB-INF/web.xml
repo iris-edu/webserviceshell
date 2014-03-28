@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="WebApp_ID" version="2.5">
+	<display-name>webserviceshell</display-name>
+	<servlet>
+		<servlet-name>log4j-init</servlet-name>
+		<servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet>
+		<servlet-name>Jersey REST Service</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+
+		<init-param>
+			<param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>com.sun.jersey.config.feature.Redirect</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>edu.iris.wss</param-value>
+		</init-param>
+
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>Jersey REST Service</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>Remote Address Filter</filter-name>
+		<filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
+		<init-param>
+			<param-name>allow</param-name>
+			<param-value>127\.\d+\.\d+\.\d+|::1(%\d+)?|0:0:0:0:0:0:0:1(%\d+)?|192\.168\.167\.1|</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>Remote Address Filter</filter-name>
+		<url-pattern>/status</url-pattern>
+	</filter-mapping>
+
+	<security-role>
+		<role-name>authenticated</role-name>
+	</security-role>
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>MySecureResource</web-resource-name>
+			<url-pattern>/queryauth/*</url-pattern>
+			<http-method>GET</http-method>
+			<http-method>POST</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>authenticated</role-name>
+		</auth-constraint>
+	</security-constraint>
+
+	<login-config>
+		<auth-method>DIGEST</auth-method>
+		<realm-name>${wss.digest.realmname}</realm-name>
+	</login-config>
+
+	<listener>
+		<listener-class>edu.iris.wss.framework.AppContextListener</listener-class>
+	</listener>
+</web-app>
