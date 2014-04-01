@@ -7,7 +7,7 @@
   <name>WebServiceShell</name>
   <groupId>edu.iris</groupId>
   <artifactId>webserviceshell</artifactId>
-  <version>1.1.4</version>
+  <version>1.1.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <url>http://iris.edu</url>
@@ -20,7 +20,7 @@
     <servlet.version>3.0.1</servlet.version>
     <sc.seis.seisFile>1.5.0</sc.seis.seisFile>
     <statswriter.version>3.0-SNAPSHOT</statswriter.version>
-    <wsslof4jinit.version>0.0.1</wsslof4jinit.version>
+    <wsslog4jinit.version>0.0.1</wsslog4jinit.version>
   </properties>
 
   <dependencies>
@@ -53,7 +53,7 @@
        <dependency>
            <groupId>edu.iris.ws</groupId>
            <artifactId>IrisWSSLog4jInit</artifactId>
-           <version>${wsslof4jinit.version}</version>
+           <version>${wsslog4jinit.version}</version>
        </dependency>
 
   </dependencies>

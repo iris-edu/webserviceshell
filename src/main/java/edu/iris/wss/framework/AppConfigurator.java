@@ -21,6 +21,7 @@ package edu.iris.wss.framework;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -335,16 +336,26 @@ public class AppConfigurator {
 				userConfig = true;
 			}
 		} catch (Exception e) {
-			logger.info("Failure loading application config file from: "
-					+ configFileName);
+                    logger.warn("Failed to load application config file: "
+                        + configFileName);
 		}
 
 		// If no user config was successfully loaded, load the default config file
 		// Exception at this point should propagate up.
-		if (!userConfig) {
-			configurationProps.load(this.getClass().getClassLoader()
-					.getResourceAsStream(defaultConfigFileName));
-		}
+                if (!userConfig) {
+                    InputStream inStream = this.getClass().getClassLoader()
+                        .getResourceAsStream(defaultConfigFileName);
+                    if (inStream == null) {
+                        throw new Exception("Default configuration file was not"
+                            + " found for name: " + defaultConfigFileName);
+                    }
+                    logger.info("Attempting to load default application"
+                        + " configuration from here: " + defaultConfigFileName);
+
+                    configurationProps.load(inStream);
+                    logger.info("Default application properties loaded, file: "
+                        + defaultConfigFileName);
+                }
 
 		// Only allow one of handler program or streaming output class
 		String handlerStr = configurationProps.getProperty("handlerProgram");

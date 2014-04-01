@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
+import java.io.InputStream;
 
 public class ParamConfigurator {
 
@@ -98,14 +99,26 @@ public class ParamConfigurator {
 	    		userConfig = true;
 			}
 		} catch (Exception e) {
-			logger.info("Failure loading parameter config file from: " + configFileName);
+                    logger.warn("Failed to load parameter config file from: "
+                        + configFileName);
 		}
 
 		// If no user config was successfully loaded, load the default config file
 		// Exception at this point should prop
-		if (!userConfig) {
-			configurationProps.load(this.getClass().getClassLoader().getResourceAsStream(defaultConfigFileName));
-		}
+                if (!userConfig) {
+                    InputStream inStream = this.getClass().getClassLoader()
+                        .getResourceAsStream(defaultConfigFileName);
+                    if (inStream == null) {
+                        throw new Exception("Default parameter file was not"
+                            + " found for name: " + defaultConfigFileName);
+                    }
+                    logger.info("Attempting to load default parameter"
+                        + " configuration from here: " + defaultConfigFileName);
+                    
+                    configurationProps.load(inStream);
+                    logger.info("Default parameter properties loaded, file: "
+                        + defaultConfigFileName);
+                }
 				
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		List<String> tmpKeys = new ArrayList(configurationProps.keySet());

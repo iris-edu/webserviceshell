@@ -57,7 +57,8 @@ public class SingletonWrapper {
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
     	} catch (Exception e) {
-    		logger.fatal("Invalid application config file: " + e.getMessage());
+    		logger.fatal("Invalid application config file, message: "
+                    + e.getMessage());
     		return;
     	}
     	
