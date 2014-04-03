@@ -14,14 +14,14 @@ public class AppContextListener implements ServletContextListener {
         try {
             WsStatsWriter.getInstance().close();
         } catch (java.lang.NoClassDefFoundError ex) {
-            System.out.println("*********** WsStatsWriter not loaded");
+            System.out.println("*** AppContextListener, WsStatsWriter not loaded");
             logger.info("WsStatsWriter is not loaded when contextDestroyed called,"
-            + " exception: java.lang.NoClassDefFoundError");
+                + " exception: java.lang.NoClassDefFoundError");
         }
     }
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
-        // noop
+        logger.info("Web application initialization process is starting");
     }
 }
