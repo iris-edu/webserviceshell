@@ -56,6 +56,27 @@
            <version>${wsslog4jinit.version}</version>
        </dependency>
 
+       <!-- fscontext probably belongs to dmc_utils as this
+            is where log usage is located,
+            fscontent for jndi related and imq for implementation
+            fscontent for UsageLogQueue  - error activating jms
+               javax.naming.NoInitialContextException: Cannot instantiate class:
+               com.sun.jndi.fscontext.RefFSContextFactory 
+            and  imq for UsageLogQueue  - error activating jms
+               java.lang.ClassCastException: javax.naming.Reference cannot be
+               cast to javax.jms.TopicConnectionFactory
+       -->
+       <dependency>
+           <groupId>com.sun.jndi</groupId>
+           <artifactId>fscontext</artifactId>
+           <version>1.2</version>
+       </dependency>
+       <dependency>
+           <groupId>com.sun.messaging.mq</groupId>
+           <artifactId>imq</artifactId>
+           <version>4.3</version>
+       </dependency>
+       
   </dependencies>
 
 

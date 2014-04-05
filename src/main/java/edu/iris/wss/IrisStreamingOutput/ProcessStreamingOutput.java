@@ -383,10 +383,14 @@ public static final String outputDirSignature = "outputdir";
 			
 			// Parse the dates. Use the more lax format first.
 			// Sadly we need to look for starttime _OR_ start
-			
-			String s = ri.paramConfig.getValue("starttime");
-			if (s == null) 
-				s = ri.paramConfig.getValue("start");
+                        
+                        
+                        
+                        String s = ri.request.getParameter("starttime");//ri.paramConfig.getValue("starttime");
+			if (s == null){
+				s = ri.request.getParameter("start");//ri.paramConfig.getValue("start");
+                        }
+
 
 			try {
 				if (s != null) {
@@ -396,10 +400,11 @@ public static final String outputDirSignature = "outputdir";
 			} catch (Exception ex) {
 				// Do nothing. Failure to parse. 
 			}
+                        
 			
-			String e = ri.paramConfig.getValue("endtime");
+			String e = ri.request.getParameter("endtime");//ri.paramConfig.getValue("endtime");
 			if (e == null) 
-				e = ri.paramConfig.getValue("end");
+				e = ri.request.getParameter("end");//ri.paramConfig.getValue("end");
 			
 			try {
 				if (e != null) {
