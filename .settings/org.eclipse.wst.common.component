@@ -2,7 +2,9 @@
 <project-modules id="moduleCoreId" project-version="1.5.0">
     <wb-module deploy-name="webserviceshell">
         <wb-resource deploy-path="/" source-path="/WebContent"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <dependent-module archiveName="StatsWriter.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/StatsWriter/StatsWriter">
             <dependency-type>uses</dependency-type>
         </dependent-module>

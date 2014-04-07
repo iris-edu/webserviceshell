@@ -1,150 +1,146 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-  <name>WebServiceShell</name>
-  <groupId>edu.iris</groupId>
-  <artifactId>webserviceshell</artifactId>
-  <version>1.1.4-SNAPSHOT</version>
-  <packaging>jar</packaging>
+	<name>WebServiceShell</name>
+	<groupId>edu.iris</groupId>
+	<artifactId>webserviceshell</artifactId>
+	<version>1.1.4-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-  <url>http://iris.edu</url>
+	<url>http://iris.edu</url>
 
-  <properties>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
-    <jersey.version.2x>2.7</jersey.version.2x>
-    <jersey.version.1x>1.18</jersey.version.1x>
-    <servlet.version>3.0.1</servlet.version>
-    <sc.seis.seisFile>1.5.0</sc.seis.seisFile>
-    <statswriter.version>3.0-SNAPSHOT</statswriter.version>
-    <wsslog4jinit.version>0.0.1</wsslog4jinit.version>
-  </properties>
+	<properties>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<jersey.version.2x>2.7</jersey.version.2x>
+		<jersey.version.1x>1.18</jersey.version.1x>
+		<servlet.version>3.0.1</servlet.version>
+		<sc.seis.seisFile>1.5.0</sc.seis.seisFile>
+		<statswriter.version>3.1</statswriter.version>
+		<wsslog4jinit.version>0.0.1</wsslog4jinit.version>
+	</properties>
 
-  <dependencies>
+	<dependencies>
 
-        <dependency>
-          <groupId>javax.servlet</groupId>
-          <artifactId>javax.servlet-api</artifactId>
-          <version>${servlet.version}</version>
-          <scope>provided</scope>
-        </dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>${servlet.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-servlet</artifactId>
-            <version>${jersey.version.1x}</version>
-        </dependency>        
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-servlet</artifactId>
+			<version>${jersey.version.1x}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>edu.sc.seis</groupId>
-            <artifactId>seisfile</artifactId>
-            <version>${sc.seis.seisFile}</version>
-        </dependency>        
+		<dependency>
+			<groupId>edu.sc.seis</groupId>
+			<artifactId>seisfile</artifactId>
+			<version>${sc.seis.seisFile}</version>
+		</dependency>
 
-       <dependency>
-           <groupId>edu.iris.StatsWriter</groupId>
-           <artifactId>StatsWriter</artifactId>
-           <version>${statswriter.version}</version>
-       </dependency>
+		<dependency>
+			<groupId>edu.iris.StatsWriter</groupId>
+			<artifactId>StatsWriter</artifactId>
+			<version>${statswriter.version}</version>
+		</dependency>
 
-       <dependency>
-           <groupId>edu.iris.ws</groupId>
-           <artifactId>IrisWSSLog4jInit</artifactId>
-           <version>${wsslog4jinit.version}</version>
-       </dependency>
+		<dependency>
+			<groupId>edu.iris.ws</groupId>
+			<artifactId>irisWSSLog4junit</artifactId>
+			<version>${wsslog4jinit.version}</version>
+		</dependency>
 
-       <!-- fscontext probably belongs to dmc_utils as this
-            is where log usage is located,
-            fscontent for jndi related and imq for implementation
-            fscontent for UsageLogQueue  - error activating jms
-               javax.naming.NoInitialContextException: Cannot instantiate class:
-               com.sun.jndi.fscontext.RefFSContextFactory 
-            and  imq for UsageLogQueue  - error activating jms
-               java.lang.ClassCastException: javax.naming.Reference cannot be
-               cast to javax.jms.TopicConnectionFactory
-       -->
-       <dependency>
-           <groupId>com.sun.jndi</groupId>
-           <artifactId>fscontext</artifactId>
-           <version>1.2</version>
-       </dependency>
-       <dependency>
-           <groupId>com.sun.messaging.mq</groupId>
-           <artifactId>imq</artifactId>
-           <version>4.3</version>
-       </dependency>
-       
-  </dependencies>
+		<!-- fscontext probably belongs to dmc_utils as this is where log usage 
+			is located, fscontent for jndi related and imq for implementation fscontent 
+			for UsageLogQueue - error activating jms javax.naming.NoInitialContextException: 
+			Cannot instantiate class: com.sun.jndi.fscontext.RefFSContextFactory and 
+			imq for UsageLogQueue - error activating jms java.lang.ClassCastException: 
+			javax.naming.Reference cannot be cast to javax.jms.TopicConnectionFactory -->
+		<dependency>
+			<groupId>com.sun.jndi</groupId>
+			<artifactId>fscontext</artifactId>
+			<version>1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.messaging.mq</groupId>
+			<artifactId>imq</artifactId>
+			<version>4.3</version>
+		</dependency>
+
+	</dependencies>
 
 
-  <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <inherited>true</inherited>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<inherited>true</inherited>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
 
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.1.1</version>
-                <configuration>
-                    <webResources>
-                        <resource>
-                            <filtering>true</filtering>
-                            <directory>src/main/webapp</directory>
-                            <includes>
-                                <include>**/web.xml</include>
-                            </includes>
-                        </resource>
-                    </webResources>
-                </configuration>              
-                <executions>
-                    <execution>
-                        <id>default-war</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>war</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-                  
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.1.1</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<filtering>true</filtering>
+							<directory>src/main/webapp</directory>
+							<includes>
+								<include>**/web.xml</include>
+							</includes>
+						</resource>
+					</webResources>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-war</id>
+						<phase>package</phase>
+						<goals>
+							<goal>war</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
-        </plugins>
-  </build>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
-  <!-- Repositories -->
-  <repositories>
-  </repositories>
+		</plugins>
+	</build>
 
-  <pluginRepositories>
-  </pluginRepositories>
+	<!-- Repositories -->
+	<repositories>
+	</repositories>
 
-  <!-- Distribution Management -->
-  <distributionManagement>
-  </distributionManagement>
-    
+	<pluginRepositories>
+	</pluginRepositories>
+
+	<!-- Distribution Management -->
+	<distributionManagement>
+	</distributionManagement>
+
 </project>
