@@ -10,7 +10,7 @@ public class RecordMetaData {
 	private Long size;
 	private Date start;
 	private Date end;
-	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSSS");
 
 	public Long getSize() {
 		return size;
