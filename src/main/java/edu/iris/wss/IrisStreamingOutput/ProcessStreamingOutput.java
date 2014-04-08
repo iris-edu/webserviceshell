@@ -34,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
@@ -408,9 +407,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
 			long processingTime = (new Date()).getTime() - startTime.getTime();
-			SimpleDateFormat sdf1 = new SimpleDateFormat(
-					"yyyy-MM-dd'T'HH:mm:ss");
-			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
 
 			// logger.info("Total bytes: " + totalBytesTransmitted);
 			try {
@@ -481,9 +477,6 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			DataRecord dr = (DataRecord) sr;
 			DataHeader dh = dr.getHeader();
 
-			String startTime = dh.getStartTime();
-			String endTime = dh.getEndTime();
-
 			String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh
 					.getStationIdentifier().trim(), dh.getLocationIdentifier()
 					.trim(), dh.getChannelIdentifier().trim(), dh
@@ -492,14 +485,14 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			RecordMetaData rmd = logHash.get(key);
 
 			if (rmd != null) {
-				rmd.setStart(dh.getStartTime());
-				rmd.setEnd(dh.getEndTime());
+				rmd.setIfEarlier(dh.getStartTime());
+				rmd.setIfLater(dh.getEndTime());
 				rmd.setSize(rmd.getSize() + (long) dr.getRecordSize());
 			} else {
 				rmd = new RecordMetaData();
 				rmd.setSize((long) dr.getRecordSize());
-				rmd.setStart(dh.getStartTime());
-				rmd.setEnd(dh.getEndTime());
+				rmd.setIfEarlier(dh.getStartTime());
+				rmd.setIfLater(dh.getEndTime());
 				logHash.put(key, rmd);
 			}
 			/*

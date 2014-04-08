@@ -55,6 +55,12 @@
 			<artifactId>irisWSSLog4junit</artifactId>
 			<version>${wsslog4jinit.version}</version>
 		</dependency>
+                
+                <dependency>
+                        <groupId>joda-time</groupId>
+                        <artifactId>joda-time</artifactId>
+                        <version>2.3</version>
+                </dependency>
 
 		<!-- fscontext probably belongs to dmc_utils as this is where log usage 
 			is located, fscontent for jndi related and imq for implementation fscontent 
