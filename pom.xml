@@ -18,7 +18,7 @@
 		<jersey.version.2x>2.7</jersey.version.2x>
 		<jersey.version.1x>1.18</jersey.version.1x>
 		<servlet.version>3.0.1</servlet.version>
-		<sc.seis.seisFile>1.5.0</sc.seis.seisFile>
+		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
 		<statswriter.version>3.1</statswriter.version>
 		<wsslog4jinit.version>0.0.1</wsslog4jinit.version>
 	</properties>
@@ -55,29 +55,7 @@
 			<artifactId>irisWSSLog4junit</artifactId>
 			<version>${wsslog4jinit.version}</version>
 		</dependency>
-                
-                <dependency>
-                        <groupId>joda-time</groupId>
-                        <artifactId>joda-time</artifactId>
-                        <version>2.3</version>
-                </dependency>
 
-		<!-- fscontext probably belongs to dmc_utils as this is where log usage 
-			is located, fscontent for jndi related and imq for implementation fscontent 
-			for UsageLogQueue - error activating jms javax.naming.NoInitialContextException: 
-			Cannot instantiate class: com.sun.jndi.fscontext.RefFSContextFactory and 
-			imq for UsageLogQueue - error activating jms java.lang.ClassCastException: 
-			javax.naming.Reference cannot be cast to javax.jms.TopicConnectionFactory -->
-		<dependency>
-			<groupId>com.sun.jndi</groupId>
-			<artifactId>fscontext</artifactId>
-			<version>1.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.messaging.mq</groupId>
-			<artifactId>imq</artifactId>
-			<version>4.3</version>
-		</dependency>
 
 	</dependencies>
 
