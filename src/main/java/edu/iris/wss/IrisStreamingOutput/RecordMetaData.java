@@ -4,13 +4,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+
 public class RecordMetaData {
 
 	private Long size;
 	private Date start;
 	private Date end;
 
-	SimpleDateFormat fmt = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS");
+	static SimpleDateFormat fmt = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS");
 
 	public Long getSize() {
 		return size;
@@ -29,9 +30,11 @@ public class RecordMetaData {
 	}
 
 	public void setIfEarlier(String start) throws ParseException {
-        System.out.println("*** this.start: " + this.start
-            + "  start: " + start);
-		start = start.replaceAll("(\\.[0-9]{3})[0-9]*( [AP]M)", "$1$2");
+		if (start == null) {
+			return;// for now
+		}
+		start = start.substring(0, 21);
+		//System.out.println("Before: "+start);
 		Date d = fmt.parse(start);
 		if (this.start != null) {
 			if (d.before(this.start)) {
@@ -40,9 +43,7 @@ public class RecordMetaData {
 		} else {
 			this.start = d;
 		}
-        System.out.println("*** this.start: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(this.start)
-            + "  start: " + start
-            + "  d: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(d));
+		//System.out.println("After: "+this.start);
 	}
 
 	public Date getEnd() {
@@ -54,9 +55,11 @@ public class RecordMetaData {
 	}
 
 	public void setIfLater(String end) throws ParseException {
-        System.out.println("*** this.end: " + this.end
-            + "  end: " + end);
-		end = end.replaceAll("(\\.[0-9]{3})[0-9]*( [AP]M)", "$1$2");
+		if (end == null) {
+			return;// for now
+		}
+		end = end.substring(0, 21);
+		//System.out.println("Before: "+end);
 		Date d = fmt.parse(end);
 
 		if (this.end != null) {
@@ -66,8 +69,25 @@ public class RecordMetaData {
 		} else {
 			this.end = d;
 		}
-        System.out.println("*** this.end: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(this.end)
-            + "  end: " + end
-            + "  d: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(d));
+		//System.out.println("After: "+this.end);
+	}
+
+	public static void main(String[] args) {
+		RecordMetaData rmd = new RecordMetaData();
+
+		try {
+            String input = "2011,036,17:24:50.9999";
+			rmd.setIfEarlier(input);
+            System.out.println("*** input: " + input + "  as Date obj, start: "
+                + RecordMetaData.fmt.format(rmd.getStart()));
+            
+			rmd.setIfLater(input);
+            System.out.println("*** input: " + input + "    as Date obj, end: "
+                + RecordMetaData.fmt.format(rmd.getEnd()));
+
+        } catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
