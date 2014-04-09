@@ -4,15 +4,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import edu.sc.seis.seisFile.mseed.Btime;
-
 public class RecordMetaData {
 
 	private Long size;
 	private Date start;
 	private Date end;
 
-	SimpleDateFormat fmt = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSSS");
+	SimpleDateFormat fmt = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS");
 
 	public Long getSize() {
 		return size;
@@ -31,6 +29,8 @@ public class RecordMetaData {
 	}
 
 	public void setIfEarlier(String start) throws ParseException {
+        System.out.println("*** this.start: " + this.start
+            + "  start: " + start);
 		start = start.replaceAll("(\\.[0-9]{3})[0-9]*( [AP]M)", "$1$2");
 		Date d = fmt.parse(start);
 		if (this.start != null) {
@@ -40,6 +40,9 @@ public class RecordMetaData {
 		} else {
 			this.start = d;
 		}
+        System.out.println("*** this.start: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(this.start)
+            + "  start: " + start
+            + "  d: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(d));
 	}
 
 	public Date getEnd() {
@@ -51,6 +54,8 @@ public class RecordMetaData {
 	}
 
 	public void setIfLater(String end) throws ParseException {
+        System.out.println("*** this.end: " + this.end
+            + "  end: " + end);
 		end = end.replaceAll("(\\.[0-9]{3})[0-9]*( [AP]M)", "$1$2");
 		Date d = fmt.parse(end);
 
@@ -61,5 +66,8 @@ public class RecordMetaData {
 		} else {
 			this.end = d;
 		}
+        System.out.println("*** this.end: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(this.end)
+            + "  end: " + end
+            + "  d: " + (new java.text.SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS")).format(d));
 	}
 }

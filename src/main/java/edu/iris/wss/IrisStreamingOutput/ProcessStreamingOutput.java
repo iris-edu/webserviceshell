@@ -486,13 +486,13 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 			if (rmd != null) {
 				rmd.setIfEarlier(dh.getStartTime());
-				rmd.setIfLater(dh.getEndTime());
+				rmd.setIfLater(dh.getLastSampleTime());
 				rmd.setSize(rmd.getSize() + (long) dr.getRecordSize());
 			} else {
 				rmd = new RecordMetaData();
 				rmd.setSize((long) dr.getRecordSize());
 				rmd.setIfEarlier(dh.getStartTime());
-				rmd.setIfLater(dh.getEndTime());
+				rmd.setIfLater(dh.getLastSampleTime());
 				logHash.put(key, rmd);
 			}
 			/*
