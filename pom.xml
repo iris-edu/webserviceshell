@@ -96,6 +96,8 @@
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<jersey.version.2x>2.7</jersey.version.2x>
 		<jersey.version.1x>1.18</jersey.version.1x>
+                <grizzly.servlet.webserver>1.9.59</grizzly.servlet.webserver>
+                <jersey.grizzly>1.18.1</jersey.grizzly>
 		<servlet.version>3.0.1</servlet.version>
 		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
 		<statswriter.version>3.1</statswriter.version>
@@ -116,6 +118,18 @@
 			<artifactId>jersey-servlet</artifactId>
 			<version>${jersey.version.1x}</version>
 		</dependency>
+
+                <dependency>
+                    <groupId>com.sun.grizzly</groupId>
+                    <artifactId>grizzly-servlet-webserver</artifactId>
+                    <version>${grizzly.servlet.webserver}</version>
+                </dependency>
+        
+                <dependency>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-grizzly</artifactId>
+                    <version>${jersey.grizzly}</version>
+                </dependency>
 
 		<dependency>
 			<groupId>edu.sc.seis</groupId>
