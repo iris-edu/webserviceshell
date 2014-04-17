@@ -1,198 +1,195 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<name>WebServiceShell</name>
-	<groupId>edu.iris</groupId>
-	<artifactId>webserviceshell</artifactId>
-	<version>1.1.4</version>
-	<packaging>jar</packaging>
+    <name>WebServiceShell</name>
+    <groupId>edu.iris</groupId>
+    <artifactId>webserviceshell</artifactId>
+    <version>1.1.4</version>
+    <packaging>jar</packaging>
 
-	<url>http://iris.edu</url>
-
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
-				<inherited>true</inherited>
-				<configuration>
-					<source>${maven.compiler.source}</source>
-					<target>${maven.compiler.target}</target>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>project</descriptorRef>
-					</descriptorRefs>
-				</configuration>
-				<executions>
-					<execution>
-						<id>package-src</id>
-						<phase>package</phase>
-						<goals>
-							<goal>attached</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+    <url>http://iris.edu</url>
 
 
-			<plugin>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.4</version>
-				<configuration>
-					<attachClasses>true</attachClasses>
-					<classesClassifier>classes</classesClassifier>
-					<webResources>
-						<resource>
-							<filtering>true</filtering>
-							<directory>src/main/webapp</directory>
-							<includes>
-								<include>**/web.xml</include>
-							</includes>
-						</resource>
-					</webResources>
-				</configuration>
-				<executions>
-					<execution>
-						<id>default-war</id>
-						<phase>package</phase>
-						<goals>
-							<goal>war</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.2.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-	</build>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>project</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>package-src</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attached</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
 
-	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<jersey.version.1x>1.18.1</jersey.version.1x>
-		<servlet.version>3.0.1</servlet.version>
-		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
-		<statswriter.version>3.1</statswriter.version>
-		<wsslog4jinit.version>0.0.1</wsslog4jinit.version>
-	</properties>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                    <classesClassifier>classes</classesClassifier>
+                    <webResources>
+                        <resource>
+                            <filtering>true</filtering>
+                            <directory>src/main/webapp</directory>
+                            <includes>
+                                <include>**/web.xml</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-war</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-	<dependencies>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>${servlet.version}</version>
-			<scope>provided</scope>
-		</dependency>
+        </plugins>
+    </build>
 
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-servlet</artifactId>
-			<version>${jersey.version.1x}</version>
-		</dependency>
 
-		<dependency>
-			<groupId>edu.sc.seis</groupId>
-			<artifactId>seisfile</artifactId>
-			<version>${sc.seis.seisFile}</version>
-		</dependency>
+    <properties>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <jersey.version.1x>1.18.1</jersey.version.1x>
+        <servlet.version>3.0.1</servlet.version>
+        <sc.seis.seisFile>1.6.2</sc.seis.seisFile>
+        <statswriter.version>3.1</statswriter.version>
+        <wsslog4jinit.version>0.0.1</wsslog4jinit.version>
+    </properties>
 
-		<dependency>
-			<groupId>edu.iris.StatsWriter</groupId>
-			<artifactId>StatsWriter</artifactId>
-			<version>${statswriter.version}</version>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${servlet.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>edu.iris.ws</groupId>
-			<artifactId>irisWSSLog4junit</artifactId>
-			<version>${wsslog4jinit.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>${jersey.version.1x}</version>
+        </dependency>
 
+        <dependency>
+            <groupId>edu.sc.seis</groupId>
+            <artifactId>seisfile</artifactId>
+            <version>${sc.seis.seisFile}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.iris.StatsWriter</groupId>
+            <artifactId>StatsWriter</artifactId>
+            <version>${statswriter.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.iris.ws</groupId>
+            <artifactId>irisWSSLog4junit</artifactId>
+            <version>${wsslog4jinit.version}</version>
+        </dependency>
                 
-                <!-- for tests only -->
+        <!-- for tests only -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-grizzly</artifactId>
+            <version>${jersey.version.1x}</version>
+            <scope>test</scope>
+        </dependency>
         
-                <dependency>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-grizzly</artifactId>
-                    <version>${jersey.version.1x}</version>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-grizzly</artifactId>
+            <version>${jersey.version.1x}</version>
+            <classifier>javadoc</classifier>
+            <scope>test</scope>
+        </dependency>
         
-                <dependency>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-grizzly</artifactId>
-                    <version>${jersey.version.1x}</version>
-                    <classifier>javadoc</classifier>
-                    <scope>test</scope>
-                </dependency>
-        
-                <dependency>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-client</artifactId>
-                    <version>${jersey.version.1x}</version>
-                    <classifier>javadoc</classifier>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey.version.1x}</version>
+            <classifier>javadoc</classifier>
+            <scope>test</scope>
+        </dependency>
                 
-                 <dependency>
-                    <groupId>com.sun.jersey.jersey-test-framework</groupId>
-                    <artifactId>jersey-test-framework-grizzly</artifactId>
-                    <version>${jersey.version.1x}</version>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-grizzly</artifactId>
+            <version>${jersey.version.1x}</version>
+            <scope>test</scope>
+        </dependency>
                 
-                 <dependency>
-                    <groupId>com.sun.jersey.jersey-test-framework</groupId>
-                    <artifactId>jersey-test-framework-grizzly</artifactId>
-                    <version>${jersey.version.1x}</version>
-                    <classifier>javadoc</classifier>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-grizzly</artifactId>
+            <version>${jersey.version.1x}</version>
+            <classifier>javadoc</classifier>
+            <scope>test</scope>
+        </dependency>
               
-                <dependency>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                    <version>4.10</version>
-                    <scope>test</scope>
-                </dependency>
-	</dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
-	<!-- Repositories -->
-	<repositories>
-	</repositories>
+    <!-- Repositories -->
+    <repositories>
+    </repositories>
 
-	<pluginRepositories>
-	</pluginRepositories>
+    <pluginRepositories>
+    </pluginRepositories>
 
-	<!-- Distribution Management -->
-	<distributionManagement>
-	</distributionManagement>
+    <!-- Distribution Management -->
+    <distributionManagement>
+    </distributionManagement>
 
 </project>
