@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class ParamConfigurator {
@@ -86,39 +87,54 @@ public class ParamConfigurator {
 		// wssConfigDir property concatenated with the web application name (last part
 		// of context path), e.g. 'station' or 'webserviceshell'
 		String configFileName = null;
-		try {
-			String wssConfigDir = System.getProperty(wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(configBase)) {
-				if (!wssConfigDir.endsWith("/")) 
-					wssConfigDir += "/";
-				
-				configFileName = wssConfigDir + configBase + userParamConfigSuffix;			
-	    		logger.info("Attempting to load parameter configuration file from: " + configFileName);
-	    		
-	    		configurationProps.load(new FileInputStream(configFileName));
-	    		userConfig = true;
-			}
-		} catch (Exception e) {
-                    logger.warn("Failed to load parameter config file from: "
-                        + configFileName);
-		}
+
+        String wssConfigDir = System.getProperty(wssConfigDirSignature);
+ 
+        String warnMsg1 = "***** check system property for " + wssConfigDirSignature
+            + ", value found: " + wssConfigDir;
+        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
+            + configBase;
+
+        if (isOkString(wssConfigDir) && isOkString(configBase)) {
+            if (!wssConfigDir.endsWith("/")) {
+                wssConfigDir += "/";
+            }
+
+            configFileName = wssConfigDir + configBase + userParamConfigSuffix;
+            logger.info("Attempting to load parameter configuration file from: "
+                + configFileName);
+
+            try {
+                configurationProps.load(new FileInputStream(configFileName));
+                userConfig = true;
+            } catch (IOException ex) {
+                logger.warn("***** could not read param cfg file: " + configFileName);
+                logger.warn("***** ignoring exception: " + ex);
+                logger.warn(warnMsg1);
+                logger.warn(warnMsg2);
+            }
+        } else {
+            logger.warn("***** unexpected configuration for service cfg file");
+            logger.warn(warnMsg1);
+            logger.warn(warnMsg2);
+        }
 
 		// If no user config was successfully loaded, load the default config file
-		// Exception at this point should prop
-                if (!userConfig) {
-                    InputStream inStream = this.getClass().getClassLoader()
-                        .getResourceAsStream(defaultConfigFileName);
-                    if (inStream == null) {
-                        throw new Exception("Default parameter file was not"
-                            + " found for name: " + defaultConfigFileName);
-                    }
-                    logger.info("Attempting to load default parameter"
-                        + " configuration from here: " + defaultConfigFileName);
-                    
-                    configurationProps.load(inStream);
-                    logger.info("Default parameter properties loaded, file: "
-                        + defaultConfigFileName);
-                }
+        // Exception at this point should prop
+        if (!userConfig) {
+            InputStream inStream = this.getClass().getClassLoader()
+                .getResourceAsStream(defaultConfigFileName);
+            if (inStream == null) {
+                throw new Exception("Default parameter file was not"
+                    + " found for name: " + defaultConfigFileName);
+            }
+            logger.info("Attempting to load default parameter"
+                + " configuration from here: " + defaultConfigFileName);
+
+            configurationProps.load(inStream);
+            logger.info("Default parameter properties loaded, file: "
+                + defaultConfigFileName);
+        }
 				
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		List<String> tmpKeys = new ArrayList(configurationProps.keySet());

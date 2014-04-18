@@ -21,6 +21,7 @@ package edu.iris.wss.framework;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -321,41 +322,55 @@ public class AppConfigurator {
 		// (last part
 		// of context path), e.g. 'station' or 'webserviceshell'
 		String configFileName = null;
-		try {
-			String wssConfigDir = System.getProperty(wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(configBase)) {
-				if (!wssConfigDir.endsWith("/"))
-					wssConfigDir += "/";
 
-				configFileName = wssConfigDir + configBase
-						+ userParamConfigSuffix;
-				logger.info("Attempting to load application configuration file from: "
-						+ configFileName);
+        String wssConfigDir = System.getProperty(wssConfigDirSignature);
+        
+        String warnMsg1 = "***** check system property for " + wssConfigDirSignature
+            + ", value found: " + wssConfigDir;
+        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
+            + configBase;
+        
+        if (isOkString(wssConfigDir) && isOkString(configBase)) {
+            if (!wssConfigDir.endsWith("/")) {
+                wssConfigDir += "/";
+            }
 
-				configurationProps.load(new FileInputStream(configFileName));
-				userConfig = true;
-			}
-		} catch (Exception e) {
-                    logger.warn("Failed to load application config file: "
-                        + configFileName);
-		}
+            configFileName = wssConfigDir + configBase
+                + userParamConfigSuffix;
+            logger.info("Attempting to load application configuration file from: "
+                + configFileName);
+
+            try {
+                configurationProps.load(new FileInputStream(configFileName));
+                userConfig = true;
+            } catch (IOException ex) {
+                logger.warn("***** could not read service cfg file: " + configFileName);
+                logger.warn("***** ignoring exception: " + ex);
+                logger.warn(warnMsg1);
+                logger.warn(warnMsg2);
+            }
+        } else {
+            logger.warn("***** unexpected configuration for service cfg file");
+            logger.warn(warnMsg1);
+            logger.warn(warnMsg2);
+        }
 
 		// If no user config was successfully loaded, load the default config file
-		// Exception at this point should propagate up.
-                if (!userConfig) {
-                    InputStream inStream = this.getClass().getClassLoader()
-                        .getResourceAsStream(defaultConfigFileName);
-                    if (inStream == null) {
-                        throw new Exception("Default configuration file was not"
-                            + " found for name: " + defaultConfigFileName);
-                    }
-                    logger.info("Attempting to load default application"
-                        + " configuration from here: " + defaultConfigFileName);
+        // Exception at this point should propagate up.
+        if (!userConfig) {
+            InputStream inStream = this.getClass().getClassLoader()
+                .getResourceAsStream(defaultConfigFileName);
+            if (inStream == null) {
+                throw new Exception("Default configuration file was not"
+                    + " found for name: " + defaultConfigFileName);
+            }
+            logger.info("Attempting to load default application"
+                + " configuration from here: " + defaultConfigFileName);
 
-                    configurationProps.load(inStream);
-                    logger.info("Default application properties loaded, file: "
-                        + defaultConfigFileName);
-                }
+            configurationProps.load(inStream);
+            logger.info("Default application properties loaded, file: "
+                + defaultConfigFileName);
+        }
 
 		// Only allow one of handler program or streaming output class
 		String handlerStr = configurationProps.getProperty("handlerProgram");

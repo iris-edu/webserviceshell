@@ -73,6 +73,7 @@ public class SingletonWrapper {
         		Class<?> singletonClass;
     			singletonClass = Class.forName(appConfig.getSingletonClassName());
     			singleton = (IrisSingleton) singletonClass.newInstance();
+                logger.info("singleton: "+ singleton);
     		} catch (ClassNotFoundException e) {
     			String err = "Could not find class with name: " + appConfig.getSingletonClassName();
     			logger.fatal(err);
