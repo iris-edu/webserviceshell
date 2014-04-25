@@ -30,7 +30,7 @@ public class RecordMetaData {
 	private Date start;
 	private Date end;
 
-	static SimpleDateFormat fmt = new SimpleDateFormat("yyyy,DDD,HH:mm:ss.SSS");
+    public static final String SeisFileDataFormat = "yyyy,DDD,HH:mm:ss.SSS";
 
 	public Long getSize() {
 		return size;
@@ -54,6 +54,10 @@ public class RecordMetaData {
 		}
 		start = start.substring(0, 21);
 		//System.out.println("Before: "+start);
+        
+        // creating format everytime because SimpleDataFormat is not
+        // thread safe
+        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
 		Date d = fmt.parse(start);
 		if (this.start != null) {
 			if (d.before(this.start)) {
@@ -79,6 +83,10 @@ public class RecordMetaData {
 		}
 		end = end.substring(0, 21);
 		//System.out.println("Before: "+end);
+
+        // creating format everytime because SimpleDataFormat is not
+        // thread safe
+        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
 		Date d = fmt.parse(end);
 
 		if (this.end != null) {
@@ -97,12 +105,16 @@ public class RecordMetaData {
 		try {
             String input = "2011,036,17:24:50.9999";
 			rmd.setIfEarlier(input);
+
+            // creating format everytime because SimpleDataFormat is not
+        // thread safe
+        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
             System.out.println("*** input: " + input + "  as Date obj, start: "
-                + RecordMetaData.fmt.format(rmd.getStart()));
+                + fmt.format(rmd.getStart()));
             
 			rmd.setIfLater(input);
             System.out.println("*** input: " + input + "    as Date obj, end: "
-                + RecordMetaData.fmt.format(rmd.getEnd()));
+                + fmt.format(rmd.getEnd()));
 
         } catch (ParseException e) {
 			// TODO Auto-generated catch block

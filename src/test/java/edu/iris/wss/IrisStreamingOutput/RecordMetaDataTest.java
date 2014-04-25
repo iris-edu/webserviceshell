@@ -19,6 +19,7 @@
 
 package edu.iris.wss.IrisStreamingOutput;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -151,7 +152,10 @@ public class RecordMetaDataTest {
         
         // expected string base on constraints of substring in method
         String startExpected = "2011,036,17:24:50.999";
-        String startResult = RecordMetaData.fmt.format(instance.getStart());
+        // creating format everytime because SimpleDataFormat is not
+        // thread safe
+        SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
+        String startResult = fmt.format(instance.getStart());
         // using the same formatter, I should get the same string from date
         // less the microsecond part
         assertTrue(startResult.equals(startExpected));
@@ -159,14 +163,14 @@ public class RecordMetaDataTest {
         // an earlier time should result in a change to start
         start = "2011,036,17:24:49.123";
         instance.setIfEarlier(start);
-        startResult = RecordMetaData.fmt.format(instance.getStart());
+        startResult = fmt.format(instance.getStart());
         assertTrue(startResult.equals(start));
         
         // a later time should result in no change
-        String startPrevious = RecordMetaData.fmt.format(instance.getStart());
+        String startPrevious = fmt.format(instance.getStart());
         start = "2011,036,17:24:51.123";
         instance.setIfEarlier(start);
-        startResult = RecordMetaData.fmt.format(instance.getStart());
+        startResult = fmt.format(instance.getStart());
         
         logger.info("*** startPrevious: " + startPrevious);
         logger.info("***   later start: " + start);
@@ -196,20 +200,23 @@ public class RecordMetaDataTest {
         instance.setIfLater(end);
         
         String endExpected = "2011,036,17:24:50.999";
-        String endResult = RecordMetaData.fmt.format(instance.getEnd());
+        // creating format everytime because SimpleDataFormat is not
+        // thread safe
+        SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
+        String endResult = fmt.format(instance.getEnd());
         assertTrue(endResult.equals(endExpected));
         
         // a later time should result in a change to end
         end = "2011,036,17:24:51.123";
         instance.setIfLater(end);
-        endResult = RecordMetaData.fmt.format(instance.getEnd());
+        endResult = fmt.format(instance.getEnd());
         assertTrue(endResult.equals(end));
         
         // an earlier time should result in no change
-        String endPrevious = RecordMetaData.fmt.format(instance.getEnd());
+        String endPrevious = fmt.format(instance.getEnd());
         end = "2011,036,17:24:49.123";
         instance.setIfLater(end);
-        endResult = RecordMetaData.fmt.format(instance.getEnd());
+        endResult = fmt.format(instance.getEnd());
         
         logger.info("*** endPrevious: " + endPrevious);
         logger.info("*** earlier end: " + end);

@@ -47,7 +47,9 @@ import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
-import edu.sc.seis.seisFile.mseed.*;
+import edu.sc.seis.seisFile.mseed.DataHeader;
+import edu.sc.seis.seisFile.mseed.DataRecord;
+import edu.sc.seis.seisFile.mseed.SeedRecord;
 
 public class ProcessStreamingOutput extends IrisStreamingOutput {
 
@@ -142,6 +144,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		try {
 			process = processBuilder.start();
 		} catch (IOException ioe) {
+            logger.error("getResponse processBuilder.start ex: ", ioe);
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"IO Error starting service process: ");
 			// + ioe.getMessage());
@@ -154,8 +157,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		try {
 			se = new StreamEater(process, process.getErrorStream());
 		} catch (Exception e) {
+            logger.error("getResponse StreamEater exception: ", e);
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					e.getMessage());
+					("Ex msg: " + e.getMessage()) );
 		}
 		is = process.getInputStream();
 
@@ -164,6 +168,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				process.getOutputStream().write(ri.postBody.getBytes());
 				process.getOutputStream().close();
 			} catch (IOException ioe) {
+                logger.error("getResponse post to output stream ex: ", ioe);
 				logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 						"Failure writing POST body\n" + ioe.getMessage());
 			}
@@ -180,15 +185,14 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				gotExitValue = true;
 				rt.cancel();
 			} catch (IllegalThreadStateException itse) {
-				// Nothing to catch here. When the process isn't done, this call
-				// always
-				// throws this type of exception.
+				// Nothing to do here. IllegalThreadStateException is thrown
+                // when process is not yet terminated
 			}
 
 			try {
 				if (is.available() > 0) {
-					rt.cancel();
-					return Status.OK;
+                    rt.cancel();
+                    return Status.OK;
 				} else {
 					// No data available yet. Just continue looping, waiting for
 					// data.
@@ -209,8 +213,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			// the system
 			// which would change the response from 'NO_DATA' to 'OK' is read in
 			// the section above.
-			if (gotExitValue)
+			if (gotExitValue) {
 				return processExitVal(exitVal, ri);
+            }
 
 			// Sleep for a little while.
 			try {
@@ -342,8 +347,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					} catch (Exception e) {
 						if (!badSeedParsingLogged) {
 							badSeedParsingLogged = true;
-							logger.error("SEED format exception in seed parse: "
-									+ e.getMessage());
+							logger.error("SEED format exception in SeedRecord.read: ",
+                                e);
 						}
 
 						// The parser barfed. Skip ahead through the remainder
@@ -355,6 +360,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 								- maxSeedRecordSize);
 						break;
 					}
+                    
 					// Parse and log the data header for logging.
 					this.processRecord(sr, logHash);
 				}
@@ -382,8 +388,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					sr = SeedRecord.read(dis);
 					this.processRecord(sr, logHash);
 				} catch (Exception e) {
-					logger.error("Caught exception in seed parse: "
-							+ e.getMessage());
+					logger.error("SeedRecord.read or processRecord ex: ", e);
 					break;
 				} finally {
 					if (cbb.getAvailable() == lastAvailable) {
@@ -396,11 +401,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				}
 			}
 		} catch (IOException ioe) {
-			logger.error("Got IOE (probable client disconnect): "
-					+ ioe.getMessage() + ioe);
+			logger.error("Got IOE (probable client disconnect): ", ioe);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} catch (Exception e) {
-			logger.error("Got Generic Exception: " + e.getMessage());
+			logger.error("Read seed or process record exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} finally {
 			// Logged the total
@@ -413,7 +417,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				logUsageMessage(ri, "_summary", totalBytesTransmitted,
 						processingTime, null, Status.OK, null);
 			} catch (Exception ex) {
-				logger.error("Error logging SEED response");
+				logger.error("Error logging SEED response, ex: " + ex);
 			}
 
 			// long total = 0;
@@ -532,11 +536,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 
 		catch (IOException ioe) {
-			logger.error("Got IOE (probable client disconnect): "
-					+ ioe.getMessage() + ioe);
+			logger.error("Got IOE (probable client disconnect): ", ioe);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} catch (Exception e) {
-			logger.error("Got Generic Exception: " + e.getMessage());
+			logger.error("Read buffer in writeNormal exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
@@ -607,13 +610,13 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				deleteTempDirectory(inFile);
 			}
 		} catch (FileNotFoundException fnfe) {
-			logger.error("File not found: " + line);
+			logger.error("File not found: " + line
+            + "  ex: " + fnfe);
 		} catch (IOException ioe) {
-			logger.error("Got IOE (probable client disconnect): "
-					+ ioe.getMessage() + ioe);
+			logger.error("Got IOE (probable client disconnect): ", ioe);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} catch (Exception e) {
-			logger.error("Got Generic Exception: " + e.getMessage());
+			logger.error("Readline in writeZip exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay());
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
@@ -650,7 +653,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			if (!f.delete())
 				logger.error("Couldn't delete: " + f);
 		} catch (Exception e) {
-			logger.error("Exception in temporary directory cleaning: ", e);
+			logger.info("Exception in temporary directory cleaning: ", e);
 		}
 	}
 
@@ -675,17 +678,18 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		// Send a SIGTERM (friendly-like) via the destroy() method.
 		// Wait for sigkillDelay msec, then terminate with SIGKILL.
 		try {
+            logger.info("Stopping process, and waiting with delay: " + sigkillDelay);
 			process.destroy();
 			Thread.sleep(sigkillDelay);
 		} catch (InterruptedException ie) {
-			logger.error("TimeoutTask thread got interrrupted.");
+			logger.error("stopProcess Thread.sleep interrrupted: " + ie);
 		}
 
 		// See if the process is still running by getting its exit value.
 		// If still running, it'll throw an IllegaThreadStateException
 		try {
 			int exitVal = process.exitValue();
-			logger.info("Process terminated w/ SIGTERM: " + exitVal);
+			logger.info("Process terminated, exit code: " + exitVal);
 		} catch (IllegalThreadStateException itse) {
 			killUnixProcess(process);
 			logger.info("Process recalcitrant.  Killing w/ SIGKILL");
