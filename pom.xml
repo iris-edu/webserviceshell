@@ -7,7 +7,7 @@
     <name>WebServiceShell</name>
     <groupId>edu.iris</groupId>
     <artifactId>webserviceshell</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.5</version>
     <packaging>jar</packaging>
 
     <url>http://iris.edu</url>
