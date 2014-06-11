@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam;
 import edu.iris.wss.utils.WebUtils;
+import java.io.UnsupportedEncodingException;
 
 public class ParameterTranslator {
 
@@ -105,13 +106,30 @@ public class ParameterTranslator {
 				qps.remove(rawKeySignature);
 			}
 		}
+        
+        // look in post data for parameters that affect HTTP operation,
+        // notably format, which is used later to set the response header type
+        if (ri.postBody != null) {
+            String key = outputControlSignature1;
+            if (ri.postBody.contains(key)) {
+                String value = extractValueByKey(ri.postBody, key);
+                qps.add(key, value);
+            }
+
+            key = outputControlSignature2;
+            if (ri.postBody.contains(key)) {
+                String value = extractValueByKey(ri.postBody, key);
+                qps.add(key, value);
+            }
+        }
 
 		// Iterate over all keys, checking for presence in the paramMap
 		// structure. Throw an
 		// exception if the param is not present in paramMap.
 
 		keys.addAll(qps.keySet());
-		for (String key : keys) {
+
+        for (String key : keys) {
 
 			ConfigParam cp = ri.paramConfig.paramMap.get(key);
 			if (cp == null) {
@@ -167,6 +185,7 @@ public class ParameterTranslator {
 			// change.
 			if (key.equalsIgnoreCase(outputControlSignature1)
 					|| key.equalsIgnoreCase(outputControlSignature2)) {
+                
 				ri.setPerRequestOutputType(value);
 			}
 
@@ -183,6 +202,46 @@ public class ParameterTranslator {
 
 		// logger.info("CMD: " + cmd);
 	}
+    
+    // method to extract values, if the given key exist.
+    // assumes postBody is from POST where header is
+    // of type application/x-www-form-urlencoded
+    static String extractValueByKey(String postBody, String key)
+        throws Exception {
+        String value = "valueNotFound";
+        String urlDecoded = null;
+        try {
+            urlDecoded = java.net.URLDecoder.decode(postBody, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            throw new UnsupportedEncodingException("ParameterTranslator.extractValueByKey"
+                + " unable to URLDecode postBody: "
+                + postBody);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("ParameterTranslator.extractValueByKey"
+                + " unable to URLDecode postBody: "
+                + postBody, ex);
+        }
+
+        // assumes properties are separated by carriage return newline, after URLDecoding
+        String[] itemsByLine = urlDecoded.split("\\r\\n");
+        for (String s : itemsByLine) {
+            if (s.contains(key)) {
+                String[] t = s.split("=");
+                if (t.length > 1) {
+                    // take last item as value
+                    value = t[t.length - 1];
+                } else {
+                    throw new Exception("ParameterTranslator.extractValueByKey"
+                        + " parameter list postBody: "
+                        + postBody);
+                }
+
+                break;
+            }
+        }
+
+        return value;
+    }
 
 	private static String[] regexpStrings = {
 			"^\\d{4}-[01]\\d-[0-3]\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+(Z)?$",
