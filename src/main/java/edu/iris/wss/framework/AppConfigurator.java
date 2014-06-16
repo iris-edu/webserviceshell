@@ -47,8 +47,9 @@ public class AppConfigurator {
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
 
+    // add miniseed as alias for mseed to stay consistent with FDSN standards
 	public static enum OutputType {
-		XML, JSON, TEXT, MSEED, TEXTTREE, ZIP
+		XML, JSON, TEXT, MSEED, MINISEED, TEXTTREE, ZIP
 	};
 
 	public static enum LoggingType {
@@ -535,6 +536,7 @@ public class AppConfigurator {
 		case JSON:
 			return "application/json";
 		case MSEED:
+		case MINISEED:
 			return "application/vnd.fdsn.mseed";
 		case ZIP:
 			return "application/zip";
@@ -554,6 +556,7 @@ public class AppConfigurator {
 		case JSON:
 			return ".json";
 		case MSEED:
+		case MINISEED:
 			return ".mseed";
 		case ZIP:
 			return ".zip";
@@ -565,6 +568,7 @@ public class AppConfigurator {
 	public static String getContentDispositionType(OutputType type) {
 		switch (type) {
 		case MSEED:
+		case MINISEED:
 			return "attachment";
 		default:
 			return "inline";

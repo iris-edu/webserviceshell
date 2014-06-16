@@ -272,7 +272,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	@Override
 	public void write(OutputStream output) {
-		if (this.ri.appConfig.getOutputType() == OutputType.MSEED) {
+		if (this.ri.appConfig.getOutputType() == OutputType.MSEED
+            || this.ri.appConfig.getOutputType() == OutputType.MINISEED) {
 			writeSeed(output);
 		} else if (this.ri.appConfig.getOutputType() == OutputType.ZIP) {
 			writeZip(output);
