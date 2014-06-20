@@ -107,8 +107,8 @@ public class ParameterTranslator {
 			}
 		}
         
-        // look in post data for parameters that affect HTTP operation,
-        // notably format, which is used later to set the response header type
+        // look in post data for parameters that affect HTTP response header type,
+        // at this time, 2014-06-20, "format" and "output"
         if (ri.postBody != null) {
             String key = outputControlSignature1;
             if (ri.postBody.contains(key)) {
@@ -203,12 +203,24 @@ public class ParameterTranslator {
 		// logger.info("CMD: " + cmd);
 	}
     
-    // method to extract values, if the given key exist.
-    // assumes postBody is from POST where header is
-    // of type application/x-www-form-urlencoded
+
+    /**
+     * Method to extract the value of the input key in a string where
+     * at least the value of interest is in a key=value form. It is expected
+     * to work on plain text or application/x-www-form-urlencoded text.
+     * Also expects newline separators between key-value pairs and network,
+     * station, etc lines.
+     * 
+     * @param postBody - the text to parse
+     * @param key - the text to search for
+     * @return - the value for the respective key,
+     *           or, returns null if key not found,
+     *           or, reeturns empty string if parameter found but no value
+     * @throws Exception 
+     */
     static String extractValueByKey(String postBody, String key)
-        throws Exception {
-        String value = "valueNotFound";
+        throws UnsupportedEncodingException, IllegalArgumentException {
+        String value = null;
         String urlDecoded = null;
         try {
             urlDecoded = java.net.URLDecoder.decode(postBody, "UTF-8");
@@ -222,19 +234,29 @@ public class ParameterTranslator {
                 + postBody, ex);
         }
 
-        // assumes properties are separated by carriage return newline, after URLDecoding
-        String[] itemsByLine = urlDecoded.split("\\r\\n");
+        // assumes properties may be separated by carriage return newline,
+        //after URLDecoding
+        
+        // ignore carriage return so as to work with either plain text or url decoded
+        urlDecoded = urlDecoded.replaceAll("\\r", "");
+            
+        String[] itemsByLine = urlDecoded.split("\\n");
         for (String s : itemsByLine) {
             if (s.contains(key)) {
                 String[] t = s.split("=");
                 if (t.length > 1) {
                     // take last item as value
                     value = t[t.length - 1];
+                } else if (t.length == 1){
+                    value = "";
+                    logger.warn("In parsing POST body for key: " + key
+                        + "  a value was not found, postBody: " + postBody);
                 } else {
-                    throw new Exception("ParameterTranslator.extractValueByKey"
+                    // maybe never get here, but just in case
+                     throw new IllegalArgumentException("ParameterTranslator.extractValueByKey"
                         + " parameter list postBody: "
                         + postBody);
-                }
+               }
 
                 break;
             }

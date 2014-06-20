@@ -75,27 +75,19 @@ public class LoggerUtils {
 			Date startTime, Date endTime, String duration) {
 		
 		if (ri.appConfig.getLoggingType() == LoggingType.LOG4J) {
+            String msg = makeUsageLogString(ri, appSuffix, dataSize, processTime,
+                errorType, httpStatusCode, extraText, network, station,
+                location, channel, quality, startTime, endTime, duration);
+            
 			switch (level.toInt()) {
 			case Level.ERROR_INT:
-				usageLogger.error(makeUsageLogString(ri, appSuffix, 
-						dataSize, processTime,
-						errorType, httpStatusCode, extraText,
-						network, station, location, channel, quality,
-						startTime, endTime, duration));
+				usageLogger.error(msg);
 				break;
 			case Level.INFO_INT:
-				usageLogger.info(makeUsageLogString(ri, appSuffix, 
-						dataSize, processTime,
-						errorType, httpStatusCode, extraText,
-						network, station, location, channel, quality,
-						startTime, endTime, duration));
+				usageLogger.info(msg);
 				break;		
 			default:
-				usageLogger.debug(makeUsageLogString(ri, appSuffix, 
-						dataSize, processTime,
-						errorType, httpStatusCode, extraText,
-						network, station, location, channel, quality,
-						startTime, endTime, duration));
+				usageLogger.debug(msg);
 				break;	
 			}
 

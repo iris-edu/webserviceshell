@@ -145,8 +145,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			process = processBuilder.start();
 		} catch (IOException ioe) {
             logger.error("getResponse processBuilder.start ex: ", ioe);
+
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"IO Error starting service process: ");
+					"IOException when starting handler");
 			// + ioe.getMessage());
 		}
 
@@ -162,9 +163,36 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					("Ex msg: " + e.getMessage()) );
 		}
 		is = process.getInputStream();
+ 
+        if (ri.postBody != null) {
+            try {
 
-		if (ri.postBody != null) {
-			try {
+// mls 2014-06-19 - code to make post from html forms work...
+// not implementing until time to test for side affects, worked once with curl as well
+// depeding on CONTENT_TYPE appears to be inconsistent from curl, curl does not 
+// set "query=" like htmls forms, and leaves CONTENT_TYPE as application/x-www-form-urlencoded
+// even when the body is not encoded. so curl does not seem to force a match between
+// --data-binary and any particular heading setting.
+// another approach, check USER-AGENT for "curl" and only do this code for not curl agents
+//
+//                System.out.println("****************** CONTENT_TYPE: "
+//                    + ri.requestHeaders.getRequestHeader(HttpHeaders.CONTENT_TYPE)
+//                    + "  USER_AGENT: " + ri.requestHeaders.getRequestHeader(HttpHeaders.USER_AGENT));
+//
+//        System.out.println("***************** postBody: " + ri.postBody);
+//                
+//        String urlDecoded = null;
+//        try {
+//            // code to make queries work from browsers, via html forms
+//            urlDecoded = java.net.URLDecoder.decode(ri.postBody, "UTF-8");
+//            urlDecoded = urlDecoded.replace("query=", "");
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//        System.out.println("***************** postBoUD: " + urlDecoded);
+// 		  process.getOutputStream().write(urlDecoded.getBytes());
+//       
+                        
 				process.getOutputStream().write(ri.postBody.getBytes());
 				process.getOutputStream().close();
 			} catch (IOException ioe) {

@@ -464,7 +464,6 @@ public class Wss {
 		}
 		//	logger.info("CMD array: " + cmd);	
 
-
 	    ProcessBuilder pb = new ProcessBuilder(cmd);
 	    pb.directory(new File(ri.appConfig.getWorkingDirectory()));    
 	   
@@ -486,7 +485,8 @@ public class Wss {
 				shellException(status, null);
 			}
 		} else if (status != Status.OK) {
-			shellException(status, "Command exit code: " + iso.getExitVal() + "  " + iso.getErrorString());
+			shellException(status, "handlerProgram exit code: " + iso.getExitVal()
+                + "  handlerProgram message: " + iso.getErrorString());
 		}
 		
 		OutputType outputType = ri.appConfig.getOutputType();
