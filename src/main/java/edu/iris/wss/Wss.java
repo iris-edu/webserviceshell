@@ -359,6 +359,13 @@ public class Wss {
 			logger.fatal(err);
 			throw new RuntimeException(err);
 		}
+        
+        if (ri.request.getMethod().equals("HEAD")) {
+            // return to Jersey before any more processing
+            String noData = "";
+            ResponseBuilder builder = Response.status(Status.OK).entity(noData).type("text/plain");
+            return builder.build();
+        }
 		
 		iso.setRequestInfo(ri);
 		
@@ -408,6 +415,7 @@ public class Wss {
     	// The handler program string from the config file may contain multiple space-delimited
     	// text. These need to be split and added to the cmd collection
 		ArrayList<String> cmd = null;
+
 		switch (ri.callType) {
 			case NORMAL:
 				// Handler string can't be NULL per configuration requirements in AppConfigurator
@@ -453,6 +461,13 @@ public class Wss {
 				} catch (Exception e) { ; }
 				break;
 		}
+        
+        if (ri.request.getMethod().equals("HEAD")) {
+            // return to Jersey before any more processing
+            String noData = "";
+            ResponseBuilder builder = Response.status(Status.OK).entity(noData).type("text/plain");
+            return builder.build();
+        }
 
 		// Now run any Argument Preprocessor class if set.
 		if (ri.appConfig.getArgPreProcessorClassName() != null) {
