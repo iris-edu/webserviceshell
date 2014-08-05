@@ -104,6 +104,30 @@ public class LoggerUtils {
 						ri.appConfig.getConnectionFactory(),
 						ri.appConfig.getTopicDestination(),
 						ri.appConfig.getJndiUrl());*/
+                
+//                // check output
+//                System.out.println("*** WsStats"
+//                    + "  fullAppName: " + fullAppName
+//                    + "  hostName: " + WebUtils.getHostname()
+//                    + "  accessDate: " + new Date()
+//                    + "  clientName: " + WebUtils.getClientName(ri.request)
+//                    + "  clientIp: " + WebUtils.getClientIp(ri.request)
+//                    + "  dataSize: " + dataSize
+//                    + "  processTime: " + processTime
+//                    + "  network: " + network
+//                    + "  station: " + station
+//                    + "  channel: " + channel
+//                    + "  location: " + location
+//                    + "  quality: " + quality
+//                    + "  startTime: " + startTime
+//                    + "  endTime: " + endTime
+//                    + "  duration: " + duration
+//                    + "  errorType: " + errorType
+//                    + "  userAgent: " + WebUtils.getUserAgent(ri.request)
+//                    + "  httpStatus: " + Integer.toString(httpStatusCode)
+//                    + "  auth username: " + WebUtils.getAuthenticatedUsername(ri.requestHeaders)
+//                    + "  extra: " + extraText
+//                );
 
 				wsw.sendUsageMessage(
 					fullAppName, 
