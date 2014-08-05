@@ -50,6 +50,7 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProcessStreamingOutput extends IrisStreamingOutput {
 
@@ -68,6 +69,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	private InputStream is = null;
 	private StreamEater se = null;
+    
+    private AtomicBoolean isKillingProcess = new AtomicBoolean(false);
 
 	// [region] Constructors and Getters
 
@@ -395,7 +398,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					this.processRecord(sr, logHash);
 				}
 
-				// Reset the timeout timer
+				// Reset the timeout timer;
 				rt.reschedule();
 			}
 
@@ -444,8 +447,15 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 			// logger.info("Total bytes: " + totalBytesTransmitted);
 			try {
-				logUsageMessage(ri, "_summary", totalBytesTransmitted,
-						processingTime, null, Status.OK, null);
+                if (isKillingProcess.get()) {
+                    logUsageMessage(ri, "_KillitInWriteSeed", 0L,
+						processingTime,
+                        "killit was called, possible timeout waiting for data after intial data flow started",
+                        Status.INTERNAL_SERVER_ERROR, null);
+                } else {
+                    logUsageMessage(ri, "_summary", totalBytesTransmitted,
+                            processingTime, null, Status.OK, null);
+                }
 			} catch (Exception ex) {
 				logger.error("Error logging SEED response, ex: " + ex);
 			}
@@ -574,10 +584,18 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
+                
+            long processingTime = (new Date()).getTime() - startTime.getTime();
+            if (isKillingProcess.get()) {
+                logUsageMessage(ri, "_KillitInWriteNormal", 0L,
+                    processingTime,
+                    "killit was called, possible timeout waiting for data after intial data flow started",
+                    Status.INTERNAL_SERVER_ERROR, null);
+            } else {
+                logUsageMessage(ri, null, totalBytesTransmitted,
+                    processingTime, null, Status.OK, null);
+            }
 
-			logUsageMessage(ri, null, totalBytesTransmitted,
-					(new Date()).getTime() - startTime.getTime(), null,
-					Status.OK, null);
 			rt.cancel();
 
 			try {
@@ -652,9 +670,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-			logUsageMessage(ri, null, totalBytesTransmitted,
-					(new Date()).getTime() - startTime.getTime(), null,
-					Status.OK, null);
+            long processingTime = (new Date()).getTime() - startTime.getTime();
+            if (isKillingProcess.get()) {
+                logUsageMessage(ri, "_KillitInWriteZip", 0L,
+                    processingTime,
+                    "killit was called, possible timeout waiting for data after intial data flow started",
+                    Status.INTERNAL_SERVER_ERROR, null);
+            } else {
+                logUsageMessage(ri, null, totalBytesTransmitted,
+                    processingTime, null, Status.OK, null);
+            }
+
 			rt.cancel();
 
 			try {
@@ -697,12 +723,13 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	// [region] Process killing utilities
 
-	private Runnable killIt = new Runnable() {
-		public void run() {
-			logger.info("Killit ran");
-			stopProcess(process, ri.appConfig.getSigkillDelay());
-		}
-	};
+    private Runnable killIt = new Runnable() {
+        public void run() {
+            logger.info("Killit ran");
+            isKillingProcess.getAndSet(true);
+            stopProcess(process, ri.appConfig.getSigkillDelay());
+        }
+    };
 
 	private static void stopProcess(Process process, Integer sigkillDelay) {
 		// Send a SIGTERM (friendly-like) via the destroy() method.
