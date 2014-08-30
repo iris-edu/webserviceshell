@@ -44,6 +44,7 @@ import org.apache.log4j.Logger;
 import com.Ostermiller.util.CircularByteBuffer;
 
 import edu.iris.wss.StreamEater;
+import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
@@ -156,7 +157,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
-		rt.schedule(killIt);
+		rt.schedule(new killIt(null));
 
 		try {
 			se = new StreamEater(process, process.getErrorStream());
@@ -237,6 +238,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// is no longer valid. The exit value check above will take care
 				// of this
 				// during the next cycle through the loop.
+                // note: may loop in here more than once if responseThreadDelayMsec
+                //       is less than ri.appConfig.getSigkillDelay()
 				logger.error("IO Exception while waiting for data: "
 						+ ioe.getMessage());
 			}
@@ -332,11 +335,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		// Must be bigger (and a multiple) of maxSeedRecordSize
 		byte[] buffer = new byte[32768];
 
-		HashMap<String, RecordMetaData> logHash = new HashMap<String, RecordMetaData>();
+		HashMap<String, RecordMetaData> logHash = new HashMap<>();
 
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
-		rt.schedule(killIt);
+		rt.schedule(new killIt(output));
 
 		CircularByteBuffer cbb = new CircularByteBuffer(
 				CircularByteBuffer.INFINITE_SIZE, false);
@@ -435,10 +438,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			}
 		} catch (IOException ioe) {
 			logger.error("Got IOE (probable client disconnect): ", ioe);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} catch (Exception e) {
 			logger.error("Read seed or process record exception: ", e);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
 			// Logged the total
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
@@ -560,7 +563,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
-		rt.schedule(killIt);
+		rt.schedule(new killIt(output));
 
 		try {
 			while (true) {
@@ -577,10 +580,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 		catch (IOException ioe) {
 			logger.error("Got IOE (probable client disconnect): ", ioe);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} catch (Exception e) {
 			logger.error("Read buffer in writeNormal exception: ", e);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
@@ -620,7 +623,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
-		rt.schedule(killIt);
+		rt.schedule(new killIt(output));
 
 		String line = null;
 		ZipOutputStream zipOutStream = new ZipOutputStream(output);
@@ -662,10 +665,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
             + "  ex: " + fnfe);
 		} catch (IOException ioe) {
 			logger.error("Got IOE (probable client disconnect): ", ioe);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} catch (Exception e) {
 			logger.error("Readline in writeZip exception: ", e);
-			stopProcess(process, ri.appConfig.getSigkillDelay());
+			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
@@ -723,15 +726,41 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	// [region] Process killing utilities
 
-    private Runnable killIt = new Runnable() {
+    private class killIt implements Runnable {
+        OutputStream outputStream;
+        killIt(OutputStream output) {
+            outputStream = output;
+        }
+        @Override
         public void run() {
             logger.info("Killit ran");
             isKillingProcess.getAndSet(true);
-            stopProcess(process, ri.appConfig.getSigkillDelay());
+            stopProcess(process, ri.appConfig.getSigkillDelay(),
+                    outputStream);
         }
     };
 
-	private static void stopProcess(Process process, Integer sigkillDelay) {
+	private static void stopProcess(Process process, Integer sigkillDelay,
+            OutputStream output) {
+        
+        // writing non-seed data to end of stream as flag to indicate that
+        // probably the desired data transfer was not completed and 
+        // webserviceshell is about the stop the connection.
+        
+        if (output != null) {
+            // My assumption, if Jersey framework never recieves data, the
+            // output stream will have never been opened, so if this method
+            // is called previous to output stream open, output will be null.
+            try {
+                logger.error("timeout or exception causing webserviceshell to attempt"
+                        + " to append error message to output before killing process");
+                output.write(AppConfigurator.miniseedStreamInterruptionIndicator.getBytes());
+                output.flush();
+            } catch (IOException ex) {
+                // noop, already trying to handle an error, so nothing else to do
+            }
+        }
+        
 		// Send a SIGTERM (friendly-like) via the destroy() method.
 		// Wait for sigkillDelay msec, then terminate with SIGKILL.
 		try {

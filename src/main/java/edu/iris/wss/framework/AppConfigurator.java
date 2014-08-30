@@ -34,13 +34,22 @@ import org.apache.log4j.Logger;
 
 public class AppConfigurator {
 
-	public static final String wssVersion = "1.1.7-SNAPSHOT";
+	public static final String wssVersion = "1.1.8-SNAPSHOT";
 	public static final String wssConfigDirSignature = "wssConfigDir";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
 	private static final String defaultConfigFileName = "META-INF/service.cfg";
 	private static final String userParamConfigSuffix = "-service.cfg";
+    
+    // this particular string is purposely matched is an error indicator
+    // for timeout on miniseed data, although, unless changed, it will
+    // also be used for writeNormal and writeZip
+    public static final String miniseedStreamInterruptionIndicator =
+            "000000##ERROR#######ERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
+            "This data stream was interrupted and is likley incomplete.     \n" +
+            "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
+            "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n";
 
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
