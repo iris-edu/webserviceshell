@@ -463,21 +463,21 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				logger.error("Error logging SEED response, ex: " + ex);
 			}
 
-			// long total = 0;
-			for (String key : logHash.keySet()) {
-				RecordMetaData rmd = logHash.get(key);
-				logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
-						Status.OK, null, LogKey.getNetwork(key),
-						LogKey.getStation(key), LogKey.getLocation(key),
-						LogKey.getChannel(key), LogKey.getQuality(key),
-						rmd.getStart(), rmd.getEnd(), null);
+            // long total = 0;
+            for (String key : logHash.keySet()) {
+                RecordMetaData rmd = logHash.get(key);
+                logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
+                        Status.OK, null, LogKey.getNetwork(key).trim(),
+                        LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
+                        LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
+                        rmd.getStart().convertToCalendar().getTime(),
+                        rmd.getEnd().convertToCalendar().getTime(), null);
 
-				// total += logHash.get(key);
-				// logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
-
-			}
-			// logger.info("Hash total: :" + total);
-			rt.cancel();
+                // total += logHash.get(key);
+                // logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
+            }
+            // logger.info("Hash total: :" + total);
+            rt.cancel();
 
 			try {
 				output.close();
@@ -489,11 +489,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		}
 	}
 
-	private static class LogKey {
+	protected static class LogKey {
 
 		static String makeKey(String n, String s, String l, String c,
 				Character q) {
-			return n + "_" + s + "_" + l + "_" + c + "_" + q;
+            StringBuilder key = new StringBuilder();
+            key.append(n).append("_");
+            key.append(s).append("_");
+            key.append(l).append("_");
+            key.append(c).append("_");
+            key.append(q);
+			return key.toString();
 		}
 
 		static String getNetwork(String key) {
@@ -524,22 +530,21 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			DataRecord dr = (DataRecord) sr;
 			DataHeader dh = dr.getHeader();
 
-			String key = LogKey.makeKey(dh.getNetworkCode().trim(), dh
-					.getStationIdentifier().trim(), dh.getLocationIdentifier()
-					.trim(), dh.getChannelIdentifier().trim(), dh
-					.getQualityIndicator());
+            String key = LogKey.makeKey(dh.getNetworkCode(),
+                    dh.getStationIdentifier(), dh.getLocationIdentifier(),
+                    dh.getChannelIdentifier(), dh.getQualityIndicator());
 
 			RecordMetaData rmd = logHash.get(key);
-
+            
 			if (rmd != null) {
-				rmd.setIfEarlier(dh.getStartTime());
-				rmd.setIfLater(dh.getLastSampleTime());
+				rmd.setIfEarlier(dh.getStartBtime());
+				rmd.setIfLater(dh.getLastSampleBtime());
 				rmd.setSize(rmd.getSize() + (long) dr.getRecordSize());
 			} else {
 				rmd = new RecordMetaData();
 				rmd.setSize((long) dr.getRecordSize());
-				rmd.setIfEarlier(dh.getStartTime());
-				rmd.setIfLater(dh.getLastSampleTime());
+				rmd.setIfEarlier(dh.getStartBtime());
+				rmd.setIfLater(dh.getLastSampleBtime());
 				logHash.put(key, rmd);
 			}
 			/*
@@ -564,7 +569,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(output));
-
+        
 		try {
 			while (true) {
 				bytesRead = is.read(buffer, 0, buffer.length);

@@ -19,14 +19,16 @@
 
 package edu.iris.wss.IrisStreamingOutput;
 
+import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import org.junit.Test;
  */
 public class RecordMetaDataTest {
     public static final Logger logger = Logger.getLogger(RecordMetaDataTest.class);
+    public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
     
     public RecordMetaDataTest() {
     }
@@ -97,11 +100,11 @@ public class RecordMetaDataTest {
     @Test
     public void testGetStartAndEndAreNull() {
         RecordMetaData instance = new RecordMetaData();
-        Date expResult = null;
-        Date result = instance.getStart();
+        Btime expResult = null;
+        Btime result = instance.getStart();
         assertEquals(expResult, result);
 
-        Date endResult = instance.getEnd();
+        Btime endResult = instance.getEnd();
         assertEquals(expResult, endResult);
     }
 
@@ -111,17 +114,17 @@ public class RecordMetaDataTest {
     @Test
     public void testGetStartAndEnd() {
         RecordMetaData instance = new RecordMetaData();
-        Date expStart = new Date();
+        Btime expStart = new Btime(new Date());
         instance.setStart(expStart);
-        Date result = instance.getStart();
+        Btime result = instance.getStart();
         assertEquals(expStart, result);
         
         // check end is default null
         assertEquals(instance.getEnd(), null);
 
-        Date expEnd = new Date();
+        Btime expEnd = new Btime(new Date());
         instance.setEnd(expEnd);
-        Date endResult = instance.getEnd();
+        Btime endResult = instance.getEnd();
         assertEquals(expEnd, endResult);
         
         // check start not changed
@@ -135,42 +138,45 @@ public class RecordMetaDataTest {
     public void testSetIfEarlier() throws Exception {
         RecordMetaData instance = new RecordMetaData();
         assertEquals(instance.getStart(), null);
+                
+        //start = "2011,036,17:24:50.9999";
+        Calendar start = Calendar.getInstance(UTC);
+        start.set(Calendar.YEAR, 2011);
+        start.set(Calendar.DAY_OF_YEAR, 36);
+        start.set(Calendar.HOUR_OF_DAY, 17);
+        start.set(Calendar.MINUTE, 24);
+        start.set(Calendar.SECOND, 50);
+        start.set(Calendar.MILLISECOND, 999);
         
-        String start = "";
-        // note: this test is a by product of our choice to
-        //       so use substring to restrict the total length
-        //       of an input and trucate microsecond values
-        try {
-            instance.setIfEarlier(start);
-            fail("string should be 21 chars or longer");
-        } catch (java.lang.StringIndexOutOfBoundsException ex) {
-            assertTrue("should pass for start g>= to 21 cahrs", true);
-        }
-        
-        start = "2011,036,17:24:50.9999";
-        instance.setIfEarlier(start);
+        instance.setIfEarlier(new Btime(start.getTime()));
         
         // expected string base on constraints of substring in method
         String startExpected = "2011,036,17:24:50.999";
+        
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
-        String startResult = fmt.format(instance.getStart());
+        String startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
         // using the same formatter, I should get the same string from date
         // less the microsecond part
         assertTrue(startResult.equals(startExpected));
         
         // an earlier time should result in a change to start
-        start = "2011,036,17:24:49.123";
-        instance.setIfEarlier(start);
-        startResult = fmt.format(instance.getStart());
-        assertTrue(startResult.equals(start));
+        startExpected = "2011,036,17:24:49.123";
+        start.set(Calendar.SECOND, 49);
+        start.set(Calendar.MILLISECOND, 123);
+
+        instance.setIfEarlier(new Btime(start.getTime()));
+        startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
+        assertTrue(startResult.equals(startExpected));
         
         // a later time should result in no change
-        String startPrevious = fmt.format(instance.getStart());
-        start = "2011,036,17:24:51.123";
-        instance.setIfEarlier(start);
-        startResult = fmt.format(instance.getStart());
+        String startPrevious = startResult;
+        //startExpected = "2011,036,17:24:51.123";
+        start.set(Calendar.SECOND, 51);
+        start.set(Calendar.MILLISECOND, 123);
+        instance.setIfEarlier(new Btime(start.getTime()));
+        startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
         
         logger.info("*** startPrevious: " + startPrevious);
         logger.info("***   later start: " + start);
@@ -180,43 +186,46 @@ public class RecordMetaDataTest {
     }
 
     /**
-     * Test of setIfEarlier method, of class RecordMetaData.
+     * Test of setIfLater method, of class RecordMetaData.
      */
     @Test
     public void testSetIfLater() throws Exception {
         RecordMetaData instance = new RecordMetaData();
         assertEquals(instance.getEnd(), null);
         
-        String end = "";
-        // see testSetIfEarlier for comments
-        try {
-            instance.setIfLater(end);
-            fail("string should be 21 chars or longer");
-        } catch (java.lang.StringIndexOutOfBoundsException ex) {
-            assertTrue("should pass for start g>= to 21 cahrs", true);
-        }
+        //end = "2011,036,17:24:50.9999";
+        Calendar end = Calendar.getInstance(UTC);
+        end.set(Calendar.YEAR, 2011);
+        end.set(Calendar.DAY_OF_YEAR, 36);
+        end.set(Calendar.HOUR_OF_DAY, 17);
+        end.set(Calendar.MINUTE, 24);
+        end.set(Calendar.SECOND, 50);
+        end.set(Calendar.MILLISECOND, 999);
         
-        end = "2011,036,17:24:50.9999";
-        instance.setIfLater(end);
+        instance.setIfLater(new Btime(end.getTime()));
         
         String endExpected = "2011,036,17:24:50.999";
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
-        String endResult = fmt.format(instance.getEnd());
+        String endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
         assertTrue(endResult.equals(endExpected));
         
         // a later time should result in a change to end
-        end = "2011,036,17:24:51.123";
-        instance.setIfLater(end);
-        endResult = fmt.format(instance.getEnd());
-        assertTrue(endResult.equals(end));
+        endExpected = "2011,036,17:24:51.123";
+        end.set(Calendar.SECOND, 51);
+        end.set(Calendar.MILLISECOND, 123);
+        instance.setIfLater(new Btime(end.getTime()));
+        endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
+        assertTrue(endResult.equals(endExpected));
         
         // an earlier time should result in no change
-        String endPrevious = fmt.format(instance.getEnd());
-        end = "2011,036,17:24:49.123";
-        instance.setIfLater(end);
-        endResult = fmt.format(instance.getEnd());
+        String endPrevious = endResult;
+        //endExpected = "2011,036,17:24:49.123";
+        end.set(Calendar.SECOND, 49);
+        end.set(Calendar.MILLISECOND, 123);
+        instance.setIfLater(new Btime(end.getTime()));
+        endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
         
         logger.info("*** endPrevious: " + endPrevious);
         logger.info("*** earlier end: " + end);

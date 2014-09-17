@@ -19,16 +19,15 @@
 
 package edu.iris.wss.IrisStreamingOutput;
 
-import java.text.ParseException;
+import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 public class RecordMetaData {
 
 	private Long size;
-	private Date start;
-	private Date end;
+	private Btime start;
+	private Btime end;
 
     public static final String SeisFileDataFormat = "yyyy,DDD,HH:mm:ss.SSS";
 
@@ -40,85 +39,64 @@ public class RecordMetaData {
 		this.size = size;
 	}
 
-	public Date getStart() {
+	public Btime getStart() {
 		return start;
 	}
 
-	public void setStart(Date start) {
+	public void setStart(Btime start) {
 		this.start = start;
 	}
 
-	public void setIfEarlier(String start) throws ParseException {
+	public void setIfEarlier(Btime start) {
 		if (start == null) {
 			return;// for now
 		}
-		start = start.substring(0, 21);
-		//System.out.println("Before: "+start);
-        
-        // creating format everytime because SimpleDataFormat is not
-        // thread safe
-        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
-		Date d = fmt.parse(start);
+		
 		if (this.start != null) {
-			if (d.before(this.start)) {
-				this.start = d;
+			if (start.before(this.start)) {
+				this.start = start;
 			}
 		} else {
-			this.start = d;
+			this.start = start;
 		}
-		//System.out.println("After: "+this.start);
 	}
 
-	public Date getEnd() {
+	public Btime getEnd() {
 		return end;
 	}
 
-	public void setEnd(Date end) {
+	public void setEnd(Btime end) {
 		this.end = end;
 	}
-
-	public void setIfLater(String end) throws ParseException {
+    
+	public void setIfLater(Btime end) {
 		if (end == null) {
 			return;// for now
 		}
-		end = end.substring(0, 21);
-		//System.out.println("Before: "+end);
-
-        // creating format everytime because SimpleDataFormat is not
-        // thread safe
-        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
-		Date d = fmt.parse(end);
 
 		if (this.end != null) {
-			if (d.after(this.end)) {
-				this.end = d;
+			if (end.after(this.end)) {
+				this.end = end;
 			}
 		} else {
-			this.end = d;
+			this.end = end;
 		}
-		//System.out.println("After: "+this.end);
 	}
 
-	public static void main(String[] args) {
-		RecordMetaData rmd = new RecordMetaData();
+    public static void main(String[] args) {
+        RecordMetaData rmd = new RecordMetaData();
 
-		try {
-            String input = "2011,036,17:24:50.9999";
-			rmd.setIfEarlier(input);
+            Btime input = new Btime(2011, 36, 17, 24, 50, 9999);
+            rmd.setIfEarlier(input);
 
             // creating format everytime because SimpleDataFormat is not
-        // thread safe
-        SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
+            // thread safe
+            SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
             System.out.println("*** input: " + input + "  as Date obj, start: "
-                + fmt.format(rmd.getStart()));
-            
-			rmd.setIfLater(input);
-            System.out.println("*** input: " + input + "    as Date obj, end: "
-                + fmt.format(rmd.getEnd()));
+                    + fmt.format(rmd.getStart().convertToCalendar().getTime()));
 
-        } catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+            rmd.setIfLater(input);
+            System.out.println("*** input: " + input + "    as Date obj, end: "
+                    + fmt.format(rmd.getEnd().convertToCalendar().getTime()));
 	}
 }
