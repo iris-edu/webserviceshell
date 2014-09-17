@@ -487,6 +487,12 @@ public class Wss {
 	    pb.environment().put("IPADDRESS", WebUtils.getClientIp(request));
 	    pb.environment().put("APPNAME", ri.appConfig.getAppName());
 	    pb.environment().put("VERSION", ri.appConfig.getVersion());
+        pb.environment().put("CLIENTNAME", WebUtils.getClientName(request));
+        pb.environment().put("HOSTNAME", WebUtils.getHostname());
+        if (WebUtils.getAuthenticatedUsername(requestHeaders) != null) {
+            pb.environment().put("AUTHENTICATEDUSERNAME",
+                    WebUtils.getAuthenticatedUsername(requestHeaders));
+        }
 	   
 		ProcessStreamingOutput iso = new ProcessStreamingOutput(pb, ri);      
 		
