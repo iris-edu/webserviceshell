@@ -80,6 +80,7 @@ public class AppConfigurator {
 	private String appName;
 	private String version;
 
+	private Boolean usageLog = true;
 	private Boolean postEnabled = false;
 	private Boolean use404For204 = false;
 	private Boolean allowCors = false;
@@ -182,6 +183,14 @@ public class AppConfigurator {
 
 	public void setWorkingDirectory(String s) {
 		workingDirectory = s;
+	}
+
+	public Boolean getUsageLog() {
+		return usageLog;
+	}
+
+	public void setUsageLog(Boolean b) {
+		usageLog = b;
 	}
 
 	public Boolean getPostEnabled() {
@@ -442,6 +451,10 @@ public class AppConfigurator {
 		if (isOkString(configStr))
 			this.timeoutSeconds = Integer.parseInt(configStr);
 
+		configStr = configurationProps.getProperty("usageLog");
+		if (isOkString(configStr))
+			this.usageLog = Boolean.parseBoolean(configStr);
+
 		configStr = configurationProps.getProperty("postEnabled");
 		if (isOkString(configStr))
 			this.postEnabled = Boolean.parseBoolean(configStr);
@@ -617,6 +630,7 @@ public class AppConfigurator {
 		sb.append(strAppend("Contributor Handler Program")
 				+ contributorsHandlerProgram + "\n");
 
+		sb.append(strAppend("Usage Log") + usageLog + "\n");
 		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
 		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
 
@@ -690,6 +704,8 @@ public class AppConfigurator {
 				+ contributorsHandlerProgram + "</TD></TR>");
 		sb.append("<TR><TD>" + "Counts Handler Program" + "</TD><TD>"
 				+ countsHandlerProgram + "</TD></TR>");
+		sb.append("<TR><TD>" + "Usage Log" + "</TD><TD>" + usageLog
+				+ "</TD></TR>");
 		sb.append("<TR><TD>" + "Post Enabled" + "</TD><TD>" + postEnabled
 				+ "</TD></TR>");
 		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204

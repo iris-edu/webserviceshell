@@ -346,6 +346,10 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		DataInputStream dis = new DataInputStream(cbb.getInputStream());
 
 		SeedRecord sr = null;
+        
+        // processing time, but excluding while read is blocking
+        long timeNonBlockingStart = 0L;
+        long timeNonBlockingTotal = 0L;
 
 		boolean badSeedParsingLogged = false;
 
@@ -355,6 +359,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				// Read bytes, keep a running total and write them to the
 				// output.
 				bytesRead = is.read(buffer, 0, buffer.length);
+                timeNonBlockingStart = System.currentTimeMillis();
 				if (bytesRead < 0) {
 					break;
 				}
@@ -363,79 +368,87 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 
-				// All the below is only for logging.
+                if (ri.appConfig.getUsageLog()) {
+                    // All the below is only for usage logging.
 
-				// Write the newly read data into the circular buffer.
-				cbb.getOutputStream().write(buffer, 0, bytesRead);
+                    // Write the newly read data into the circular buffer.
+                    cbb.getOutputStream().write(buffer, 0, bytesRead);
 
 				// We're going to parse SEED records out of the circular buffer
-				// until the remaining
-				// bytes in the buffer get below maxSeedBlockSize (max seed
-				// record size).
-
+                    // until the remaining
+                    // bytes in the buffer get below maxSeedBlockSize (max seed
+                    // record size).
 				// IMPORTANT: The SeedRecord.read() call blocks, so we def. do
-				// _NOT_ want to allow that to
-				// happen. Therefore we _only_ call this when we have at least 1
-				// block of miniSeed.
-				while (cbb.getAvailable() >= maxSeedRecordSize) {
-					try {
-						sr = SeedRecord.read(dis, defaultSeedRecordSize);
-					} catch (Exception e) {
-						if (!badSeedParsingLogged) {
-							badSeedParsingLogged = true;
-							logger.error("SEED format exception in SeedRecord.read: ",
-                                e);
-						}
+                    // _NOT_ want to allow that to
+                    // happen. Therefore we _only_ call this when we have at least 1
+                    // block of miniSeed.
+                    while (cbb.getAvailable() >= maxSeedRecordSize) {
+                        try {
+                            sr = SeedRecord.read(dis, defaultSeedRecordSize);
+                        } catch (Exception e) {
+                            if (!badSeedParsingLogged) {
+                                badSeedParsingLogged = true;
+                                logger.error("SEED format exception in SeedRecord.read: ",
+                                        e);
+                            }
 
 						// The parser barfed. Skip ahead through the remainder
-						// of this buffer.
+                            // of this buffer.
+                            byte[] trash = new byte[cbb.getAvailable()
+                                    - maxSeedRecordSize];
+                            dis.read(trash, 0, cbb.getAvailable()
+                                    - maxSeedRecordSize);
+                            break;
+                        }
 
-						byte[] trash = new byte[cbb.getAvailable()
-								- maxSeedRecordSize];
-						dis.read(trash, 0, cbb.getAvailable()
-								- maxSeedRecordSize);
-						break;
-					}
-                    
-					// Parse and log the data header for logging.
-					this.processRecord(sr, logHash);
-				}
+                        // Parse and log the data header for logging.
+                        this.processRecord(sr, logHash);
+                    }
+                }
 
 				// Reset the timeout timer;
 				rt.reschedule();
+                
+                timeNonBlockingTotal += System.currentTimeMillis()
+                        - timeNonBlockingStart;
 			}
 
+            if (ri.appConfig.getUsageLog()) {
 			// Finally clear anything out in the buffer. There might be data
-			// left in the circular
-			// buffer whose length will be less than maxSeedRecordSize.
-			// SeedRecord.read will block with a broken SEED record and will
-			// reset the stream forever
-			// So it's important to only try to decode the remaining data if it
-			// could be a full SEED
-			// record.
+                // left in the circular
+                // buffer whose length will be less than maxSeedRecordSize.
+                // SeedRecord.read will block with a broken SEED record and will
+                // reset the stream forever
+                // So it's important to only try to decode the remaining data if it
+                // could be a full SEED
+                // record.
 
 			// That said, a corrupt or truncated piece of SEED will hang the
-			// SeisFile decoder and a
-			// time out will occur.
-			long lastAvailable = cbb.getAvailable();
-			while (cbb.getAvailable() >= minSeedRecordSize) {
-				try {
-					sr = null;
-					sr = SeedRecord.read(dis);
-					this.processRecord(sr, logHash);
-				} catch (Exception e) {
-					logger.error("SeedRecord.read or processRecord ex: ", e);
-					break;
-				} finally {
-					if (cbb.getAvailable() == lastAvailable) {
-						// Nothing got parsed. Get the hell out of here.
-						logger.info("Bad seed found during logging");
-						break;
-					} else {
-						lastAvailable = cbb.getAvailable();
-					}
-				}
-			}
+                // SeisFile decoder and a
+                // time out will occur.
+                long lastAvailable = cbb.getAvailable();
+                while (cbb.getAvailable() >= minSeedRecordSize) {
+                    try {
+                        sr = null;
+                        sr = SeedRecord.read(dis);
+                        this.processRecord(sr, logHash);
+                    } catch (Exception e) {
+                        logger.error("SeedRecord.read or processRecord ex: ", e);
+                        break;
+                    } finally {
+                        if (cbb.getAvailable() == lastAvailable) {
+                            // Nothing got parsed. Get the hell out of here.
+                            logger.info("Bad seed found during logging");
+                            break;
+                        } else {
+                            lastAvailable = cbb.getAvailable();
+                        }
+                    }
+                }
+            }
+            
+            timeNonBlockingTotal += System.currentTimeMillis()
+                    - timeNonBlockingStart;
 		} catch (IOException ioe) {
 			logger.error("Got IOE (probable client disconnect): ", ioe);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
@@ -443,40 +456,39 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Read seed or process record exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
-			// Logged the total
-			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
+            long processingTime = (new Date()).getTime() - startTime.getTime();
+            logger.info("writeSeed done:  Wrote " + totalBytesTransmitted + " bytes"
+                    + "  processingTime: " + processingTime
+                    + "  timeNotBlocking: " + timeNonBlockingTotal);
+            ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-			long processingTime = (new Date()).getTime() - startTime.getTime();
-
-			// logger.info("Total bytes: " + totalBytesTransmitted);
-			try {
-                if (isKillingProcess.get()) {
-                    logUsageMessage(ri, "_KillitInWriteSeed", 0L,
-						processingTime,
-                        "killit was called, possible timeout waiting for data after intial data flow started",
-                        Status.INTERNAL_SERVER_ERROR, null);
-                } else {
-                    logUsageMessage(ri, "_summary", totalBytesTransmitted,
-                            processingTime, null, Status.OK, null);
+            if (ri.appConfig.getUsageLog()) {
+                try {
+                    if (isKillingProcess.get()) {
+                        logUsageMessage(ri, "_KillitInWriteSeed", 0L,
+                                processingTime,
+                                "killit was called, possible timeout waiting"
+                                + " for data after intial data flow started",
+                                Status.INTERNAL_SERVER_ERROR, null);
+                    } else {
+                        logUsageMessage(ri, "_summary", totalBytesTransmitted,
+                                processingTime, null, Status.OK, null);
+                    }
+                } catch (Exception ex) {
+                    logger.error("Error logging SEED response, ex: " + ex);
                 }
-			} catch (Exception ex) {
-				logger.error("Error logging SEED response, ex: " + ex);
-			}
 
-            // long total = 0;
-            for (String key : logHash.keySet()) {
-                RecordMetaData rmd = logHash.get(key);
-                logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
-                        Status.OK, null, LogKey.getNetwork(key).trim(),
-                        LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
-                        LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
-                        rmd.getStart().convertToCalendar().getTime(),
-                        rmd.getEnd().convertToCalendar().getTime(), null);
-
-                // total += logHash.get(key);
-                // logger.info ("Key: " + key + " Bytes: " + logHash.get(key));
+                for (String key : logHash.keySet()) {
+                    RecordMetaData rmd = logHash.get(key);
+                    logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
+                            Status.OK, null, LogKey.getNetwork(key).trim(),
+                            LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
+                            LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
+                            rmd.getStart().convertToCalendar().getTime(),
+                            rmd.getEnd().convertToCalendar().getTime(), null);
+                }
             }
-            // logger.info("Hash total: :" + total);
+            
             rt.cancel();
 
 			try {
@@ -569,10 +581,15 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(output));
+
+        // processing time, but excluding while read is blocking
+        long timeNonBlockingStart = 0L;
+        long timeNonBlockingTotal = 0L;
         
 		try {
 			while (true) {
 				bytesRead = is.read(buffer, 0, buffer.length);
+                timeNonBlockingStart = System.currentTimeMillis();
 				if (bytesRead < 0) {
 					break;
 				}
@@ -580,6 +597,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 				rt.reschedule();
+                timeNonBlockingTotal += System.currentTimeMillis()
+                        - timeNonBlockingStart;
 			}
 		}
 
@@ -590,18 +609,22 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Read buffer in writeNormal exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
-			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
-			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
-                
             long processingTime = (new Date()).getTime() - startTime.getTime();
-            if (isKillingProcess.get()) {
-                logUsageMessage(ri, "_KillitInWriteNormal", 0L,
-                    processingTime,
-                    "killit was called, possible timeout waiting for data after intial data flow started",
-                    Status.INTERNAL_SERVER_ERROR, null);
-            } else {
-                logUsageMessage(ri, null, totalBytesTransmitted,
-                    processingTime, null, Status.OK, null);
+            logger.info("writeNormal done:  Wrote " + totalBytesTransmitted + " bytes"
+                    + "  processingTime: " + processingTime
+                    + "  timeNotBlocking: " + timeNonBlockingTotal);
+            ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
+
+            if (ri.appConfig.getUsageLog()) {
+                if (isKillingProcess.get()) {
+                    logUsageMessage(ri, "_KillitInWriteNormal", 0L,
+                            processingTime,
+                            "killit was called, possible timeout waiting for data after intial data flow started",
+                            Status.INTERNAL_SERVER_ERROR, null);
+                } else {
+                    logUsageMessage(ri, null, totalBytesTransmitted,
+                            processingTime, null, Status.OK, null);
+                }
             }
 
 			rt.cancel();
@@ -633,12 +656,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		String line = null;
 		ZipOutputStream zipOutStream = new ZipOutputStream(output);
 
+        // processing time, but excluding while read is blocking
+        long timeNonBlockingStart = 0L;
+        long timeNonBlockingTotal = 0L;
+
 		// Read the InputStream is, a line at a time. Each line should be a
 		// filename
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
 			while ((line = in.readLine()) != null) {
+                timeNonBlockingStart = System.currentTimeMillis();
 				rt.reschedule();
 				line = line.trim();
 				String fname = getBaseFilename(line);
@@ -664,6 +692,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 				if (fis != null)
 					fis.close();
 				deleteTempDirectory(inFile);
+                timeNonBlockingTotal += System.currentTimeMillis()
+                        - timeNonBlockingStart;
 			}
 		} catch (FileNotFoundException fnfe) {
 			logger.error("File not found: " + line
@@ -675,18 +705,22 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Readline in writeZip exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
-			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
-			ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
-
             long processingTime = (new Date()).getTime() - startTime.getTime();
-            if (isKillingProcess.get()) {
-                logUsageMessage(ri, "_KillitInWriteZip", 0L,
-                    processingTime,
-                    "killit was called, possible timeout waiting for data after intial data flow started",
-                    Status.INTERNAL_SERVER_ERROR, null);
-            } else {
-                logUsageMessage(ri, null, totalBytesTransmitted,
-                    processingTime, null, Status.OK, null);
+            logger.info("writeZip done:  Wrote " + totalBytesTransmitted + " bytes"
+                    + "  processingTime: " + processingTime
+                    + "  timeNotBlocking: " + timeNonBlockingTotal);
+            ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
+
+            if (ri.appConfig.getUsageLog()) {
+                if (isKillingProcess.get()) {
+                    logUsageMessage(ri, "_KillitInWriteZip", 0L,
+                            processingTime,
+                            "killit was called, possible timeout waiting for data after intial data flow started",
+                            Status.INTERNAL_SERVER_ERROR, null);
+                } else {
+                    logUsageMessage(ri, null, totalBytesTransmitted,
+                            processingTime, null, Status.OK, null);
+                }
             }
 
 			rt.cancel();
