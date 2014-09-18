@@ -4,11 +4,12 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	id="WebApp_ID" version="3.0">
 	<display-name>webserviceshell</display-name>
-	<servlet>
+        <!-- deactivated for now, 20140918, using annotation in Log4jInit instead -->
+	<!--servlet>
 		<servlet-name>log4j-init</servlet-name>
 		<servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
 		<load-on-startup>1</load-on-startup>
-	</servlet>
+	</servlet-->
 	<servlet>
 		<servlet-name>Jersey REST Service</servlet-name>
 		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>

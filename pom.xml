@@ -122,7 +122,7 @@
         <servlet.version>3.0.1</servlet.version>
         <sc.seis.seisFile>1.6.2</sc.seis.seisFile>
         <statswriter.version>3.1</statswriter.version>
-        <wsslog4jinit.version>0.0.1</wsslog4jinit.version>
+        <wsslog4jinit.version>0.9</wsslog4jinit.version>
     </properties>
 
     <dependencies>
@@ -152,8 +152,8 @@
         </dependency>
 
         <dependency>
-            <groupId>edu.iris.ws</groupId>
-            <artifactId>irisWSSLog4junit</artifactId>
+            <groupId>edu.iris.wss</groupId>
+            <artifactId>IrisWSSLog4jInit</artifactId>
             <version>${wsslog4jinit.version}</version>
         </dependency>
                 
