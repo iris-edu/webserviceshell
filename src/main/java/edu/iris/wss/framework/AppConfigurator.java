@@ -47,7 +47,7 @@ public class AppConfigurator {
     // also be used for writeNormal and writeZip
     public static final String miniseedStreamInterruptionIndicator =
             "000000##ERROR#######ERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
-            "This data stream was interrupted and is likley incomplete.     \n" +
+            "This data stream was interrupted and is likely incomplete.     \n" +
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n";
 

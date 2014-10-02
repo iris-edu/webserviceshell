@@ -39,38 +39,27 @@ public class ServiceShellException extends WebApplicationException {
 	public static final Logger logger = Logger.getLogger(ServiceShellException.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 
-	// [region] Constructors
 	public ServiceShellException(final Status status) {
+        // need this constructor for 204, otherwise, if entity or type is
+        // used in builder, Jersey appears to convert the status to 200
 		super(Response.status(status).build());
 	}
 	
     public ServiceShellException(final Status status, final String message) {
-        super(Response.status(status).
-          entity(message + "\n").type("text/plain").build());
+        super(new Throwable("throwable - " + message), Response.status(status).
+           entity(message + "\n").type("text/plain").build());
     }
-    
-    public ServiceShellException(WebApplicationException wae, String message) {
-    	super(Response.status(wae.getResponse().getStatus()).
-    	          entity(message + "\n").type("text/plain").build());
-    }
-    
-    // [end region] 
-    
-    public static void logAndThrowException(RequestInfo ri, Status status) {
-   		LoggerUtils.logWssUsageError(ri, null, 0L, 0L, null, status.getStatusCode(), null);
-   		
-		throw new ServiceShellException(status);
-	}
     
     public static void logAndThrowException(RequestInfo ri, Status status, String message) {
     	if (message != null)
     		logAndThrowException(ri, status, message, null);
-    	else
-    		logAndThrowException(ri, status);
-    }
-    
-    public static void logAndThrowException(RequestInfo ri, WebApplicationException wae, String message) {
-        logAndThrowException(ri, Status.fromStatusCode(wae.getResponse().getStatus()), message, null);
+        else {
+            // This should not happen, it means WSS is inconsistent about setting
+            // values for message earlier in the call stack
+            Thread.dumpStack();
+            String newMsg = "*** note, WSS warning, received unexpected null message";
+            logAndThrowException(ri, status, newMsg, null);
+        }
     }
 
     public static final String usageDetailsSignature = "Usage Details ...";
@@ -83,7 +72,7 @@ public class ServiceShellException extends WebApplicationException {
     	
     	ri.statsKeeper.logError();
     	
-    	logger.error(message + ": " + getErrorString(e));
+    	logger.error(message + getErrorString(e));
     	
    		LoggerUtils.logWssUsageError(ri, null, 0L, 0L, message, status.getStatusCode(), null);
 		
@@ -114,21 +103,31 @@ public class ServiceShellException extends WebApplicationException {
     	
 //    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());
-    	throw new ServiceShellException(status, sb.toString());
+        if (status == status.NO_CONTENT) {
+            // for 204, need different constructor with no message
+            // otherwise Jersey changes 204 to 200
+            throw new ServiceShellException(status);
+        } else {
+            throw new ServiceShellException(status, sb.toString());
+        }
     }
     
     public static String getErrorString(Throwable e) {
-    	StringBuilder sb = new StringBuilder();
-    	
-    	if (e == null)  return "";
-    	
-    	if (e.getMessage() != null) {
-    		sb.append(e.getMessage() + "\n");
-    	}
+        StringBuilder sb = new StringBuilder();
 
-		if (e.getCause() != null) {
-			sb.append(getErrorString(e.getCause()));
-		}
-		return sb.toString();
+        if (e == null) {
+            return "  exception: is null";
+        }
+
+        if (e.getMessage() != null) {
+            sb.append("  exception: ");
+            sb.append(e.getMessage() + "\n");
+        }
+
+        if (e.getCause() != null) {
+            sb.append("  exception cause: ");
+            sb.append(getErrorString(e.getCause()));
+        }
+        return sb.toString();
     }
 }

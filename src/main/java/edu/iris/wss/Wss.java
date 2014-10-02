@@ -336,7 +336,8 @@ public class Wss {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri);
 		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, e.getMessage());
+			shellException(Status.BAD_REQUEST,
+                    "error from ParameterTranslator, exp: " + e.getMessage());
 		}
 				
 		String className = ri.appConfig.getStreamingOutputClassName();
@@ -369,23 +370,26 @@ public class Wss {
 		
 		iso.setRequestInfo(ri);
 		
-		// Wait for an exit code, the start of data transmission or a timeout.
+		// Wait for an exit code, expecting the start of data transmission
+        // or exception or timeout.
 		Status status = iso.getResponse();
+        
 		if (status == null) {
-			shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
-		} else if (status == Status.NO_CONTENT) {
+            shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
+        } else if (status == Status.NO_CONTENT) {
+            // override 204 if configured to do so
 			if (ri.perRequestUse404for204) {
 				status = Status.NOT_FOUND;
-				shellException(status, status.toString() + ": " +  iso.getErrorString());
-			} else {
-				shellException(status, null);
 			}
-		} else if (status != Status.OK) {
-			shellException(status, status.toString() + ": " +  iso.getErrorString());
+        }
+		
+        if (status != Status.OK) {
+            newerShellException(status, ri, iso);
 		}
 		
-		OutputType outputType = ri.appConfig.getOutputType();
-		
+        // use the output type from configuration, unless overridden on
+        // in the request URL	
+		OutputType outputType = ri.appConfig.getOutputType();		
 		if (ri.perRequestOutputType != null) {
 			outputType = ri.perRequestOutputType;
 		}
@@ -423,13 +427,15 @@ public class Wss {
 				try {
 					ParameterTranslator.parseQueryParams(cmd, ri);
 				} catch (Exception e) {
-					shellException(Status.BAD_REQUEST, e.getMessage());
+					shellException(Status.BAD_REQUEST,
+                            "error from ParameterTranslator, exp: " + e.getMessage());
 				}
 				break;
 			case CATALOGS:
 				String catalogsHandlerString = ri.appConfig.getCatalogsHandlerProgram();
 				if (!isOkString(catalogsHandlerString))
-					shellException(Status.NOT_FOUND, null);
+					shellException(Status.NOT_FOUND,
+                            "catalogHandler msg: " + catalogsHandlerString);
 
 				cmd = new ArrayList<String>(Arrays.asList(catalogsHandlerString.split(" ")));
 				try {
@@ -441,7 +447,8 @@ public class Wss {
 				String contributorsHandlerString = ri.appConfig.getContributorsHandlerProgram();
 
 				if (!isOkString(contributorsHandlerString))
-					shellException(Status.NOT_FOUND, null);
+					shellException(Status.NOT_FOUND,
+                            "contributorsHandler msg: " + contributorsHandlerString);
 				
 				cmd = new ArrayList<String>(Arrays.asList(contributorsHandlerString.split(" ")));
 				try {
@@ -453,7 +460,8 @@ public class Wss {
 				String countsHandlerString = ri.appConfig.getCountsHandlerProgram();
 
 				if (!isOkString(countsHandlerString))
-					shellException(Status.NOT_FOUND, null);
+					shellException(Status.NOT_FOUND,
+                            "countsHandler msg: " + countsHandlerString);
 				
 				cmd = new ArrayList<String>(Arrays.asList(countsHandlerString.split(" ")));
 				try {
@@ -496,22 +504,24 @@ public class Wss {
 	   
 		ProcessStreamingOutput iso = new ProcessStreamingOutput(pb, ri);      
 		
-		// Wait for an exit code, the start of data transmission or a timeout.
+		// Wait for an exit code, expecting the start of data transmission
+        // or exception or timeout.
 		Status status = iso.getResponse();
+        
 		if (status == Status.NO_CONTENT) {
+            // override 204 if configured to do so
 			if (ri.perRequestUse404for204) {
 				status = Status.NOT_FOUND;
-				shellException(status, status.toString() + ": " +  iso.getErrorString());
-			} else {
-				shellException(status, null);
 			}
-		} else if (status != Status.OK) {
-			shellException(status, "handlerProgram exit code: " + iso.getExitVal()
-                + "  handlerProgram message: " + iso.getErrorString());
+        }
+		
+        if (status != Status.OK) {
+            newerShellException(status, ri, iso);
 		}
 		
+        // use the output type from configuration, unless overridden on
+        // in the request URL
 		OutputType outputType = ri.appConfig.getOutputType();
-		
 		if (ri.perRequestOutputType != null) {
 			outputType = ri.perRequestOutputType;
 		}
@@ -558,7 +568,13 @@ public class Wss {
 		argpp.process(ri,  cmd);
 	}
 	
-	private void shellException(Status badRequest, String s) {
-		ServiceShellException.logAndThrowException(ri, badRequest, s);
+	private void shellException(Status status, String message) {
+		ServiceShellException.logAndThrowException(ri, status, message);       
+	}
+	
+	private static void newerShellException(Status status, RequestInfo ri, 
+            IrisStreamingOutput iso) {
+		ServiceShellException.logAndThrowException(ri, status,
+                status.toString() + iso.getErrorString());
 	}
 }

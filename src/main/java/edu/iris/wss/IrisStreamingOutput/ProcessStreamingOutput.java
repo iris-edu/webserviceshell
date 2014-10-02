@@ -98,25 +98,41 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 		this.ri = ri;
 	}
 
-	public Integer getExitVal() {
-		return exitVal;
-	}
-
+    // Note: this is broken if ever threaded, exitVal should be
+    // passed in, not a global, but it means a change to the
+    // interface
+    @Override
 	public String getErrorString() {
-		if (se == null)
-			return null;
+        return getErrorString(exitVal);
+	}
+    
+	public String getErrorString(int exitCode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("  exit code: ").append(exitCode);
 
-		try {
-			return se.getOutputString();
-		} catch (IOException ioe) {
-			return "No error description available";
-		}
+		if (se == null) {
+            sb.append("  error: none, stderr is null");
+        } else {
+
+            try {
+                if (se.getOutputString().length() <= 0) {
+                    sb.append("  error: none, message is zero length");
+                } else {
+                    sb.append("  error: ").append(se.getOutputString());
+                }
+            } catch (IOException ioe) {
+                sb.append("  error: none, IOException reading stderr");
+            }
+        }
+        
+        return sb.toString();
 	}
 
 	// [end region]
 
 	// [region] Response Method
 
+    @Override
 	public Status getResponse() {
 		startTime = new Date();
 
@@ -271,6 +287,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			else
 				return Status.NO_CONTENT;
 		} else if (exitVal == 1) {
+            logger.error("Handler exited," + this.getErrorString(exitVal));
 			return Status.INTERNAL_SERVER_ERROR;
 		} else if (exitVal == 3) {
 			return Status.BAD_REQUEST;
@@ -278,26 +295,20 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			return Status.REQUEST_ENTITY_TOO_LARGE;
 		}
 
-		// logger.info("MESS: " + this.getErrorString());
-
-		// These below are for timeouts and other weird errors that shouldn't
-		// really generate errors through this mechanism.
 		if (exitVal == 9 + 128) {
 			// SIGKILL
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"Enforced timeout or unexpected termination of handler: "
-							+ this.getErrorString());
+					"Enforced timeout or unexpected termination of handler,"
+                            + this.getErrorString(exitVal));
 		} else if (exitVal == 15 + 128) {
 			// SIGTERM
-			logAndThrowException(
-					ri,
-					Status.INTERNAL_SERVER_ERROR,
-					"Timeout or unexpected termination of handler: "
-							+ this.getErrorString());
+			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+					"Timeout or unexpected termination of handler,"
+                            + this.getErrorString(exitVal));
 		} else {
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"Termination of handler with unknown exit code: " + exitVal
-							+ " " + this.getErrorString());
+					"Unexpected termination of handler,"
+                            + this.getErrorString(exitVal));;
 		}
 
 		return Status.OK; // Won't get here.
@@ -309,7 +320,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	public void write(OutputStream output) {
 		if (this.ri.appConfig.getOutputType() == OutputType.MSEED
             || this.ri.appConfig.getOutputType() == OutputType.MINISEED) {
-			writeSeed(output);
+			writeMiniSeed(output);
 		} else if (this.ri.appConfig.getOutputType() == OutputType.ZIP) {
 			writeZip(output);
 		} else {
@@ -319,7 +330,14 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	// [region] Seed writer
 
-	public void writeSeed(OutputStream output) {
+    /**
+     * Reads stdin and writes to stdout, To capture processing statistics, the
+     * data is also parsed as miniseed formated data. Primarily to get the 
+     * number of bytes per channel.
+     * 
+     * @param output 
+     */
+	public void writeMiniSeed(OutputStream output) {
 
 		long totalBytesTransmitted = 0L;
 		int bytesRead;
@@ -374,7 +392,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
                     // Write the newly read data into the circular buffer.
                     cbb.getOutputStream().write(buffer, 0, bytesRead);
 
-				// We're going to parse SEED records out of the circular buffer
+				// We're going to parse miniSEED records out of the circular buffer
                     // until the remaining
                     // bytes in the buffer get below maxSeedBlockSize (max seed
                     // record size).
@@ -388,8 +406,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
                         } catch (Exception e) {
                             if (!badSeedParsingLogged) {
                                 badSeedParsingLogged = true;
-                                logger.error("SEED format exception in SeedRecord.read: ",
-                                        e);
+                                logger.error("MiniSEED format exception in SeedRecord.read"
+                                        + "  bytes transmitted so far: " + totalBytesTransmitted
+                                        + "  exception: " + e);
                             }
 
 						// The parser barfed. Skip ahead through the remainder
@@ -438,7 +457,8 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
                     } finally {
                         if (cbb.getAvailable() == lastAvailable) {
                             // Nothing got parsed. Get the hell out of here.
-                            logger.info("Bad seed found during logging");
+                            logger.info("Unexpected miniseed data found while"
+                                    + " getting usage statistics");
                             break;
                         } else {
                             lastAvailable = cbb.getAvailable();
@@ -453,11 +473,11 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			logger.error("Got IOE (probable client disconnect): ", ioe);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} catch (Exception e) {
-			logger.error("Read seed or process record exception: ", e);
+			logger.error("Miniseed parse error or process record exception: ", e);
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
             long processingTime = (new Date()).getTime() - startTime.getTime();
-            logger.info("writeSeed done:  Wrote " + totalBytesTransmitted + " bytes"
+            logger.info("writeMiniSeed done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  timeNotBlocking: " + timeNonBlockingTotal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
@@ -465,7 +485,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
             if (ri.appConfig.getUsageLog()) {
                 try {
                     if (isKillingProcess.get()) {
-                        logUsageMessage(ri, "_KillitInWriteSeed", 0L,
+                        logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
                                 processingTime,
                                 "killit was called, possible timeout waiting"
                                 + " for data after intial data flow started",
@@ -475,7 +495,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
                                 processingTime, null, Status.OK, null);
                     }
                 } catch (Exception ex) {
-                    logger.error("Error logging SEED response, ex: " + ex);
+                    logger.error("Error logging MiniSEED response, ex: " + ex);
                 }
 
                 for (String key : logHash.keySet()) {
@@ -782,7 +802,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 	private static void stopProcess(Process process, Integer sigkillDelay,
             OutputStream output) {
         
-        // writing non-seed data to end of stream as flag to indicate that
+        // writing non-miniseed data to end of stream as flag to indicate that
         // probably the desired data transfer was not completed and 
         // webserviceshell is about the stop the connection.
         
@@ -791,13 +811,17 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
             // output stream will have never been opened, so if this method
             // is called previous to output stream open, output will be null.
             try {
-                logger.error("timeout or exception causing webserviceshell to attempt"
-                        + " to append error message to output before killing process");
+                logger.error("stopProcess called for timeout or exception,"
+                        + " an error message is being appended"
+                        + " to the output stream before killing the handler.");
                 output.write(AppConfigurator.miniseedStreamInterruptionIndicator.getBytes());
                 output.flush();
             } catch (IOException ex) {
                 // noop, already trying to handle an error, so nothing else to do
             }
+        } else {
+            logger.error("stopProcess called for timeout or exception, outputStream"
+            + " is null, this indicates the handler never wrote data.");
         }
         
 		// Send a SIGTERM (friendly-like) via the destroy() method.

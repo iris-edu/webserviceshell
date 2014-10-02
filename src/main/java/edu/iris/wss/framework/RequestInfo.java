@@ -63,8 +63,10 @@ public  class RequestInfo {
 		
 		if ((this.appConfig.getHandlerProgram() == null) && 
 				(this.appConfig.getStreamingOutputClassName() == null)) {
-			ServiceShellException.logAndThrowException(this, Status.INTERNAL_SERVER_ERROR, 
-					"Service Configuration Problem");
+			ServiceShellException.logAndThrowException(this,
+                    Status.INTERNAL_SERVER_ERROR, 
+					"Service configuration problem,"
+                    + " handler program and StreamingOutputClassName not defined");
 
 		}
 	}	
