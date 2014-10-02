@@ -387,12 +387,9 @@ public class Wss {
             newerShellException(status, ri, iso);
 		}
 		
-        // use the output type from configuration, unless overridden on
+        // use the output type from configuration, unless overridden
         // in the request URL	
-		OutputType outputType = ri.appConfig.getOutputType();		
-		if (ri.perRequestOutputType != null) {
-			outputType = ri.perRequestOutputType;
-		}
+		OutputType outputType = ri.getRequestOutputType();
 		
 		ResponseBuilder builder = Response.status(status)
 				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
@@ -519,12 +516,9 @@ public class Wss {
             newerShellException(status, ri, iso);
 		}
 		
-        // use the output type from configuration, unless overridden on
+        // use the output type from configuration, unless overridden
         // in the request URL
-		OutputType outputType = ri.appConfig.getOutputType();
-		if (ri.perRequestOutputType != null) {
-			outputType = ri.perRequestOutputType;
-		}
+		OutputType outputType = ri.getRequestOutputType();
 		
 		ResponseBuilder builder = Response.status(status)
 				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    

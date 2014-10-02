@@ -141,7 +141,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					"No valid process found.");
 		}
 
-		if (ri.appConfig.getOutputType() == OutputType.ZIP) {
+		if (ri.getRequestOutputType() == OutputType.ZIP) {
 			// Create a sub-directory for the results based off of the working
 			// Directory
 			String wd = ri.appConfig.getWorkingDirectory();
@@ -316,17 +316,19 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	// [end region]
 
-	@Override
-	public void write(OutputStream output) {
-		if (this.ri.appConfig.getOutputType() == OutputType.MSEED
-            || this.ri.appConfig.getOutputType() == OutputType.MINISEED) {
-			writeMiniSeed(output);
-		} else if (this.ri.appConfig.getOutputType() == OutputType.ZIP) {
-			writeZip(output);
-		} else {
-			writeNormal(output);
-		}
-	}
+	   @Override
+    public void write(OutputStream output) {
+        OutputType outputType = ri.getRequestOutputType();
+        
+        if (outputType == OutputType.MSEED
+                || outputType == OutputType.MINISEED) {
+            writeMiniSeed(output);
+        } else if (outputType == OutputType.ZIP) {
+            writeZip(output);
+        } else {
+            writeNormal(output);
+        }
+    }
 
 	// [region] Seed writer
 

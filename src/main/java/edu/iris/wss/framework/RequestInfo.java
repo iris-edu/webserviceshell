@@ -78,4 +78,21 @@ public  class RequestInfo {
 			throw new Exception("Unrecognized output format: " + s);
 		}
 	}
+    
+    /**
+     * Override configuration outputType with request outputType if the
+     * request included the type.
+     * 
+     * @return 
+     */
+	public OutputType getRequestOutputType() {
+        OutputType outputType = appConfig.getOutputType();
+        
+		if (this.perRequestOutputType != null) {
+			outputType = this.perRequestOutputType;
+		}
+        
+        return outputType;
+	}
+
 }
