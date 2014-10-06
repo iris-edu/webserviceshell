@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -56,10 +58,29 @@ public class AppConfigurator {
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
 
+    private String formatOutputTypes(Map<String, String> outputTypes) {
+        StringBuilder s = new StringBuilder();
+        s.append("outputTypes = ");
+        
+        Iterator<String> keyIt = outputTypes.keySet().iterator();
+        while(keyIt.hasNext()) {
+            String key = keyIt.next();
+            s.append(key).append(": ").append(outputTypes.get(key));
+            if (keyIt.hasNext()) {
+                s.append(", ");
+            }
+        }
+        
+        return s.toString();
+    }
+
     // add miniseed as alias for mseed to stay consistent with FDSN standards
 	public static enum OutputType {
 		XML, JSON, TEXT, MSEED, MINISEED, TEXTTREE, ZIP
 	};
+    
+    // start with not Thread safe HashMap with default size
+    Map<String, String> outputTypes = new HashMap<>();
 
 	public static enum LoggingType {
 		LOG4J, JMS
@@ -153,6 +174,17 @@ public class AppConfigurator {
 		outputType = e;
 	}
 
+    public String getOutputContentType(String outputType) throws Exception {
+        // Note: do the same operation on outputType as the setter, e.g. trim
+        //       and toUpperCase
+        String contentType = outputTypes.get(outputType.trim().toUpperCase());
+        if (contentType == null) {
+            throw new Exception("WebserviceShell getOutputTypes, no Content-Type"
+                    + " found for outputType: " + outputType);
+        }
+		return contentType;
+	}
+
 	public void setOutputType(String s) throws Exception {
 		try {
 			this.outputType = OutputType.valueOf(s.toUpperCase());
@@ -160,6 +192,33 @@ public class AppConfigurator {
 			throw new Exception("Unrecognized output format: " + s);
 		}
 	}
+
+	public void setOutputTypes(String s) throws Exception {
+        if (!isOkString(s)) {
+			throw new Exception("Missing outputTypes, at least one pair must"
+                    + " be set");
+        }
+        
+        String[] pairs = s.split(java.util.regex.Pattern.quote(","));
+
+        for (String pair : pairs) {
+            String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
+            if (oneKV.length != 2) {
+                throw new Exception(
+                        "WebserviceShell setOutputTypes is expecting 2 items in"
+                        + " a comma separated list of pairs of output type"
+                        + " and HTTP Content-Type,"
+                        + " instead item count: " + oneKV.length
+                        + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
+                        + "  input: " + s);
+            }
+
+            // Not sure HTTP types should be uppercase, so leave it how the
+            // configuration file sets it
+            outputTypes.put(oneKV[0].trim().toUpperCase(),
+                    oneKV[1].trim());
+        }
+    }
 
 	public LoggingType getLoggingType() {
 		return loggingType;
@@ -442,6 +501,10 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("outputType");
 		if (isOkString(configStr))
 			this.setOutputType(configStr);
+		
+		configStr = configurationProps.getProperty("outputTypes");
+		if (isOkString(configStr))
+			this.setOutputTypes(configStr);
 
 		configStr = configurationProps.getProperty("loggingMethod");
 		if (isOkString(configStr))
@@ -636,6 +699,8 @@ public class AppConfigurator {
 
 		sb.append(strAppend("Output Type") + outputType + "\n");
 
+		sb.append(strAppend("Output Types") + formatOutputTypes(outputTypes) + "\n");
+
 		sb.append(strAppend("Logging Method") + loggingType + "\n");
 
 		if (jndiUrl != null)
@@ -713,6 +778,9 @@ public class AppConfigurator {
 
 		sb.append("<TR><TD>" + "Output Type" + "</TD><TD>" + outputType
 				+ "</TD></TR>");
+        
+		sb.append("<TR><TD>").append("Output Types").append("</TD><TD>")
+                .append(formatOutputTypes(outputTypes)).append("</TD></TR>");
 
 		sb.append("<TR><TD>" + "Logging Method" + "</TD><TD>" + loggingType
 				+ "</TD></TR>");
