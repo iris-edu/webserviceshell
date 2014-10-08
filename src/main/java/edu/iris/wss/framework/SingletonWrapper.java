@@ -19,6 +19,7 @@
 
 package edu.iris.wss.framework;
 
+import edu.iris.dmc.jms.service.WebLogService;
 import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
@@ -33,6 +34,9 @@ public class SingletonWrapper {
 	public ParamConfigurator paramConfig = new ParamConfigurator();
 	public StatsKeeper statsKeeper = new StatsKeeper();
 	public IrisSingleton singleton = null;
+        
+    public static WebLogService webLogService = null;
+
 	
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
 

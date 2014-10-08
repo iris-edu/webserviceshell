@@ -121,7 +121,7 @@
         <jersey.version.1x>1.18.1</jersey.version.1x>
         <servlet.version>3.0.1</servlet.version>
         <sc.seis.seisFile>1.6.2</sc.seis.seisFile>
-        <statswriter.version>3.1</statswriter.version>
+        <dmc.usage.log.version>1.0.0</dmc.usage.log.version>
         <wsslog4jinit.version>0.9</wsslog4jinit.version>
     </properties>
 
@@ -146,9 +146,9 @@
         </dependency>
 
         <dependency>
-            <groupId>edu.iris.StatsWriter</groupId>
-            <artifactId>StatsWriter</artifactId>
-            <version>${statswriter.version}</version>
+            <groupId>edu.iris.dmc</groupId>
+            <artifactId>dmc-usage-log</artifactId>
+            <version>${dmc.usage.log.version}</version>
         </dependency>
 
         <dependency>

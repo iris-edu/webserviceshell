@@ -42,7 +42,7 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
 			errorType, httpStatus.getStatusCode(), extraText,
 			network, station, location, channel, quality,
-			startTime, endTime, duration);
+			startTime, endTime);
 	}
 	
 	public static void logUsageMessage(RequestInfo ri, String appSuffix,

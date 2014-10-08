@@ -19,15 +19,18 @@
 
 package edu.iris.wss.utils;
 
+import edu.iris.dmc.jms.WebUsageItem;
+import edu.iris.dmc.jms.service.WebLogService;
+import edu.iris.wss.framework.AppConfigurator;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import edu.iris.StatsWriter.WsStatsWriter;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.AppConfigurator.LoggingType;
+import edu.iris.wss.framework.SingletonWrapper;
 
 public class LoggerUtils {
 
@@ -35,49 +38,112 @@ public class LoggerUtils {
 	public static final Logger logger = Logger.getLogger(LoggerUtils.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 	
+    /**
+     * ERROR usage logging
+     * 
+     */
 	public static void logWssUsageError(RequestInfo ri, String appSuffix,
 			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText) {
 
-		logWssUsageMessage(Level.ERROR, ri, 
-				appSuffix, dataSize, processTime,
-				errorType, httpStatusCode, extraText,
-				null, null, null, null, null,
-				null, null, null);
+        WebUsageItem wui = new WebUsageItem();
+
+        wui.setApplication(makeFullAppName(ri, appSuffix));
+        wui.setHost(WebUtils.getHostname());
+        wui.setAccessDate(new Date());
+        wui.setClientName(WebUtils.getClientName(ri.request));
+        wui.setClientIP(WebUtils.getClientIp(ri.request));
+        wui.setDataSize(dataSize);
+        wui.setProcessTime(processTime);
+        wui.setNetwork(null);
+        wui.setStation(null);
+        wui.setChannel(null);
+        wui.setLocation(null);
+        wui.setQuality(null);
+        wui.setStartTime(null);
+        wui.setEndTime(null);
+        wui.setErrorType(errorType);
+        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
+        wui.setHttpStatus(httpStatusCode);
+        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        wui.setExtra(extraText);
+
+		logWssUsageMessage(Level.ERROR, wui, ri);
 	}
 	
-	// Usage helper functions for 'INFO' level messages.  I.e. normal ones.	
-	
+	/**
+     * INFO usage summary logging
+     * 
+     */
 	public static void logWssUsageMessage(RequestInfo ri, String appSuffix,
 			Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText) {
-		logWssUsageMessage(ri, appSuffix, dataSize, processTime, errorType, httpStatusCode, extraText,
-				null, null, null, null, null, null, null, null);
+
+        WebUsageItem wui = new WebUsageItem();
+
+        wui.setApplication(makeFullAppName(ri, appSuffix));
+        wui.setHost(WebUtils.getHostname());
+        wui.setAccessDate(new Date());
+        wui.setClientName(WebUtils.getClientName(ri.request));
+        wui.setClientIP(WebUtils.getClientIp(ri.request));
+        wui.setDataSize(dataSize);
+        wui.setProcessTime(processTime);
+        wui.setNetwork(null);
+        wui.setStation(null);
+        wui.setChannel(null);
+        wui.setLocation(null);
+        wui.setQuality(null);
+        wui.setStartTime(null);
+        wui.setEndTime(null);
+        wui.setErrorType(errorType);
+        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
+        wui.setHttpStatus(httpStatusCode);
+        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        wui.setExtra(extraText);
+        
+		logWssUsageMessage(Level.INFO, wui, ri);
 	}
 	
+    /**
+     * INFO usage detail logging
+     *
+     */
 	public static void logWssUsageMessage(RequestInfo ri, 
 			String appSuffix, Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText,
 			String network, String station, String location, String channel, String quality,
-			Date startTime, Date endTime, String duration) {
-		logWssUsageMessage(Level.INFO, ri, 
-				appSuffix, dataSize, processTime,
-				errorType, httpStatusCode, extraText,
-				network, station, location, channel, quality,
-				startTime, endTime, duration);
+			Date startTime, Date endTime) {
+
+        WebUsageItem wui = new WebUsageItem();
+
+        wui.setApplication(makeFullAppName(ri, appSuffix));
+        wui.setHost(WebUtils.getHostname());
+        wui.setAccessDate(new Date());
+        wui.setClientName(WebUtils.getClientName(ri.request));
+        wui.setClientIP(WebUtils.getClientIp(ri.request));
+        wui.setDataSize(dataSize);
+        wui.setProcessTime(processTime);
+        wui.setNetwork(network);
+        wui.setStation(station);
+        wui.setChannel(channel);
+        wui.setLocation(location);
+        wui.setQuality(quality);
+        wui.setStartTime(startTime);
+        wui.setEndTime(endTime);
+        wui.setErrorType(errorType);
+        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
+        wui.setHttpStatus(httpStatusCode);
+        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        wui.setExtra(extraText);
+        
+		logWssUsageMessage(Level.INFO, wui, ri);
 	}
 	
-		
-	public static void logWssUsageMessage(Level level, RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Integer httpStatusCode, String extraText,
-			String network, String station, String location, String channel, String quality,
-			Date startTime, Date endTime, String duration) {
-		
-		if (ri.appConfig.getLoggingType() == LoggingType.LOG4J) {
-            String msg = makeUsageLogString(ri, appSuffix, dataSize, processTime,
-                errorType, httpStatusCode, extraText, network, station,
-                location, channel, quality, startTime, endTime, duration);
+	public static void logWssUsageMessage(Level level, WebUsageItem wui, RequestInfo ri) {
+		AppConfigurator.LoggingType loggingType = ri.appConfig.getLoggingType();
+        
+		if (loggingType == LoggingType.LOG4J) {
+            String msg = makeUsageLogString(wui);
             
 			switch (level.toInt()) {
 			case Level.ERROR_INT:
@@ -90,116 +156,85 @@ public class LoggerUtils {
 				usageLogger.debug(msg);
 				break;	
 			}
-
-			return;
-		}
-		
-		if (ri.appConfig.getLoggingType() == LoggingType.JMS) {
-			
-			String fullAppName = ri.appConfig.getAppName();
-			if (appSuffix != null) fullAppName += appSuffix;
-			
-			try {
-				WsStatsWriter wsw = WsStatsWriter.getInstance();/*new WsStatsWriter(
-						ri.appConfig.getConnectionFactory(),
-						ri.appConfig.getTopicDestination(),
-						ri.appConfig.getJndiUrl());*/
+		} else if (loggingType == LoggingType.JMS) {
+            // for now, webLogService startup is here as in the original code
+            // rather than in AppContextListener, if placed in AppContextListener, 
+            // startup timing between components needs to be checked
+            try {
+                if (SingletonWrapper.webLogService == null) {
+                    SingletonWrapper.webLogService = new WebLogService();
+                    try {
+                        SingletonWrapper.webLogService.init();
+                        logger.info("webLogService init succeeded");
+                    } catch (Exception ex) {
+                        System.out.println("webLogService init exception: "
+                                + ex + "  msg: " + ex.getMessage());
+                        logger.error("webLogService init exception: ", ex);
+                    }
+                }
                 
 //                // check output
-//                System.out.println("*** WsStats"
-//                    + "  fullAppName: " + fullAppName
-//                    + "  hostName: " + WebUtils.getHostname()
-//                    + "  accessDate: " + new Date()
-//                    + "  clientName: " + WebUtils.getClientName(ri.request)
-//                    + "  clientIp: " + WebUtils.getClientIp(ri.request)
-//                    + "  dataSize: " + dataSize
-//                    + "  processTime: " + processTime
-//                    + "  network: " + network
-//                    + "  station: " + station
-//                    + "  channel: " + channel
-//                    + "  location: " + location
-//                    + "  quality: " + quality
-//                    + "  startTime: " + startTime
-//                    + "  endTime: " + endTime
-//                    + "  duration: " + duration
-//                    + "  errorType: " + errorType
-//                    + "  userAgent: " + WebUtils.getUserAgent(ri.request)
-//                    + "  httpStatus: " + Integer.toString(httpStatusCode)
-//                    + "  auth username: " + WebUtils.getAuthenticatedUsername(ri.requestHeaders)
-//                    + "  extra: " + extraText
+//                System.out.println("*** logWssUsageMessage \n"
+//                    + getUsageLogHeader() + "\n"
+//                    + makeUsageLogString(wui)
 //                );
+                
+                SingletonWrapper.webLogService.send(wui);
 
-				wsw.sendUsageMessage(
-					fullAppName, 
-					WebUtils.getHostname(),
-					new Date(),  // Access time
-					WebUtils.getClientName(ri.request),
-					WebUtils.getClientIp(ri.request), 
-					dataSize, 
-					processTime,
-					network, station, channel, location, quality, 
-					startTime, endTime, duration, 
-					errorType, // Error Type
-					WebUtils.getUserAgent(ri.request),
-					Integer.toString(httpStatusCode),
-					WebUtils.getAuthenticatedUsername(ri.requestHeaders),
-					extraText);
-			
-
-			} catch (Exception e) {
-				logger.error("Error while logging via JMS: " + e.getMessage());
+			} catch (Exception ex) {
+				logger.error("Error while logging via JMS ex: " + ex
+                        + "  msg: " + ex.getMessage());
+                logger.error("Error while logging via JMS stack:", ex);
 			}
-		}
+		} else {
+            logger.error("Error, unexpected loggingType configuration value: "
+                    + loggingType + "  msg: " + makeUsageLogString(wui));
+        }
 	}
 	
-	public static String makeUsageLogString(RequestInfo ri,  String appSuffix,
-			long dataLength, long processTime,
-			String errorType, Integer httpStatus, String extra) {
-		
-		return makeUsageLogString(ri, appSuffix, 
-				dataLength, processTime,
-				errorType, httpStatus, extra,
-				null, null, null, null, null, 
-				null, null, null);
-	}
-	
-	public static String makeUsageLogString(RequestInfo ri, String appSuffix,
-			Long dataLength, Long processTime,
-			String errorType, Integer httpStatus, String extra,
-			String network, String station, String channel, String location, String quality,
-			Date startTime, Date endTime, String duration) {
+    public static String makeFullAppName(RequestInfo ri, String appSuffix) {
+        String fullAppName = ri.appConfig.getAppName();
+        if (appSuffix != null) {
+            fullAppName += appSuffix;
+        }
+        
+        return fullAppName;
+    }
+
+	public static String makeUsageLogString(WebUsageItem wui) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 		StringBuffer sb = new StringBuffer();
 		
-		String fullAppName = ri.appConfig.getAppName();
-		if (appSuffix != null) fullAppName += appSuffix;
+        // note, keep in the same order as getUsageLogHeader
+		append(sb, wui.getApplication());
+		append(sb, wui.getHost());
+        if (wui.getAccessDate() != null) {
+            append(sb, sdf.format(wui.getAccessDate()));
+        }
+		append(sb, wui.getClientName());
+		append(sb, wui.getClientIP());
+		append(sb, wui.getDataSize().toString());
+		append(sb, wui.getProcessTime().toString());
 		
-		append(sb, fullAppName);
-		append(sb, WebUtils.getHostname());
-		append(sb, sdf.format(new Date()));
-		append(sb, WebUtils.getClientName(ri.request));
-		append(sb, WebUtils.getClientIp(ri.request));
-		append(sb, dataLength.toString());
-		append(sb, processTime.toString());
+		append(sb, wui.getErrorType());
+		append(sb, wui.getUserAgent());
+		append(sb, Integer.toString(wui.getHttpStatus()));
+		append(sb, wui.getUserName());
 		
-		append(sb, errorType);
-		append(sb, WebUtils.getUserAgent(ri.request));
-		append(sb, Integer.toString(httpStatus));
-		append(sb, WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-		
-		append(sb, network);
-		append(sb, station);
-		append(sb, channel);
-		append(sb, location);
-		append(sb, quality);
-		if (startTime != null)
-			append(sb, sdf.format(startTime));		
-		if (endTime != null) 
-			append(sb, sdf.format(endTime));
-		
-		append(sb, extra);
+		append(sb, wui.getNetwork());
+		append(sb, wui.getStation());
+		append(sb, wui.getChannel());
+		append(sb, wui.getLocation());
+		append(sb, wui.getQuality());
+		if (wui.getStartTime() != null) {
+			append(sb, sdf.format(wui.getStartTime()));
+        }
+		if (wui.getEndTime() != null) {
+			append(sb, sdf.format(wui.getEndTime()));
+        }
+		append(sb, wui.getExtra());
 
 		return sb.toString();
 	}
