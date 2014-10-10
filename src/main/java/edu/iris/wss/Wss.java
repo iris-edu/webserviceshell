@@ -28,7 +28,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo.CallType;
 
@@ -38,6 +37,7 @@ import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.IrisStreamingOutput.ProcessStreamingOutput;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
+import java.util.logging.Level;
 
 @Path ("/")
 public class Wss {
@@ -60,7 +60,7 @@ public class Wss {
 	@Path("status")
 	@GET
 	public String cfg() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	StringBuilder sb = new StringBuilder();
 		sb.append("<HTML><BODY>");
@@ -105,7 +105,7 @@ public class Wss {
 	
     @GET
     public Response ok() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	String docUrl = ri.appConfig.getRootServiceDoc();
     	
@@ -156,14 +156,14 @@ public class Wss {
 	@Path("version")
 	@GET @Produces("text/plain")
 	public String getVersion() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	return ri.appConfig.getVersion();
 	}
 	
 	@Path("whoami")
 	@GET @Produces("text/plain")
 	public String getwho() {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	return request.getRemoteAddr();
 	}	
 	
@@ -171,7 +171,7 @@ public class Wss {
 	@GET @Produces ("application/xml")
 	public Response getWadl() {
 		
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	
     	// First check if wadlPath configuration is set.  If so, then stream from that URL.
     	
@@ -245,7 +245,7 @@ public class Wss {
 	@POST
 	@Path("queryauth") 
 	public Response postQueryAuth(String pb) {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
 		if (! ri.appConfig.getPostEnabled()) 
@@ -258,7 +258,7 @@ public class Wss {
 	@POST
 	@Path("query") 
 	public Response postQuery(String pb) {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
 		if (! ri.appConfig.getPostEnabled()) 
@@ -271,7 +271,7 @@ public class Wss {
 	@GET
 	@Path("queryauth")
 	public Response queryAuth() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	ri.statsKeeper.logAuthGet();
 		return processQuery();
@@ -280,8 +280,8 @@ public class Wss {
 	@GET 
 	@Path("query")
 	public Response query() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
-    
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        
     	ri.statsKeeper.logGet();
 		return processQuery();
 	}
@@ -289,7 +289,7 @@ public class Wss {
 	@GET 
 	@Path("catalogs")
 	public Response catalogs() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.callType = CallType.CATALOGS;
 
     	ri.statsKeeper.logGet();
@@ -299,7 +299,7 @@ public class Wss {
 	@GET 
 	@Path("contributors")
 	public Response contributors() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.callType = CallType.CONTRIBUTORS;
 
     	ri.statsKeeper.logGet();
@@ -309,7 +309,7 @@ public class Wss {
 	@GET 
 	@Path("counts")
 	public Response counts() throws Exception {
-    	ri = new RequestInfo(sw, uriInfo, request, requestHeaders);
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.callType = CallType.COUNTS;
 
     	ri.statsKeeper.logGet();
@@ -386,15 +386,19 @@ public class Wss {
         if (status != Status.OK) {
             newerShellException(status, ri, iso);
 		}
-		
-        // use the output type from configuration, unless overridden
-        // in the request URL	
-		OutputType outputType = ri.getRequestOutputType();
-		
-		ResponseBuilder builder = Response.status(status)
-				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
-		builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
-				"; filename=" + ri.appConfig.getOutputFilename(outputType));			
+
+        String mediaType = null;
+        try {
+            mediaType = ri.getPerRequestMediaType();
+        } catch (Exception ex) {
+            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+                    + " mediaTypeKey: " + ri.getPerRequestOutputTypeKey()
+                    + ServiceShellException.getErrorString(ex));
+        }
+        
+        ResponseBuilder builder = Response.status(status).type(mediaType)
+                .entity(iso);
+        builder.header("Content-Disposition", ri.createContentDisposition());
 		
 		// Insert CORS header elements. 
 		if (ri.appConfig.getAllowCors()) {
@@ -434,9 +438,9 @@ public class Wss {
 					shellException(Status.NOT_FOUND,
                             "catalogHandler msg: " + catalogsHandlerString);
 
-				cmd = new ArrayList<String>(Arrays.asList(catalogsHandlerString.split(" ")));
+				cmd = new ArrayList<>(Arrays.asList(catalogsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("XML");
+					ri.setPerRequestOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 				
@@ -447,9 +451,9 @@ public class Wss {
 					shellException(Status.NOT_FOUND,
                             "contributorsHandler msg: " + contributorsHandlerString);
 				
-				cmd = new ArrayList<String>(Arrays.asList(contributorsHandlerString.split(" ")));
+				cmd = new ArrayList<>(Arrays.asList(contributorsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("XML");
+					ri.setPerRequestOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 				
@@ -460,9 +464,9 @@ public class Wss {
 					shellException(Status.NOT_FOUND,
                             "countsHandler msg: " + countsHandlerString);
 				
-				cmd = new ArrayList<String>(Arrays.asList(countsHandlerString.split(" ")));
+				cmd = new ArrayList<>(Arrays.asList(countsHandlerString.split(" ")));
 				try {
-					ri.appConfig.setOutputType("XML");
+					ri.setPerRequestOutputType("XML");
 				} catch (Exception e) { ; }
 				break;
 		}
@@ -516,14 +520,18 @@ public class Wss {
             newerShellException(status, ri, iso);
 		}
 		
-        // use the output type from configuration, unless overridden
-        // in the request URL
-		OutputType outputType = ri.getRequestOutputType();
-		
-		ResponseBuilder builder = Response.status(status)
-				.type(AppConfigurator.getMimeType(outputType)).entity(iso);    
-		builder.header("Content-Disposition", AppConfigurator.getContentDispositionType(outputType) + 
-				"; filename=" + ri.appConfig.getOutputFilename(outputType));	
+        String mediaType = null;
+        try {
+            mediaType = ri.getPerRequestMediaType();
+        } catch (Exception ex) {
+            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+                    + " mediaTypeKey: " + ri.getPerRequestOutputTypeKey()
+                    + ServiceShellException.getErrorString(ex));
+        }
+        
+        ResponseBuilder builder = Response.status(status).type(mediaType)
+                .entity(iso);
+        builder.header("Content-Disposition", ri.createContentDisposition());
 		
 		// Insert CORS header elements. 
 		if (ri.appConfig.getAllowCors()) {

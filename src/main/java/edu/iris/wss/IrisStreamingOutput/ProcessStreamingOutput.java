@@ -45,7 +45,7 @@ import com.Ostermiller.util.CircularByteBuffer;
 
 import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator;
-import edu.iris.wss.framework.AppConfigurator.OutputType;
+import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.sc.seis.seisFile.mseed.DataHeader;
@@ -141,7 +141,9 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					"No valid process found.");
 		}
 
-		if (ri.getRequestOutputType() == OutputType.ZIP) {
+        InternalTypes processingType = InternalTypes.valueOf(
+                ri.getPerRequestOutputTypeKey());
+        if (processingType == InternalTypes.ZIP) {
 			// Create a sub-directory for the results based off of the working
 			// Directory
 			String wd = ri.appConfig.getWorkingDirectory();
@@ -318,16 +320,20 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	   @Override
     public void write(OutputStream output) {
-        OutputType outputType = ri.getRequestOutputType();
+        InternalTypes processingType = InternalTypes.valueOf(
+                ri.getPerRequestOutputTypeKey());
         
-        if (outputType == OutputType.MSEED
-                || outputType == OutputType.MINISEED) {
-            writeMiniSeed(output);
-        } else if (outputType == OutputType.ZIP) {
+		switch (processingType) {
+		case MSEED:
+		case MINISEED:
+			writeMiniSeed(output);
+            break;
+        case ZIP:
             writeZip(output);
-        } else {
-            writeNormal(output);
-        }
+            break;
+		default:
+			writeNormal(output);
+		}
     }
 
 	// [region] Seed writer

@@ -6,7 +6,7 @@
 
 package edu.iris.wss.framework;
 
-import edu.iris.wss.framework.AppConfigurator.OutputType;
+import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import java.util.ArrayList;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -48,29 +48,29 @@ public class ParameterTranslatorTest {
     public void testParseQueryParams() throws Exception {
 
         String postData =
-        "query=format%3Dtext%0D%0Alevel%3Dchannel%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
+        "query=format%3Dbinary%0D%0Alevel%3Dchannel%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
         String value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
         
-        assertEquals(OutputType.valueOf(value.toUpperCase()), OutputType.TEXT);
+        assertEquals(InternalTypes.valueOf(value.toUpperCase()), InternalTypes.BINARY);
         
         postData =
-        "query=output%3Dtext%0D%0Alevel%3Dchannel%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
+        "query=output%3Dbinary%0D%0Alevel%3Dchannel%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature1);
-        assertEquals(OutputType.valueOf(value.toUpperCase()), OutputType.TEXT);
+        assertEquals(InternalTypes.valueOf(value.toUpperCase()), InternalTypes.BINARY);
 
         postData =
-        "query=level%3Dchannel%0D%0Aformat%3Dtext%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
+        "query=level%3Dchannel%0D%0Aformat%3Dbinary%0D%0AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00";
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
-        assertEquals(OutputType.valueOf(value.toUpperCase()), OutputType.TEXT);
+        assertEquals(InternalTypes.valueOf(value.toUpperCase()), InternalTypes.BINARY);
 
         postData =
-        "AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00%0D%0Aquery=level%3Dchannel%0D%0Aformat%3Dtext";
+        "AIU+ANMO+--+*+1995-01-11T01%3A11%3A00+1998-02-22T02%3A22%3A00%0D%0Aquery=level%3Dchannel%0D%0Aformat%3Dbinary";
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
-        assertEquals(OutputType.valueOf(value.toUpperCase()), OutputType.TEXT);
+        assertEquals(InternalTypes.valueOf(value.toUpperCase()), InternalTypes.BINARY);
 
         postData =
         "%0q";
@@ -95,7 +95,7 @@ public class ParameterTranslatorTest {
         String value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
         
-        assertEquals(OutputType.MINISEED, OutputType.valueOf(value.toUpperCase()));
+        assertEquals(InternalTypes.MINISEED, InternalTypes.valueOf(value.toUpperCase()));
  
         // mseed should work also
         postData =
@@ -103,7 +103,7 @@ public class ParameterTranslatorTest {
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
         
-        assertEquals(OutputType.MSEED, OutputType.valueOf(value.toUpperCase()));
+        assertEquals(InternalTypes.MSEED, InternalTypes.valueOf(value.toUpperCase()));
         
         postData =
         "level=channel\n" +
@@ -121,7 +121,7 @@ public class ParameterTranslatorTest {
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
 
-        assertEquals(OutputType.MINISEED, OutputType.valueOf(value.toUpperCase()));
+        assertEquals(InternalTypes.MINISEED, InternalTypes.valueOf(value.toUpperCase()));
     }
 
      
@@ -189,20 +189,20 @@ public class ParameterTranslatorTest {
     public void testParseQueryFormatText() throws Exception {
 
         String postData =
-        "query=level%3Dchannel%0D%0Aformat%3Dtext%0D%0ATA+*+*+*+*+2014-05-01T00%3A00%3A00";
+        "query=level%3Dchannel%0D%0Aformat%3Dbinary%0D%0ATA+*+*+*+*+2014-05-01T00%3A00%3A00";
         String value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
         
-        assertEquals(OutputType.TEXT, OutputType.valueOf(value.toUpperCase()));
+        assertEquals(InternalTypes.BINARY, InternalTypes.valueOf(value.toUpperCase()));
  
         postData =
         "level=channel\n" +
-        "format=text\n" +
+        "format=binary\n" +
         "TA * * * * 2014-05-01T00:00:00";
         
         value = ParameterTranslator.extractValueByKey(postData,
             ParameterTranslator.outputControlSignature2);
 
-        assertEquals(OutputType.TEXT, OutputType.valueOf(value.toUpperCase()));
+        assertEquals(InternalTypes.BINARY, InternalTypes.valueOf(value.toUpperCase()));
     }
 }

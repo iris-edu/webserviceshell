@@ -23,7 +23,6 @@ package edu.iris.wss.framework;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
-import edu.iris.wss.framework.AppConfigurator.OutputType;
 import edu.iris.wss.framework.FdsnStatus.Status;
 
 public  class RequestInfo {
@@ -36,7 +35,11 @@ public  class RequestInfo {
 	public CallType callType = CallType.NORMAL;
 	
 	public boolean perRequestUse404for204 = false;
-	public AppConfigurator.OutputType perRequestOutputType = null;
+    
+    // Note: The setter should be validating this string, trim it
+    //       and set to uppercase. This should enable any gets of
+    //       this value to not need to trim, validate, etc.
+	public String perRequestOutputTypeKey = null;
 	
 	public String postBody = null;
 	
@@ -48,51 +51,100 @@ public  class RequestInfo {
 	
 	// Used (set) by ProcessStreamingOutput class on ZIP output
 	public String workingSubdirectory = null;
-	
-	public RequestInfo(SingletonWrapper sw,
+    
+    // as per StackOverflow, make sure the object is fully created before
+    // passing it to another constructor, use createInstance factory to create.
+    private RequestInfo() {
+        // noop
+    }
+    
+    public static RequestInfo createInstance(SingletonWrapper sw,
 			UriInfo uriInfo, 
 			javax.servlet.http.HttpServletRequest request,
 			HttpHeaders requestHeaders) {
-		this.sw = sw;
-		this.uriInfo = uriInfo;
-		this.request = request;
-		this.requestHeaders = requestHeaders;
-		this.appConfig = sw.appConfig;
-		this.paramConfig = sw.paramConfig;
-		this.statsKeeper = sw.statsKeeper;
+        RequestInfo ri = new RequestInfo();
+        ri.sw = sw;
+        ri.uriInfo = uriInfo;
+        ri.request = request;
+		ri.requestHeaders = requestHeaders;
+		ri.appConfig = sw.appConfig;
+		ri.paramConfig = sw.paramConfig;
+		ri.statsKeeper = sw.statsKeeper;
 		
-		if ((this.appConfig.getHandlerProgram() == null) && 
-				(this.appConfig.getStreamingOutputClassName() == null)) {
-			ServiceShellException.logAndThrowException(this,
+        // TBD since this is configurartion, look at doing this once at startup.
+		if ((ri.appConfig.getHandlerProgram() == null) && 
+				(ri.appConfig.getStreamingOutputClassName() == null)) {
+			ServiceShellException.logAndThrowException(ri,
                     Status.INTERNAL_SERVER_ERROR, 
 					"Service configuration problem,"
                     + " handler program and StreamingOutputClassName not defined");
-
 		}
-	}	
+        
+        return ri;
+    }
+    
+    // For testing only
+    protected RequestInfo(AppConfigurator appConfig) {
+        this.appConfig = appConfig;
+    }
 	
-	public void setPerRequestOutputType(String s) throws Exception {
-		try {
-			this.perRequestOutputType = OutputType.valueOf(s.toUpperCase());
-		} catch (Exception e) {
-			throw new Exception("Unrecognized output format: " + s);
+    /**
+     * Validate and store the value from format parameter in query
+     * 
+     * @param trialKey
+     * @throws Exception 
+     */
+	public void setPerRequestOutputType(String trialKey) throws Exception {
+        if (trialKey == null) {
+            throw new Exception("WebServiceShell, output type key is null, it"
+                    + " must be key in outputTypes list in ...service.cfg");
+        }
+        // Validate of the value in query &format parameter
+        String key = trialKey.trim().toUpperCase();
+        
+        if (appConfig.containsKey(key)) {
+            this.perRequestOutputTypeKey = key;
+        } else {
+            throw new Exception("WebServiceShell, unrecognized outpTtype key: "
+                    + key + "  from input: " + trialKey
+                    + "  must be a type in outputTypes in ...service.cfg");
+        }
+	}
+	
+    /**
+     * Note: Callers should expect the return value to be
+     *       validated, trimmed, and uppercase
+     * 
+     * @return 
+     */
+	public String getPerRequestOutputTypeKey() {
+        // Note: Callers should expect the return value to be
+        //       validated, trimmed, and uppercase
+        String key = perRequestOutputTypeKey;
+        if (key == null) {
+            key = appConfig.defaultOutputTypeKey();
 		}
+        return key;
 	}
     
     /**
      * Override configuration outputType with request outputType if the
-     * request included the type.
+     * request included &format.
      * 
      * @return 
+     * @throws java.lang.Exception 
      */
-	public OutputType getRequestOutputType() {
-        OutputType outputType = appConfig.getOutputType();
-        
-		if (this.perRequestOutputType != null) {
-			outputType = this.perRequestOutputType;
-		}
-        
-        return outputType;
-	}
+    public String getPerRequestMediaType() throws Exception {
+        return appConfig.getMediaType(getPerRequestOutputTypeKey());
+    }
 
+    /**
+     * Create disposition based on current request and configuration information
+     * @return 
+     */
+    public String createContentDisposition() {
+        String key = getPerRequestOutputTypeKey();
+        return AppConfigurator.getContentDispositionType(key) + "; filename="
+                + appConfig.getOutputFilename(key);
+    }
 }

@@ -35,6 +35,7 @@ import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 
 public class AppConfigurator {
+	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
 	public static final String wssVersion = "1.1.9-SNAPSHOT";
 	public static final String wssConfigDirSignature = "wssConfigDir";
@@ -53,12 +54,19 @@ public class AppConfigurator {
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n";
 
-	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
-
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
+    
+    public AppConfigurator() {
+        // set default type
+        outputTypes.put("BINARY", "application/octet-stream");
+    }
 
-    private String formatOutputTypes(Map<String, String> outputTypes) {
+    public String formatOutputTypes() {
+        return formatOutputTypes(outputTypes);
+    }
+
+    private static String formatOutputTypes(Map<String, String> outputTypes) {
         StringBuilder s = new StringBuilder();
         s.append("outputTypes = ");
         
@@ -74,19 +82,26 @@ public class AppConfigurator {
         return s.toString();
     }
 
+    // An enum of the types supported internally, in support of various
+    // switches and branching. Only BINARY is defined by default in outputTypes
+    // For an operator to use use the code controlled by the types in this enum,
+    // the service config file parameter outputTypes must have pairs where the
+    // keys is identical to the elements in this list
     // add miniseed as alias for mseed to stay consistent with FDSN standards
-	public static enum OutputType {
-		XML, JSON, TEXT, MSEED, MINISEED, TEXTTREE, ZIP
+	public static enum InternalTypes {
+		MSEED, MINISEED, ZIP, BINARY
 	};
     
-    // start with not Thread safe HashMap with default size
-    Map<String, String> outputTypes = new HashMap<>();
+	private final InternalTypes outputType = InternalTypes.BINARY;
+    private String defaultOutputTypeKey = "BINARY";
+    public String defaultOutputTypeKey() {
+		return defaultOutputTypeKey;
+	}
+    private Map<String, String> outputTypes = new HashMap<>();
 
 	public static enum LoggingType {
 		LOG4J, JMS
 	};
-
-	private OutputType outputType = OutputType.TEXT;
 
 	private String rootServicePath;
 	private String rootServiceDoc;
@@ -165,34 +180,21 @@ public class AppConfigurator {
 		version = s;
 	}
 
-	// These config entries have defaults from this class.
-	public OutputType getOutputType() {
-		return outputType;
+    public boolean containsKey(String outputTypeKey) throws Exception {
+        return outputTypes.containsKey(outputTypeKey);
 	}
 
-	public void setOutputType(OutputType e) {
-		outputType = e;
-	}
-
-    public String getOutputContentType(String outputType) throws Exception {
-        // Note: do the same operation on outputType as the setter, e.g. trim
+    public String getMediaType(String outputTypeKey) throws Exception {
+        // Note: do the same operation on outputTypeKey as the setter, e.g. trim
         //       and toUpperCase
-        String contentType = outputTypes.get(outputType.trim().toUpperCase());
-        if (contentType == null) {
+        String mediaType = outputTypes.get(outputTypeKey.trim().toUpperCase());
+        if (mediaType == null) {
             throw new Exception("WebserviceShell getOutputTypes, no Content-Type"
-                    + " found for outputType: " + outputType);
+                    + " found for outputType: " + outputTypeKey);
         }
-		return contentType;
+		return mediaType;
 	}
-
-	public void setOutputType(String s) throws Exception {
-		try {
-			this.outputType = OutputType.valueOf(s.toUpperCase());
-		} catch (Exception e) {
-			throw new Exception("Unrecognized output format: " + s);
-		}
-	}
-
+    
 	public void setOutputTypes(String s) throws Exception {
         if (!isOkString(s)) {
 			throw new Exception("Missing outputTypes, at least one pair must"
@@ -201,6 +203,7 @@ public class AppConfigurator {
         
         String[] pairs = s.split(java.util.regex.Pattern.quote(","));
 
+        int count = 0;
         for (String pair : pairs) {
             String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
             if (oneKV.length != 2) {
@@ -213,10 +216,14 @@ public class AppConfigurator {
                         + "  input: " + s);
             }
 
-            // Not sure HTTP types should be uppercase, so leave it how the
-            // configuration file sets it
-            outputTypes.put(oneKV[0].trim().toUpperCase(),
-                    oneKV[1].trim());
+            String key = oneKV[0].trim().toUpperCase();
+            outputTypes.put(key, oneKV[1].trim());
+            
+            // the first item in the list shall be the new default
+            count++;
+            if (count == 1) {
+                defaultOutputTypeKey = key;
+            }
         }
     }
 
@@ -498,10 +505,6 @@ public class AppConfigurator {
 		if (isOkString(configStr))
 			this.wadlPath = configStr;
 		
-		configStr = configurationProps.getProperty("outputType");
-		if (isOkString(configStr))
-			this.setOutputType(configStr);
-		
 		configStr = configurationProps.getProperty("outputTypes");
 		if (isOkString(configStr))
 			this.setOutputTypes(configStr);
@@ -609,58 +612,33 @@ public class AppConfigurator {
 		logger.info(this.toString());
 	}
 
-	public static String getMimeType(OutputType type) {
-
-		switch (type) {
-		case XML:
-			return "application/xml";
-		case TEXT:
-			return "text/plain";
-		case TEXTTREE:
-			return "text/plain";
-		case JSON:
-			return "application/json";
-		case MSEED:
-		case MINISEED:
-			return "application/vnd.fdsn.mseed";
-		case ZIP:
-			return "application/zip";
-		default:
-			return "text/plain";
-		}
-	}
-
-	public static String getExtension(OutputType type) {
-		switch (type) {
-		case XML:
-			return ".xml";
-		case TEXT:
-			return ".txt";
-		case TEXTTREE:
-			return ".txt";
-		case JSON:
-			return ".json";
-		case MSEED:
-		case MINISEED:
-			return ".mseed";
-		case ZIP:
-			return ".zip";
-		default:
+	public static String getExtension(String type) {
+        InternalTypes processingType = InternalTypes.valueOf(type);
+        
+    	switch (processingType) {
+		case BINARY:
+            // This is intened for the caller to not put a suffix on
+            // the generated filename
 			return null;
+        default:
+			return type.toLowerCase();
 		}
 	}
 
-	public static String getContentDispositionType(OutputType type) {
-		switch (type) {
+	public static String getContentDispositionType(String type) {
+        InternalTypes processingType = InternalTypes.valueOf(type);
+
+        switch (processingType) {
 		case MSEED:
 		case MINISEED:
+        case BINARY:
 			return "attachment";
 		default:
 			return "inline";
 		}
 	}
 
-	public String getOutputFilename(OutputType type) {
+	public String getOutputFilename(String type) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return this.appName + "_" + sdf.format(new Date())
 				+ getExtension(type);
@@ -697,7 +675,7 @@ public class AppConfigurator {
 		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
 		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
 
-		sb.append(strAppend("Output Type") + outputType + "\n");
+		sb.append(strAppend("Default Output Type Key") + defaultOutputTypeKey + "\n");
 
 		sb.append(strAppend("Output Types") + formatOutputTypes(outputTypes) + "\n");
 
@@ -776,8 +754,8 @@ public class AppConfigurator {
 		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204
 				+ "</TD></TR>");
 
-		sb.append("<TR><TD>" + "Output Type" + "</TD><TD>" + outputType
-				+ "</TD></TR>");
+		sb.append("<TR><TD>" + "Default Output Type Key" + "</TD><TD>"
+                + defaultOutputTypeKey + "</TD></TR>");
         
 		sb.append("<TR><TD>").append("Output Types").append("</TD><TD>")
                 .append(formatOutputTypes(outputTypes)).append("</TD></TR>");
