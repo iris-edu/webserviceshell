@@ -82,12 +82,16 @@ public class AppConfigurator {
         return s.toString();
     }
 
-    // An enum of the types supported internally, in support of various
-    // switches and branching. Only BINARY is defined by default in outputTypes
-    // For an operator to use use the code controlled by the types in this enum,
-    // the service config file parameter outputTypes must have pairs where the
-    // keys is identical to the elements in this list
-    // add miniseed as alias for mseed to stay consistent with FDSN standards
+    // An enum of the types supported internally. This is used in the code to
+    // identify places in which the external typeKeys specified in the
+    // service.cfg file must aggree with the respective items in this enum.
+    // An operator must have typeKeys "zip" and/or "miniseed" to enable access
+    // to respective code.
+    //
+    // BINARY is defined as the default
+    //
+    // miniseed is an alias for mseed - to be consistent with FDSN standards
+    //
 	public static enum InternalTypes {
 		MSEED, MINISEED, ZIP, BINARY
 	};
