@@ -4,7 +4,10 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	id="WebApp_ID" version="3.0">
 	<display-name>webserviceshell</display-name>
-        <!-- deactivated for now, 20140918, using annotation in Log4jInit instead -->
+  <!-- 20140918 - deactivated activation here in the web.xml file in favor of
+       using WebServlet annotaion in Log4jInit.java, 
+       groupId edu.iris.wss  artifactId IrisWSSLog4jInit must be in the pom
+       and loaded into the war file so that log4j gets initialized correctly -->
 	<!--servlet>
 		<servlet-name>log4j-init</servlet-name>
 		<servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
