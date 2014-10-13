@@ -141,9 +141,7 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 					"No valid process found.");
 		}
 
-        InternalTypes processingType = InternalTypes.valueOf(
-                ri.getPerRequestOutputTypeKey());
-        if (processingType == InternalTypes.ZIP) {
+        if (ri.isCurrentTypeKey(InternalTypes.ZIP)) {
 			// Create a sub-directory for the results based off of the working
 			// Directory
 			String wd = ri.appConfig.getWorkingDirectory();
@@ -320,20 +318,14 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 
 	   @Override
     public void write(OutputStream output) {
-        InternalTypes processingType = InternalTypes.valueOf(
-                ri.getPerRequestOutputTypeKey());
-        
-		switch (processingType) {
-		case MSEED:
-		case MINISEED:
-			writeMiniSeed(output);
-            break;
-        case ZIP:
+        if (ri.isCurrentTypeKey(InternalTypes.MSEED)
+                || ri.isCurrentTypeKey(InternalTypes.MINISEED)) {
+            writeMiniSeed(output);
+        } else if (ri.isCurrentTypeKey(InternalTypes.ZIP)) {
             writeZip(output);
-            break;
-		default:
-			writeNormal(output);
-		}
+        } else {
+            writeNormal(output);
+        }
     }
 
 	// [region] Seed writer

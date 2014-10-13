@@ -184,7 +184,7 @@ public class AppConfigurator {
 		version = s;
 	}
 
-    public boolean containsKey(String outputTypeKey) throws Exception {
+    public boolean isConfiguredForTypeKey(String outputTypeKey) throws Exception {
         return outputTypes.containsKey(outputTypeKey);
 	}
 
@@ -614,38 +614,6 @@ public class AppConfigurator {
 		// Finished w/o problems.
 		this.isValid = true;
 		logger.info(this.toString());
-	}
-
-	public static String getExtension(String type) {
-        InternalTypes processingType = InternalTypes.valueOf(type);
-        
-    	switch (processingType) {
-		case BINARY:
-            // This is intened for the caller to not put a suffix on
-            // the generated filename
-			return null;
-        default:
-			return type.toLowerCase();
-		}
-	}
-
-	public static String getContentDispositionType(String type) {
-        InternalTypes processingType = InternalTypes.valueOf(type);
-
-        switch (processingType) {
-		case MSEED:
-		case MINISEED:
-        case BINARY:
-			return "attachment";
-		default:
-			return "inline";
-		}
-	}
-
-	public String getOutputFilename(String type) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		return this.appName + "_" + sdf.format(new Date())
-				+ getExtension(type);
 	}
 
 	private static boolean isOkString(String s) {

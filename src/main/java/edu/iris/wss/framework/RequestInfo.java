@@ -20,10 +20,13 @@
 package edu.iris.wss.framework;
 
 
+import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public  class RequestInfo {
 
@@ -102,7 +105,7 @@ public  class RequestInfo {
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
         
-        if (appConfig.containsKey(key)) {
+        if (appConfig.isConfiguredForTypeKey(key)) {
             this.perRequestOutputTypeKey = key;
         } else {
             throw new Exception("WebServiceShell, unrecognized outpTtype key: "
@@ -127,6 +130,10 @@ public  class RequestInfo {
         return key;
 	}
     
+    public boolean isCurrentTypeKey(InternalTypes typeKey) {
+        return getPerRequestOutputTypeKey().equals(typeKey.toString());
+    }
+    
     /**
      * Override configuration outputType with request outputType if the
      * request included &format.
@@ -139,12 +146,33 @@ public  class RequestInfo {
     }
 
     /**
-     * Create disposition based on current request and configuration information
+     * Create content disposition based on current request and configuration
+     * information
+     * 
      * @return 
      */
     public String createContentDisposition() {
-        String key = getPerRequestOutputTypeKey();
-        return AppConfigurator.getContentDispositionType(key) + "; filename="
-                + appConfig.getOutputFilename(key);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        StringBuilder sb = new StringBuilder();
+        
+        if (isCurrentTypeKey(InternalTypes.MSEED)
+                || isCurrentTypeKey(InternalTypes.MINISEED)
+                || isCurrentTypeKey(InternalTypes.BINARY)) {
+            sb.append("attachment");
+        } else {
+            sb.append("inline");
+        }
+        
+        sb.append("; filename=");
+        sb.append(appConfig.getAppName());
+        sb.append("_");
+        sb.append(sdf.format(new Date()));
+                
+        if (! isCurrentTypeKey(InternalTypes.BINARY)) {
+            // no suffix for binary
+            sb.append(".").append(getPerRequestOutputTypeKey());
+        }
+                
+        return sb.toString();
     }
 }
