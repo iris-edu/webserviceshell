@@ -156,6 +156,7 @@ public class RecordMetaDataTest {
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
+        fmt.setTimeZone(UTC);
         String startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
         // using the same formatter, I should get the same string from date
         // less the microsecond part
@@ -208,6 +209,7 @@ public class RecordMetaDataTest {
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
+        fmt.setTimeZone(UTC);
         String endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
         assertTrue(endResult.equals(endExpected));
         
