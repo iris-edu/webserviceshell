@@ -170,7 +170,7 @@ public  class RequestInfo {
                 
         if (! isCurrentTypeKey(InternalTypes.BINARY)) {
             // no suffix for binary
-            sb.append(".").append(getPerRequestOutputTypeKey());
+            sb.append(".").append(getPerRequestOutputTypeKey().toLowerCase());
         }
                 
         return sb.toString();
