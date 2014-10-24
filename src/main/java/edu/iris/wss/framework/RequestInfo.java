@@ -98,9 +98,10 @@ public  class RequestInfo {
      * @throws Exception 
      */
 	public void setPerRequestOutputType(String trialKey) throws Exception {
+        String msgTail
+                = "  the value must be in the outputTypes list in service.cfg";
         if (trialKey == null) {
-            throw new Exception("WebServiceShell, output type key is null, it"
-                    + " must be key in outputTypes list in ...service.cfg");
+            throw new Exception("format value is null," + msgTail);
         }
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
@@ -108,9 +109,8 @@ public  class RequestInfo {
         if (appConfig.isConfiguredForTypeKey(key)) {
             this.perRequestOutputTypeKey = key;
         } else {
-            throw new Exception("WebServiceShell, unrecognized outpTtype key: "
-                    + key + "  from input: " + trialKey
-                    + "  must be a type in outputTypes in ...service.cfg");
+            throw new Exception("Unrecognized format value: "
+                    + trialKey + msgTail);
         }
 	}
 	

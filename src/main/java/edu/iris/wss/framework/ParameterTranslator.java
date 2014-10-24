@@ -174,7 +174,7 @@ public class ParameterTranslator {
 
 			case TEXT:
 				if (!isOkString(value)) {
-					throw new Exception("No valid value for " + key);
+					throw new Exception("Invalid value for parameter: " + key);
 				}
 				break;
 			}

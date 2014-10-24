@@ -337,7 +337,7 @@ public class Wss {
 			ParameterTranslator.parseQueryParams(cmd, ri);
 		} catch (Exception e) {
 			shellException(Status.BAD_REQUEST,
-                    "error from ParameterTranslator, excp: " + e.getMessage());
+                    "Error with WebServiceShell parameter, " + e.getMessage());
 		}
 				
 		String className = ri.appConfig.getStreamingOutputClassName();
@@ -429,7 +429,7 @@ public class Wss {
 					ParameterTranslator.parseQueryParams(cmd, ri);
 				} catch (Exception e) {
 					shellException(Status.BAD_REQUEST,
-                            "error from ParameterTranslator, excp: " + e.getMessage());
+                            "Error with WebServiceShell parameter, " + e.getMessage());
 				}
 				break;
 			case CATALOGS:
