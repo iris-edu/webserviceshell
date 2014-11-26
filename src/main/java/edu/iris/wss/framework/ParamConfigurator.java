@@ -72,7 +72,8 @@ public class ParamConfigurator {
     
     // A map of aliases pointing to their respective parameter name
     public static final String aliasesName = "aliases";
-	public Map<String, String> aliasesMap = null;
+    // need empty map in case there are no aliases
+	public Map<String, String> aliasesMap = new HashMap<>();
 	
 	public String getValue(String key) {
 		ConfigParam cp = paramMap.get(key);
