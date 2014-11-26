@@ -31,6 +31,8 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.Set;
 
 public class ParamConfigurator {
 
@@ -38,6 +40,7 @@ public class ParamConfigurator {
 	
     private static final String defaultConfigFileName = "META-INF/param.cfg";
     private static final String userParamConfigSuffix = "-param.cfg";
+    private static final String aliasesKeyName = "aliases";
     
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 
@@ -65,7 +68,11 @@ public class ParamConfigurator {
 		}
 	}
 
-	public HashMap<String, ConfigParam> paramMap = new HashMap<String, ConfigParam>();
+	public HashMap<String, ConfigParam> paramMap = new HashMap<>();
+    
+    // A map of aliases pointing to their respective parameter name
+    public static final String aliasesName = "aliases";
+	public Map<String, String> aliasesMap = null;
 	
 	public String getValue(String key) {
 		ConfigParam cp = paramMap.get(key);
@@ -144,19 +151,94 @@ public class ParamConfigurator {
 				throw new Exception("Duplicated config parameter: " + key);
 			
 			String type = (String) configurationProps.get(key);
-			if (!isOkString(type) )  type = null;
-			ParamType paramType;
-			try {
-				paramType = ParamType.valueOf(type.toUpperCase());	
-			} catch (Exception e) {
-				throw new Exception("Unrecognized param type: " + type);
-			}
-			
-			paramMap.put(key, new ConfigParam(key, paramType)); 
+			if (!isOkString(type)) {
+                type = null;
+            }
+            
+            if (key.equals(aliasesKeyName)) {
+                aliasesMap = createAliasesMap(type);
+            } else {
+                ParamType paramType;
+                try {
+                    paramType = ParamType.valueOf(type.toUpperCase());	
+                } catch (Exception e) {
+                    throw new Exception("Unrecognized param type: " + type);
+                }
+
+                paramMap.put(key, new ConfigParam(key, paramType));
+            }
 			configurationProps.remove(key);	
 		}
 		logger.info(this.toString());
 	}
+    
+    public static Map<String, String> createAliasesMap(String aliasValues)
+            throws Exception {
+        Map<String, String> aliases = new HashMap<>();
+        
+        StringBuilder s2 = new StringBuilder(aliasValues.length());
+        
+        // simple parsing, rebuild string with commas inside perenthesis
+        // replaced with |
+        int openPerenCnt = 0;
+        for (int i1 = 0; i1 < aliasValues.length(); i1++){
+            char c = aliasValues.charAt(i1);
+            if (c == '(') {
+                openPerenCnt++;
+                if (openPerenCnt > 1) 
+                {
+                    throw new Exception(
+                        "WebserviceShell createAliasesMap too many open parenthesis"
+                            + " no nesting expected, aliases input: " + aliasValues);
+                }
+            }
+            if (c == ')') {
+                openPerenCnt--;
+                if (openPerenCnt < 0) 
+                {
+                    throw new Exception(
+                        "WebserviceShell createAliasesMap too many closed parenthesis"
+                            + " no nesting expected, aliases input: " + aliasValues);
+                }
+            }
+            
+            if (openPerenCnt == 1 && c == ',') {
+                c = '|';
+            }
+            s2.append(c);
+        }
+        if (openPerenCnt != 0) {
+            throw new Exception(
+                    "WebserviceShell createAliasesMap unbalanced parenthesis"
+                        + " aliases input: " + aliasValues);
+        }
+        
+        String[] pairs = s2.toString().split(java.util.regex.Pattern.quote(","));
+        
+        for (String pair : pairs) {
+            String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
+            if (oneKV.length != 2) {
+                throw new Exception(
+                        "WebserviceShell createAliasesMap is expecting 2 items in"
+                        + " a comma separated list of pairs of parameter:"
+                        + " aliases,"
+                        + " instead item count is: " + oneKV.length
+                        + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
+                        + "  input: " + aliasValues);
+            }
+
+            String respectiveParam = oneKV[0].trim();
+            
+            String[] aliasArray = oneKV[1].trim().replace("(", "")
+                    .replace(")", "").split(java.util.regex.Pattern.quote("|"));
+            
+            for (String s: aliasArray) {
+                aliases.put(s.trim(), respectiveParam);
+            }
+        }
+        
+        return aliases;
+    }
 
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
@@ -170,6 +252,8 @@ public class ParamConfigurator {
 			ConfigParam cp = paramMap.get(key);
 			sb.append(strAppend(cp.name) + cp.type + "\n");
 		}
+        sb.append(aliasesMap).append("\n");
+              
 		return sb.toString();
 	}
 	
@@ -192,6 +276,7 @@ public class ParamConfigurator {
 			ConfigParam cp = paramMap.get(key);
 			sb.append("<TR><TD>" + cp.name + "</TD><TD>" + cp.type + "</TD></TR>");
 		}
+        sb.append("<TR><TD>" + aliasesName + "</TD><TD>" + aliasesMap + "</TD></TR>");
 
 		sb.append("</TABLE>");
 

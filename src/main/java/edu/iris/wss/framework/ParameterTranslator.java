@@ -129,38 +129,53 @@ public class ParameterTranslator {
 
 		keys.addAll(qps.keySet());
 
-        for (String key : keys) {
+        for (String queryKey : keys) {
 
-			ConfigParam cp = ri.paramConfig.paramMap.get(key);
+			if (qps.get(queryKey).size() > 1) {
+				throw new Exception("Multiple entries for query parameter: "
+                      + queryKey);
+            }
+            
+            String typeKey;
+            if (ri.paramConfig.aliasesMap.containsKey(queryKey)) {
+                typeKey = ri.paramConfig.aliasesMap.get(queryKey);
+                if (qps.containsKey(typeKey)) {
+                    throw new Exception("Multiple query parameters for same type: "
+                          + queryKey + ", " + typeKey);
+                }
+            } else {
+                typeKey = queryKey;
+            }
+
+			ConfigParam cp = ri.paramConfig.paramMap.get(typeKey);
 			if (cp == null) {
-				throw new Exception("Unknown query parameter: " + key);
+				throw new Exception("No type defined or unknown query parameter: "
+                      + queryKey);
 			}
 
-			if (qps.get(key).size() > 1)
-				throw new Exception("Duplicate query parameter: " + key);
-
-			// cp.value = qps.getFirst(key);
-			String value = qps.getFirst(key);
+			// note: should only be one value, duplicate checks should be
+            //       performed before this assignment
+			String value = qps.getFirst(queryKey);
 
 			// Test if param type is OK. DATE, NUMBER, TEXT, BOOLEAN
 			switch (cp.type) {
 			case NONE:
 				if (isOkString(value)) {
-					throw new Exception("No value permitted for " + key
+					throw new Exception("No value permitted for " + queryKey
 							+ " Found value: " + value);
 				}
 				break;
 
 			case DATE:
 				if (!isValidFdsnDate(value)) {
-					throw new Exception("Bad date value for " + key + ": "
+					throw new Exception("Bad date value for " + queryKey + ": "
 							+ value);
 				}
 				break;
 
 			case NUMBER:
 				if (!isValidFdsnDecimal(value)) {
-					throw new Exception("Bad numeric value for " + key + ": "
+					throw new Exception("Bad numeric value for " + queryKey + ": "
 							+ value);
 				}
 				break;
@@ -168,13 +183,13 @@ public class ParameterTranslator {
 			case BOOLEAN:
 				if (!value.equalsIgnoreCase("true")
 						&& !value.equalsIgnoreCase("false"))
-					throw new Exception("Bad boolean value for " + key + ": "
+					throw new Exception("Bad boolean value for " + queryKey + ": "
 							+ value);
 				break;
 
 			case TEXT:
 				if (!isOkString(value)) {
-					throw new Exception("Invalid value for parameter: " + key);
+					throw new Exception("Invalid value for parameter: " + queryKey);
 				}
 				break;
 			}
@@ -183,14 +198,14 @@ public class ParameterTranslator {
 			// valid, change the config class's
 			// output mime type so that the overall service's output format will
 			// change.
-			if (key.equalsIgnoreCase(outputControlSignature1)
-					|| key.equalsIgnoreCase(outputControlSignature2)) {
+			if (queryKey.equalsIgnoreCase(outputControlSignature1)
+					|| queryKey.equalsIgnoreCase(outputControlSignature2)) {
                 
 				ri.setPerRequestOutputType(value);
 			}
 
 			// Add key and also value if valid.
-			cmd.add("--" + key);
+			cmd.add("--" + queryKey);
 			if (isOkString(value)) {
 				cmd.add(value.replaceAll("\\p{Cntrl}", ""));
 			}
