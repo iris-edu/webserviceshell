@@ -108,20 +108,20 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
     
 	public String getErrorString(int exitCode) {
         StringBuilder sb = new StringBuilder();
-        sb.append("  exit code: ").append(exitCode);
+        sb.append("  handler exit code: ").append(exitCode);
 
 		if (se == null) {
-            sb.append("  error: none, stderr is null");
+            sb.append("  stderr: none, stderr is null");
         } else {
 
             try {
                 if (se.getOutputString().length() <= 0) {
-                    sb.append("  error: none, message is zero length");
+                    sb.append("  stderr: none, message is zero length");
                 } else {
-                    sb.append("  error: ").append(se.getOutputString());
+                    sb.append("  stderr: ").append(se.getOutputString());
                 }
             } catch (IOException ioe) {
-                sb.append("  error: none, IOException reading stderr");
+                sb.append("  stderr: none, IOException reading stderr");
             }
         }
         
@@ -477,9 +477,35 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
             long processingTime = (new Date()).getTime() - startTime.getTime();
+
+            // set some arbitrary exit values to help determine if the test
+            // for process exit code is failing versus the process itself
+            int localExitVal = -99999;
+            try {
+                localExitVal = process.waitFor();
+                if (localExitVal != 0) {
+                    logger.info("writeMiniSeed finishing, errMsg: "
+                            + getErrorString(localExitVal));
+                    try {
+                        output.write(AppConfigurator
+                                .miniseedStreamInterruptionIndicator.getBytes());
+                        output.flush();
+                    } catch (IOException ex) {
+                        // noop, already trying to handle an error, so nothing else to do
+                    }
+                } 
+            } catch (IllegalThreadStateException ex) {
+                // ignore exception
+                localExitVal = -88888;
+            } catch (InterruptedException ex) {
+                // ignore exception
+                localExitVal = -77777;
+            }
+            
             logger.info("writeMiniSeed done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
-                    + "  timeNotBlocking: " + timeNonBlockingTotal);
+                    + "  timeNotBlocking: " + timeNonBlockingTotal
+                    + "  handler exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
             if (ri.appConfig.getUsageLog()) {
@@ -630,9 +656,35 @@ public class ProcessStreamingOutput extends IrisStreamingOutput {
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
             long processingTime = (new Date()).getTime() - startTime.getTime();
+            
+            // set some arbitrary exit values to help determine if the test
+            // for process exit code is failing versus the process itself
+            int localExitVal = -99999;
+            try {
+                localExitVal = process.waitFor();
+                if (localExitVal != 0) {
+                    logger.info("writeNormal finishing, errMsg: "
+                            + getErrorString(localExitVal));
+                    try {
+                        output.write(AppConfigurator
+                                .miniseedStreamInterruptionIndicator.getBytes());
+                        output.flush();
+                    } catch (IOException ex) {
+                        // noop, already trying to handle an error, so nothing else to do
+                    }
+                } 
+            } catch (IllegalThreadStateException ex) {
+                // ignore exception
+                localExitVal = -88888;
+            } catch (InterruptedException ex) {
+                // ignore exception
+                localExitVal = -77777;
+            }
+            
             logger.info("writeNormal done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
-                    + "  timeNotBlocking: " + timeNonBlockingTotal);
+                    + "  timeNotBlocking: " + timeNonBlockingTotal
+                    + "  handler exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
             if (ri.appConfig.getUsageLog()) {
