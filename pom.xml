@@ -122,7 +122,7 @@
         <servlet.version>3.0.1</servlet.version>
         <sc.seis.seisFile>1.6.2</sc.seis.seisFile>
         <dmc.usage.log.version>1.0.1</dmc.usage.log.version>
-        <wsslog4jinit.version>0.9</wsslog4jinit.version>
+        <wsslog4jinit.version>0.95</wsslog4jinit.version>
     </properties>
 
     <dependencies>
