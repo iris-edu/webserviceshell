@@ -336,8 +336,7 @@ public class Wss {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri);
 		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST,
-                    "Error with WebServiceShell parameter, " + e.getMessage());
+			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
 		}
 				
 		String className = ri.appConfig.getStreamingOutputClassName();
@@ -428,8 +427,7 @@ public class Wss {
 				try {
 					ParameterTranslator.parseQueryParams(cmd, ri);
 				} catch (Exception e) {
-					shellException(Status.BAD_REQUEST,
-                            "Error with WebServiceShell parameter, " + e.getMessage());
+					shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
 				}
 				break;
 			case CATALOGS:

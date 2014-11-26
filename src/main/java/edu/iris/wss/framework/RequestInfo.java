@@ -98,10 +98,8 @@ public  class RequestInfo {
      * @throws Exception 
      */
 	public void setPerRequestOutputType(String trialKey) throws Exception {
-        String msgTail
-                = "  the value must be in the outputTypes list in service.cfg";
         if (trialKey == null) {
-            throw new Exception("format value is null," + msgTail);
+            throw new Exception("format value is null");
         }
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
@@ -109,8 +107,7 @@ public  class RequestInfo {
         if (appConfig.isConfiguredForTypeKey(key)) {
             this.perRequestOutputTypeKey = key;
         } else {
-            throw new Exception("Unrecognized format value: "
-                    + trialKey + msgTail);
+            throw new Exception("Unrecognized format value: " + trialKey);
         }
 	}
 	
