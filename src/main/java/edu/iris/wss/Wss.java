@@ -19,6 +19,7 @@
 
 package edu.iris.wss;
 
+import com.sun.jersey.api.uri.UriComponent;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
@@ -177,14 +178,17 @@ public class Wss {
     	
     	String wadlPath = ri.appConfig.getWadlPath();
     	if ((wadlPath != null) && (!wadlPath.isEmpty())) {
+            logger.info("Attempting to load WADL from: " + wadlPath);
+            
         	InputStream is = null;
           	URL url = null;
         	try {    		
         		url = new URL(wadlPath);    		
         		is = url.openStream();
-        	} catch (Exception e) {
-        		String err = "Can't find root documentation page: " + wadlPath;
-            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
+        	} catch (Exception ex) {
+        		String errMsg = "Wss - Error getting WADL URL: " + wadlPath + "  ex: "
+                      + ex;
+                shellException(adjustByCfg(Status.NO_CONTENT, ri), errMsg);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -214,6 +218,7 @@ public class Wss {
 		String wadlFileName = null;
 		String configBase = WebUtils.getConfigFileBase(context);
 		FileInputStream wadlStream = null;
+        String errMsg = "Wss - Error getting default WADL file";
 		try {
 			String wssConfigDir = System.getProperty(AppConfigurator.wssConfigDirSignature);
 			if (isOkString(wssConfigDir) && isOkString(configBase)) {
@@ -228,14 +233,115 @@ public class Wss {
 
 					wadlStream = new FileInputStream(wadlFileName);
 					return Response.status(Status.OK).entity(wadlStream).build();
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Failure loading wadl file from: " + wadlFileName);
+				} else {
+                    errMsg = errMsg + "  wadlFileName: " + wadlFileName;
+                }
+			} else {
+                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
+                      + "  configBase: " + configBase;
+            }
+		} catch (Exception ex) {
+            errMsg = errMsg + "  ex: " + ex;
 		}
 
-		return Response.status(Status.NOT_FOUND).build();
+        Status status = adjustByCfg(Status.NO_CONTENT, ri);
+        shellException(status, errMsg);
+        return Response.status(status).build();
+	}
+	
+	@Path("v2/swagger")
+	@GET @Produces ({"application/json", "text/plain"})
+	public Response getSwaggerV2Specification() {
+		
+    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+    	
+    	// First check if swaggerV2Spec configuration paramter is set.
+        // If so, then return stream object from that URL.
+    	
+    	String resourceURLStr = ri.appConfig.getSwaggerV2URL();
+    	if ((resourceURLStr != null) && (!resourceURLStr.isEmpty())) {
+            logger.info("Attempting to load resource from: " + resourceURLStr);
+            
+        	InputStream is = null;
+          	URL url = null;
+        	try {    		
+        		url = new URL(resourceURLStr);    		
+        		is = url.openStream();
+        	} catch (Exception ex) {
+        		String errMsg = "Wss - Error on Swagger V2 URL: "
+                      + resourceURLStr + "  ex: " + ex;
+//                logger.error("Failure loading SwaggerV2 file from: " + url
+//                + "  ex: " + ex);
+//            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
 
+                shellException(adjustByCfg(Status.NO_CONTENT, ri), errMsg);
+        	}
+        	
+        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
+
+        	StreamingOutput so = new StreamingOutput() {
+        		@Override
+    			public void write(OutputStream outputStream) throws IOException,
+                      WebApplicationException {
+        			BufferedWriter writer =
+                          new BufferedWriter (new OutputStreamWriter(outputStream));
+        			String inputLine = null ;
+        			while ((inputLine = br.readLine()) != null) {
+        				writer.write(inputLine);
+        				writer.newLine();
+        			}
+        			writer.flush();
+        			br.close();
+        			writer.close();
+    			}
+        	};
+
+        	ResponseBuilder builder = Response.status(Status.OK).entity(so)
+                  .type("application/json");
+    		return builder.build();
+    	}
+
+        // else - for resource URL not found, try with a default name
+        //
+		// Try to read the resource file from the webserviceshell configuration
+        // file folder using the same naming conventions as regular
+        // webserviceshell cfg files.
+		String resourceFileName = null;
+		String configBase = WebUtils.getConfigFileBase(context);
+		FileInputStream fileInStream = null;
+        String errMsg = "Wss - Error getting default resource file";
+		try {
+			String wssConfigDir = System.getProperty(AppConfigurator.wssConfigDirSignature);
+			if (isOkString(wssConfigDir) && isOkString(configBase)) {
+				if (!wssConfigDir.endsWith("/")) {
+					wssConfigDir += "/";
+                }
+				
+				resourceFileName = wssConfigDir + configBase + "-swagger.json";		
+			
+				File resourceFile = new File(resourceFileName);
+				if (resourceFile.exists()) {
+					logger.info("Attempting to load resource file from: "
+                          + resourceFileName);
+
+					fileInStream = new FileInputStream(resourceFileName);
+                    ResponseBuilder builder = Response.status(Status.OK)
+                          .entity(fileInStream).type("application/json");
+                    return builder.build();
+				} else {
+                    errMsg = errMsg + "  resourceFileName: " + resourceFileName;
+                }
+			} else {
+                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
+                      + "  configBase: " + configBase;
+            }
+		} catch (Exception ex) {
+            errMsg = errMsg + "  ex: " + ex;
+		}
+
+        Status status = adjustByCfg(Status.NO_CONTENT, ri);
+        shellException(status, errMsg);
+        return Response.status(status).build();
 	}
 	
 	// [end region]
@@ -256,17 +362,104 @@ public class Wss {
 	}
 	 
 	@POST
-	@Path("query") 
+	@Path("query")
 	public Response postQuery(String pb) {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
 		if (! ri.appConfig.getPostEnabled()) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
-		
+        
 		ri.statsKeeper.logPost();
 		return processQuery();
 	}
+    
+//	@POST
+//	@Path("test")
+//    @Produces("text/plain")
+//    public String postTest(String pb) {
+//        return postprocess(pb, false);
+//    }
+//    
+//	@POST
+//	@Path("test/usehandler")
+//    @Produces("text/plain")
+//    public String posTestUseHandler(String pb) {
+//        return postprocess(pb, true);
+//    }
+//    
+//	public String postprocess(String pb, Boolean useHandler) {
+//    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+//    	ri.postBody = pb;
+//   	
+//		if (! ri.appConfig.getPostEnabled()) {
+//			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+//        }
+// 		ri.statsKeeper.logPost();
+//        
+//        String cType = ri.request.getContentType();
+//        Map pMap = ri.request.getParameterMap();
+//        
+//        System.out.println("********* post context path: "
+//              + ri.request.getContextPath() + "  cType: " + cType);
+//        
+//        System.out.println("********* post parameter map: " + pMap);
+//        System.out.println("********* post body: " + pb);
+//        
+//        String answer = "default";
+//        
+//        if (cType.equals("application/json")) {
+//            answer = pb;
+//        } else if (cType.equals("application/x-www-form-urlencoded")) {
+//            System.out.println("********* post decoded  true: "
+//                  + UriComponent.decodeQuery(pb, true));
+//            System.out.println("********* post decoded false: "
+//                  + UriComponent.decodeQuery(pb, false));
+//            
+//            answer = UriComponent.decodeQuery(pb, true).toString();
+//        } else {
+//            answer = pb;
+//        }
+//        
+//        Response handlerResp = null;
+//        if (useHandler) {
+//            handlerResp = processQuery();
+//            answer = handlerResp.toString();
+//        }
+//        
+//        return answer;
+//	}
+	
+	@GET 
+	@Path("test")
+    @Produces("text/plain")
+	public String getTest() throws Exception {
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        
+    	ri.statsKeeper.logGet();
+            
+        System.out.println("********* get test type: " + ri.request.getContentType());
+        System.out.println("********* get test context path: " + ri.request.getContextPath());
+        System.out.println("********* get test parameter map: " + ri.request.getParameterMap());
+        System.out.println("********* get test header accept: " + ri.request.getHeader("accept"));
+        //return processQuery();
+        return "get test was called";
+	}
+	 
+//	@POST
+//    @Consumes("application/x-www-form-urlencoded")
+//    @Produces("text/plain")
+//	@Path("query") 
+//	public String postQuery(MultivaluedMap<String, String> postParams) {
+//
+//    	System.out.println("******* postParams:  " + postParams);
+//        
+//		if (! ri.appConfig.getPostEnabled()) 
+//			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+//		
+//		ri.statsKeeper.logPost();
+//		return postParams.toString();
+//	}
 
 	@GET
 	@Path("queryauth")
@@ -282,6 +475,11 @@ public class Wss {
 	public Response query() throws Exception {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
         
+        System.out.println("********* query get type: " + ri.request.getContentType());
+        System.out.println("********* query get context path: " + ri.request.getContextPath());
+        System.out.println("********* query get parameter map: " + ri.request.getParameterMap());
+        System.out.println("********* query get header accept: " + ri.request.getHeader("accept"));
+        System.out.println("********* query get header names: " + ri.request.getHeaderNames());
     	ri.statsKeeper.logGet();
 		return processQuery();
 	}
@@ -375,12 +573,9 @@ public class Wss {
         
 		if (status == null) {
             shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
-        } else if (status == Status.NO_CONTENT) {
-            // override 204 if configured to do so
-			if (ri.perRequestUse404for204) {
-				status = Status.NOT_FOUND;
-			}
         }
+        
+        status = adjustByCfg(status, ri);
 		
         if (status != Status.OK) {
             newerShellException(status, ri, iso);
@@ -507,12 +702,7 @@ public class Wss {
         // or exception or timeout.
 		Status status = iso.getResponse();
         
-		if (status == Status.NO_CONTENT) {
-            // override 204 if configured to do so
-			if (ri.perRequestUse404for204) {
-				status = Status.NOT_FOUND;
-			}
-        }
+        status = adjustByCfg(status, ri);
 		
         if (status != Status.OK) {
             newerShellException(status, ri, iso);
@@ -577,4 +767,14 @@ public class Wss {
 		ServiceShellException.logAndThrowException(ri, status,
                 status.toString() + iso.getErrorString());
 	}
+    
+    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
+        if (trialStatus == Status.NO_CONTENT) {
+            // override 204 if configured to do so
+            if (ri.perRequestUse404for204) {
+                return Status.NOT_FOUND;
+            }
+        }
+        return trialStatus;
+    }
 }

@@ -108,6 +108,7 @@ public class AppConfigurator {
 	private String rootServicePath;
 	private String rootServiceDoc;
 	private String wadlPath;
+	private String swaggerV2URL;
 
 	private String workingDirectory = "/";
 	private String handlerProgram;
@@ -310,6 +311,14 @@ public class AppConfigurator {
 	public void setWadlPath(String s) {
 		wadlPath = s;
 	}
+	
+	public String getSwaggerV2URL() {
+		return swaggerV2URL;
+	}
+
+	public void setSwaggerV2URL(String s) {
+		swaggerV2URL = s;
+	}
 
 	public Integer getTimeoutSeconds() {
 		return timeoutSeconds;
@@ -506,6 +515,11 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("wadlPath");
 		if (isOkString(configStr))
 			this.wadlPath = configStr;
+
+		configStr = configurationProps.getProperty("swaggerV2URL");
+		if (isOkString(configStr)) {
+			this.swaggerV2URL = configStr;
+        }
 		
 		configStr = configurationProps.getProperty("outputTypes");
 		if (isOkString(configStr))
@@ -627,6 +641,7 @@ public class AppConfigurator {
 		sb.append(strAppend("Root Service Path") + rootServicePath + "\n");
 		sb.append(strAppend("Root Service Doc") + rootServiceDoc + "\n");
 		sb.append(strAppend("WADL Path") + wadlPath + "\n");
+		sb.append(strAppend("Swagger V2 URL") + swaggerV2URL + "\n");
 
 		sb.append(strAppend("Application Name") + appName + "\n");
 		sb.append(strAppend("Version") + version + "\n");
@@ -699,6 +714,8 @@ public class AppConfigurator {
 				+ rootServiceDoc + "</TD></TR>");
 		sb.append("<TR><TD>" + "WADL Path" + "</TD><TD>"
 				+ wadlPath + "</TD></TR>");
+		sb.append("<TR><TD>" + "Swagger V2 URL" + "</TD><TD>"
+				+ swaggerV2URL + "</TD></TR>");
 
 		sb.append("<TR><TD>" + "Application Name" + "</TD><TD>" + appName
 				+ "</TD></TR>");

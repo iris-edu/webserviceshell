@@ -39,8 +39,8 @@ import org.junit.Test;
  *
  * @author mike
  */
-public class ServiceConfigTest  {
-    public static final Logger logger = Logger.getLogger(ServiceConfigTest.class);
+public class ServiceConfig2Test  {
+    public static final Logger logger = Logger.getLogger(ServiceConfig2Test.class);
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
@@ -48,7 +48,7 @@ public class ServiceConfigTest  {
     // set webapp name for this test service.
     // This is used in WebUtils.getConfigFileBase to build the config file name,
     // that is, in this case dataselect-1 is prepended to -service.cfg
-    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
+    private static final String SOME_CONTEXT = "/testservice/otherservice/1";
     
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
@@ -56,7 +56,7 @@ public class ServiceConfigTest  {
     // see pom for version, was 1.9.x 
     private static GrizzlyWebServer grizzlyWebServer;
     
-    public ServiceConfigTest() {
+    public ServiceConfig2Test() {
     }
 
     @BeforeClass
@@ -103,33 +103,10 @@ public class ServiceConfigTest  {
     public void tearDown() {
     }
 
-    @Test
-    public void testGet_wssversion() throws Exception {
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("wssversion").get(String.class);
-
-        // start with a basic test, that the URL exists and returns something
-        assertNotNull(responseMsg);
-    }
-
-    @Test
-    public void testGet_status() throws Exception {
-        
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("status").get(String.class);
-
-        // test that the URL exists and returns something
-        assertNotNull(responseMsg);
-        
-        // test for some basic known content
-        assertTrue(
-            responseMsg.indexOf("<TD>URL</TD><TD>" + SOME_CONTEXT + "/status</TD>") > -1);
-        assertTrue(
-            responseMsg.indexOf("<TD>Port</TD><TD>" + BASE_PORT + "</TD>") > -1);
-    }
-
+    // Note: These two test depend on there not being a respective
+    //       otherservice-1-service.cfg file which sets wadlPath or swaggerV2URL.
+    //       Or if there is no otherservice-1-service.cfg file, the parameters
+    //       are not set in META-INF/service.cfg.
     @Test
     public void testGet_wadl() throws Exception {
         
@@ -137,7 +114,7 @@ public class ServiceConfigTest  {
         WebResource webResource = c.resource(BASE_URI);
         String responseMsg = webResource.path("application.wadl").get(String.class);
 
-        assertTrue(responseMsg.contains("dummy wadl file"));
+        assertTrue(responseMsg.contains("othersrvice wadl file"));
     }
 
     @Test
@@ -147,6 +124,6 @@ public class ServiceConfigTest  {
         WebResource webResource = c.resource(BASE_URI);
         String responseMsg = webResource.path("v2/swagger").get(String.class);
 
-        assertTrue(responseMsg.contains("data from specified test file"));
+        assertTrue(responseMsg.contains("data from otherservice default test file"));
     }
 }
