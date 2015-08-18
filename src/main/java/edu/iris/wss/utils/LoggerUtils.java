@@ -212,6 +212,8 @@ public class LoggerUtils {
 		append(sb, wui.getHost());
         if (wui.getAccessDate() != null) {
             append(sb, sdf.format(wui.getAccessDate()));
+        } else {
+            sb.append("|");
         }
 		append(sb, wui.getClientName());
 		append(sb, wui.getClientIP());
@@ -230,9 +232,13 @@ public class LoggerUtils {
 		append(sb, wui.getQuality());
 		if (wui.getStartTime() != null) {
 			append(sb, sdf.format(wui.getStartTime()));
+        }  else {
+            sb.append("|");
         }
 		if (wui.getEndTime() != null) {
 			append(sb, sdf.format(wui.getEndTime()));
+        } else {
+            sb.append("|");
         }
 		append(sb, wui.getExtra());
 
