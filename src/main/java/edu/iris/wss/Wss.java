@@ -60,7 +60,7 @@ public class Wss {
 	
 	@Path("status")
 	@GET
-	public String cfg() {
+	public Response getStatus() {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	StringBuilder sb = new StringBuilder();
@@ -84,20 +84,56 @@ public class Wss {
 
     	sb.append("</BODY></HTML>");
 
-		return sb.toString();
+        ResponseBuilder builder = Response.status(Status.OK)
+              .entity(sb.toString())
+              .type("text/html");
+        addCORSHeadersIfConfigured(builder, ri);
+		return builder.build();
+
 	}
 	
 	// [region] Root path documentation handler, version handler and WADL
 
 
-	private String defDoc() {
-						
-		return "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">" + 
-				"<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=US-ASCII\">" +
-				"<title>Welcome to the Web Service Shell</title></head>" +
-				"<body><h2>Welcome to the Web Service Shell</h2>" + 
-				"<p> Configure what to return here instead of this text by using the <b>rootServiceDoc</b> option." + 
-				"</body></html>";
+	private String defDoc(String htmlMarkupMsg) {
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+		return "<!DOCTYPE html>"
+              + "<html><head>"
+              + "<style>"
+              + "#wssinfo {"
+//              + "font-size: small;"
+              + "background-color: #d0f0d0;"
+              + "display: inline-block;"
+              + "position: absolute;"
+              + "top: 70px;"
+              + "left: 10px;"
+              + "}"
+              + "#message {"
+              + "background-color: #f0d0d0;"
+              + "display: inline-block;"
+              + "position: absolute;"
+              + "top: 120px;"
+              + "left: 10px;"
+              + "}"
+              + "</style>"
+              + "<title>Welcome to the Web Service Shell</title>"
+              + "</head>"
+              + "<body>"
+              + "<div id=\"container\">"
+              + "<div id=\"welcome\"><h2>Welcome to the Web Service Shell</h2></div>"
+              + "<div id=\"wssinfo\">"
+              + "<div><b>Web Service Shell version:</b> "
+              + ri.appConfig.getWssVersion() + "</div>"
+              + "<div><b>appName:</b> " + ri.appConfig.getAppName()
+              + "&nbsp&nbsp<b>version:</b> " + ri.appConfig.getVersion() + "</div>"
+              + "</div>"
+
+              + "<div id=\"message\">"
+              + htmlMarkupMsg
+              + "</div>"
+
+              + "</div>"
+              + "</body></html>";
 	}
 	
 	private static boolean isOkString(String s) {
@@ -111,8 +147,18 @@ public class Wss {
     	String docUrl = ri.appConfig.getRootServiceDoc();
     	
     	// Dump some default text if no good Service Doc Config
-    	if (!isOkString(docUrl))  
-    		return  Response.status(Status.OK).entity(defDoc()).type("text/html").build(); 	
+    	if (!isOkString(docUrl)) {
+            String htmlMarkup ="<div>The <b>rootServiceDoc</b> parameter is not"
+                  + " set in the service configuration file.</div>"
+                  + "<div>You can configure documentation for this service by using"
+                  + " the <b>rootServiceDoc</b> parameter in the *-service.cfg"
+                  + " file.</div>";
+            ResponseBuilder builder = Response.status(Status.OK)
+                  .entity(defDoc(htmlMarkup))
+                  .type("text/html");
+            addCORSHeadersIfConfigured(builder, ri);
+            return builder.build();
+        }
     	
       	InputStream is = null;
       	URL url = null;
@@ -120,8 +166,17 @@ public class Wss {
     		url = new URL(docUrl);    		
     		is = url.openStream();
     	} catch (Exception e) {
-    		String err = "Can't find root documentation page: " + docUrl;
-        	return  Response.status(Status.OK).entity(err).type("text/plain").build();
+            String htmlMarkup = "<div>An exception occurred while reading the"
+                  + " contents of the <b>rootServiceDoc</b> parameter.</div>"
+                  + "<div><b>rootServiceDoc value:</b> " + docUrl + "</div>"
+                  + "<div><b>Exception:</b> " + e.toString() + "</div>"
+                  + "<div>The <b>rootServiceDoc</b> parameter is in the"
+                  + " *-service.cfg parameter file.</div>";
+        	ResponseBuilder builder = Response.status(Status.OK)
+                  .entity(defDoc(htmlMarkup))
+                  .type("text/html");
+            addCORSHeadersIfConfigured(builder, ri);
+            return builder.build();
     	}
     	
     	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -144,28 +199,72 @@ public class Wss {
 			}
     	};
 
-    	ResponseBuilder builder = Response.status(Status.OK).entity(so).type("text/html");
+        ResponseBuilder builder = Response.status(Status.OK)
+              .entity(so)
+              .type("text/html");
+        addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
-	
+
     @Path("wssversion")
 	@GET @Produces("text/plain")
-	public String getWssVersion() throws IOException {
-    	return AppConfigurator.wssVersion;
+	public Response getWssVersion() throws IOException {
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+
+        ResponseBuilder builder = Response.status(Status.OK)
+              .type(MediaType.TEXT_PLAIN)
+              .entity(AppConfigurator.wssVersion);
+
+        addCORSHeadersIfConfigured(builder, ri);
+
+		return builder.build();
 	}
 	
+    private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
+		if (ri.appConfig.getCorsEnabled()) {
+            // Insert CORS header elements.
+		    rb.header("Access-Control-Allow-Origin", "*");
+
+            // dont add this unless cookies are expected
+//            rb.header("Access-Control-Allow-Credentials", "true");
+
+            // Not setting these at this time - 2015-08-12
+//            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
+//            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+
+            // not clear if needed now, 2015-08-12, but this is how to let client
+            // see what headers are available, although "...Allow-Headers" may be
+            // sufficient
+//            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
+		}
+    }
+
 	@Path("version")
 	@GET @Produces("text/plain")
-	public String getVersion() {
+	public Response getVersion() {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	return ri.appConfig.getVersion();
+
+        ResponseBuilder builder = Response.status(Status.OK)
+              .type(MediaType.TEXT_PLAIN)
+              .entity(ri.appConfig.getVersion());
+
+        addCORSHeadersIfConfigured(builder, ri);
+
+		return builder.build();
 	}
 	
 	@Path("whoami")
 	@GET @Produces("text/plain")
-	public String getwho() {
+	public Response getwho() {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	return request.getRemoteAddr();
+
+        ResponseBuilder builder = Response.status(Status.OK)
+              .type(MediaType.TEXT_PLAIN)
+              .entity(request.getRemoteAddr());
+
+        addCORSHeadersIfConfigured(builder, ri);
+
+		return builder.build();
 	}	
 	
 	@Path("application.wadl")
@@ -208,7 +307,10 @@ public class Wss {
     			}
         	};
 
-        	ResponseBuilder builder = Response.status(Status.OK).entity(so).type("application/xml");
+            ResponseBuilder builder = Response.status(Status.OK)
+                  .type("application/xml")
+                  .entity(so);
+            addCORSHeadersIfConfigured(builder, ri);
     		return builder.build();
     	}
 
@@ -232,7 +334,12 @@ public class Wss {
 					logger.info("Attempting to load wadl file from: " + wadlFileName);
 
 					wadlStream = new FileInputStream(wadlFileName);
-					return Response.status(Status.OK).entity(wadlStream).build();
+                    
+                    ResponseBuilder builder = Response.status(Status.OK)
+                          .type("application/xml")
+                          .entity(wadlStream);
+                    addCORSHeadersIfConfigured(builder, ri);
+                    return builder.build();
 				} else {
                     errMsg = errMsg + "  wadlFileName: " + wadlFileName;
                 }
@@ -246,7 +353,11 @@ public class Wss {
 
         Status status = adjustByCfg(Status.NO_CONTENT, ri);
         shellException(status, errMsg);
-        return Response.status(status).build();
+
+        ResponseBuilder builder = Response.status(status)
+              .type(MediaType.TEXT_PLAIN);
+        addCORSHeadersIfConfigured(builder, ri);
+        return builder.build();
 	}
 	
 	@Path("v2/swagger")
@@ -296,8 +407,10 @@ public class Wss {
     			}
         	};
 
-        	ResponseBuilder builder = Response.status(Status.OK).entity(so)
-                  .type("application/json");
+            ResponseBuilder builder = Response.status(Status.OK)
+                  .type("application/json")
+                  .entity(so);
+            addCORSHeadersIfConfigured(builder, ri);
     		return builder.build();
     	}
 
@@ -326,7 +439,9 @@ public class Wss {
 
 					fileInStream = new FileInputStream(resourceFileName);
                     ResponseBuilder builder = Response.status(Status.OK)
-                          .entity(fileInStream).type("application/json");
+                          .type("application/json")
+                          .entity(fileInStream);
+                    addCORSHeadersIfConfigured(builder, ri);
                     return builder.build();
 				} else {
                     errMsg = errMsg + "  resourceFileName: " + resourceFileName;
@@ -341,7 +456,11 @@ public class Wss {
 
         Status status = adjustByCfg(Status.NO_CONTENT, ri);
         shellException(status, errMsg);
-        return Response.status(status).build();
+
+        ResponseBuilder builder = Response.status(status)
+              .type(MediaType.TEXT_PLAIN);
+        addCORSHeadersIfConfigured(builder, ri);
+        return builder.build();
 	}
 	
 	// [end region]
@@ -433,7 +552,7 @@ public class Wss {
 	@GET 
 	@Path("test")
     @Produces("text/plain")
-	public String getTest() throws Exception {
+	public Response getTest() throws Exception {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
         
     	ri.statsKeeper.logGet();
@@ -443,7 +562,14 @@ public class Wss {
         System.out.println("********* get test parameter map: " + ri.request.getParameterMap());
         System.out.println("********* get test header accept: " + ri.request.getHeader("accept"));
         //return processQuery();
-        return "get test was called";
+
+        ResponseBuilder builder = Response.status(Status.OK)
+              .type(MediaType.TEXT_PLAIN)
+              .entity("get test was called");
+
+        addCORSHeadersIfConfigured(builder, ri);
+
+		return builder.build();
 	}
 	 
 //	@POST
@@ -475,11 +601,6 @@ public class Wss {
 	public Response query() throws Exception {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
         
-        System.out.println("********* query get type: " + ri.request.getContentType());
-        System.out.println("********* query get context path: " + ri.request.getContextPath());
-        System.out.println("********* query get parameter map: " + ri.request.getParameterMap());
-        System.out.println("********* query get header accept: " + ri.request.getHeader("accept"));
-        System.out.println("********* query get header names: " + ri.request.getHeaderNames());
     	ri.statsKeeper.logGet();
 		return processQuery();
 	}
@@ -561,7 +682,10 @@ public class Wss {
         if (ri.request.getMethod().equals("HEAD")) {
             // return to Jersey before any more processing
             String noData = "";
-            ResponseBuilder builder = Response.status(Status.OK).entity(noData).type("text/plain");
+            ResponseBuilder builder = Response.status(Status.OK)
+                  .type("text/plain")
+                  .entity(noData);
+            addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
         }
 		
@@ -590,17 +714,12 @@ public class Wss {
                     + ServiceShellException.getErrorString(ex));
         }
         
-        ResponseBuilder builder = Response.status(status).type(mediaType)
-                .entity(iso);
+        ResponseBuilder builder = Response.status(status)
+              .type(mediaType)
+              .entity(iso);
         builder.header("Content-Disposition", ri.createContentDisposition());
 		
-		// Insert CORS header elements. 
-		if (ri.appConfig.getAllowCors()) {
-		    builder.header("Access-Control-Allow-Origin", "*");
-		    builder.header("Access-Control-Allow-Credentials", "true");
-		    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-		    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-		}
+		addCORSHeadersIfConfigured(builder, ri);
 	    
 		return builder.build();
 	}
@@ -667,7 +786,10 @@ public class Wss {
         if (ri.request.getMethod().equals("HEAD")) {
             // return to Jersey before any more processing
             String noData = "";
-            ResponseBuilder builder = Response.status(Status.OK).entity(noData).type("text/plain");
+            ResponseBuilder builder = Response.status(Status.OK)
+                  .type("text/plain")
+                  .entity(noData);
+            addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
         }
 
@@ -717,17 +839,12 @@ public class Wss {
                     + ServiceShellException.getErrorString(ex));
         }
         
-        ResponseBuilder builder = Response.status(status).type(mediaType)
-                .entity(iso);
+        ResponseBuilder builder = Response.status(status)
+              .type(mediaType)
+              .entity(iso);
         builder.header("Content-Disposition", ri.createContentDisposition());
 		
-		// Insert CORS header elements. 
-		if (ri.appConfig.getAllowCors()) {
-		    builder.header("Access-Control-Allow-Origin", "*");
-		    builder.header("Access-Control-Allow-Credentials", "true");
-		    builder.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-		    builder.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-		}
+		addCORSHeadersIfConfigured(builder, ri);
 	    
 		return builder.build();
 	}
