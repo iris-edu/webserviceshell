@@ -112,6 +112,7 @@ public class AppConfigurator {
 
 	private String workingDirectory = "/";
 	private String handlerProgram;
+	private String infoHandlerProgram;
 	private String catalogsHandlerProgram;
 	private String contributorsHandlerProgram;
 	private String countsHandlerProgram;
@@ -133,6 +134,7 @@ public class AppConfigurator {
 	private String topicDestination = null;
 	private String jndiUrl = null;
 
+	private String streamingOutputInfoClassName = null;
 	private String streamingOutputClassName = null;
 	private String singletonClassName = null;
 	
@@ -146,6 +148,21 @@ public class AppConfigurator {
 
 	public void setHandlerProgram(String s) {
 		handlerProgram = s;
+	}
+
+	public String getInfoHandlerProgram() {
+		return infoHandlerProgram;
+	}
+
+	public void setInfoHandlerProgram(String s) {
+		infoHandlerProgram = s;
+	}
+	public String getStreamingOutputInfoClassName() {
+		return streamingOutputInfoClassName;
+	}
+
+	public void setStreamingOutputInfoClassName(String s) {
+		streamingOutputInfoClassName = s;
 	}
 
 	public String getStreamingOutputClassName() {
@@ -474,11 +491,19 @@ public class AppConfigurator {
 
 		// Only allow one of handler program or streaming output class
 		String handlerStr = configurationProps.getProperty("handlerProgram");
+		String infoHandlerStr = configurationProps.getProperty("infoHandlerProgram");
+
 		String soStr = configurationProps
 				.getProperty("streamingOutputClassName");
 
+        String soInfoStr = configurationProps
+				.getProperty("streamingOutputInfoClassName");
+		if (isOkString(soInfoStr)) {
+			this.streamingOutputInfoClassName = soInfoStr;
+        }
+
 		if (!isOkString(handlerStr) && !isOkString(soStr))
-			throw new Exception("Missing handler program configuration");
+			throw new Exception("Missing HandlerProgram or streamingOutputClassName parameters");
 
 		if (isOkString(handlerStr) && isOkString(soStr))
 			throw new Exception(
@@ -486,6 +511,18 @@ public class AppConfigurator {
 
 		if (isOkString(handlerStr))
 			this.handlerProgram = handlerStr;
+
+//      NOTE: not implemented for now 2015-08-27 so that as not to
+//             require the addition of infoHandlerProgram on existing
+//             services in respective -1-service.cfg files.
+//        if (!isOkString(infoHandlerStr) && !isOkString(soInfoStr))
+//			throw new Exception("Missing infoHandlerProgram or streamingOutputInfoClassName parameters");
+//
+//		if (isOkString(infoHandlerStr) && isOkString(soInfoStr))
+//			throw new Exception(
+//					"Both infoHandlerProgram and streamingOutputInfoClassName specified.  Only one allowed.");
+		if (isOkString(infoHandlerStr))
+			this.infoHandlerProgram = infoHandlerStr;
 
 		if (isOkString(soStr))
 			this.streamingOutputClassName = soStr;
@@ -653,6 +690,7 @@ public class AppConfigurator {
 		sb.append(strAppend("Handler Working Directory") + workingDirectory
 				+ "\n");
 		sb.append(strAppend("Handler Program") + handlerProgram + "\n");
+		sb.append(strAppend("Info Handler Program") + infoHandlerProgram + "\n");
 		sb.append(strAppend("Handler Timeout") + timeoutSeconds + "\n");
 
 		sb.append(strAppend("Catalog Handler Program") + catalogsHandlerProgram
@@ -687,6 +725,10 @@ public class AppConfigurator {
 		if (streamingOutputClassName != null)
 			sb.append(strAppend("Streaming Output Class ")
 					+ streamingOutputClassName + "\n");
+
+		if (streamingOutputInfoClassName != null)
+			sb.append(strAppend("Streaming Output Info Class ")
+					+ streamingOutputInfoClassName + "\n");
 
 		return sb.toString();
 	}
@@ -728,6 +770,8 @@ public class AppConfigurator {
 		sb.append("<TR><TD>" + "Handler Working Directory" + "</TD><TD>"
 				+ workingDirectory + "</TD></TR>");
 		sb.append("<TR><TD>" + "Handler Program" + "</TD><TD>" + handlerProgram
+				+ "</TD></TR>");
+		sb.append("<TR><TD>" + "Info Handler Program" + "</TD><TD>" + infoHandlerProgram
 				+ "</TD></TR>");
 		sb.append("<TR><TD>" + "Handler Timeout" + "</TD><TD>" + timeoutSeconds
 				+ "</TD></TR>");
@@ -775,6 +819,10 @@ public class AppConfigurator {
 		if (streamingOutputClassName != null)
 			sb.append("<TR><TD>" + "Streaming Output Class " + "</TD><TD>"
 					+ streamingOutputClassName + "</TD></TR>");
+
+		if (streamingOutputInfoClassName != null)
+			sb.append("<TR><TD>" + "Streaming Output Info Class " + "</TD><TD>"
+					+ streamingOutputInfoClassName + "</TD></TR>");
 
 		sb.append("</TABLE>");
 

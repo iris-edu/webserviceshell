@@ -42,7 +42,6 @@ import java.util.logging.Level;
 
 @Path ("/")
 public class Wss {
-	 
 	@Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
     @Context 	UriInfo uriInfo;	
@@ -89,11 +88,9 @@ public class Wss {
               .type("text/html");
         addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
-
 	}
 	
 	// [region] Root path documentation handler, version handler and WADL
-
 
 	private String defDoc(String htmlMarkupMsg) {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
@@ -141,7 +138,7 @@ public class Wss {
 	}
 	
     @GET
-    public Response ok() {
+    public Response rootpath() {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	String docUrl = ri.appConfig.getRootServiceDoc();
@@ -278,7 +275,7 @@ public class Wss {
     	String wadlPath = ri.appConfig.getWadlPath();
     	if ((wadlPath != null) && (!wadlPath.isEmpty())) {
             logger.info("Attempting to load WADL from: " + wadlPath);
-            
+
         	InputStream is = null;
           	URL url = null;
         	try {    		
@@ -334,7 +331,7 @@ public class Wss {
 					logger.info("Attempting to load wadl file from: " + wadlFileName);
 
 					wadlStream = new FileInputStream(wadlFileName);
-                    
+
                     ResponseBuilder builder = Response.status(Status.OK)
                           .type("application/xml")
                           .entity(wadlStream);
@@ -359,7 +356,7 @@ public class Wss {
         addCORSHeadersIfConfigured(builder, ri);
         return builder.build();
 	}
-	
+
 	@Path("v2/swagger")
 	@GET @Produces ({"application/json", "text/plain"})
 	public Response getSwaggerV2Specification() {
@@ -492,7 +489,20 @@ public class Wss {
 		ri.statsKeeper.logPost();
 		return processQuery();
 	}
-    
+
+    @POST
+    @Path("info") // on demand synthtics model information
+    public Response postInfo(String pb) {
+        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        ri.postBody = pb;
+
+        if (! ri.appConfig.getPostEnabled())
+          shellException(Status.BAD_REQUEST, "POST Method not allowed");
+
+        ri.statsKeeper.logPost();
+        return processInfo();
+    }
+
 //	@POST
 //	@Path("test")
 //    @Produces("text/plain")
@@ -587,6 +597,15 @@ public class Wss {
 //		return postParams.toString();
 //	}
 
+    @GET 
+    @Path("info") // on demand synthtics model information
+    public Response getInfo() throws Exception {
+      ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+
+      ri.statsKeeper.logGet();
+      return processInfo();
+    }
+
 	@GET
 	@Path("queryauth")
 	public Response queryAuth() throws Exception {
@@ -635,20 +654,31 @@ public class Wss {
 		return processQuery();
 	}	
 
+	private Response processInfo() {
+		if (!ri.appConfig.isValid())
+			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
+
+		if (ri.appConfig.getStreamingOutputClassName() != null) {
+			return runJava("info");
+		} else {
+			return runCommand("info");
+		}
+	}
+
 	private Response processQuery() {
 		if (!ri.appConfig.isValid())
 			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
 
 		if (ri.appConfig.getStreamingOutputClassName() != null) {
-			return runJava();
+			return runJava("query");
 		} else {
-			return runCommand();
+			return runCommand("query");
 		}
 	}
 	
 	// [end region]
 
-	private Response runJava() {
+	private Response runJava(String classChoice) {
 		
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
 		ArrayList<String> cmd = new ArrayList<String>();
@@ -657,8 +687,13 @@ public class Wss {
 		} catch (Exception e) {
 			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
 		}
-				
-		String className = ri.appConfig.getStreamingOutputClassName();
+
+        String className = null;
+        if (classChoice.equals("info")) {
+            className = ri.appConfig.getStreamingOutputInfoClassName();
+        } else {
+            className = ri.appConfig.getStreamingOutputClassName();
+        }
 		IrisStreamingOutput iso = null;
 		
 		try {
@@ -724,7 +759,7 @@ public class Wss {
 		return builder.build();
 	}
 		
-	private Response runCommand()  {
+	private Response runCommand(String cmdChoice)  {
 
     	// Create the 'command' array by first adding on the program to 
     	// be invoked.  Then parse the query parameters.  These are appended
@@ -737,7 +772,13 @@ public class Wss {
 		switch (ri.callType) {
 			case NORMAL:
 				// Handler string can't be NULL per configuration requirements in AppConfigurator
-				cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));			
+                if (cmdChoice.equals("info")) {
+                    cmd = new ArrayList<String>(Arrays.asList(
+                          ri.appConfig.getInfoHandlerProgram().split(" ")));
+                } else {
+                    cmd = new ArrayList<String>(Arrays.asList(
+                          ri.appConfig.getHandlerProgram().split(" ")));
+                }
 				try {
 					ParameterTranslator.parseQueryParams(cmd, ri);
 				} catch (Exception e) {
@@ -884,7 +925,7 @@ public class Wss {
 		ServiceShellException.logAndThrowException(ri, status,
                 status.toString() + iso.getErrorString());
 	}
-    
+
     private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
         if (trialStatus == Status.NO_CONTENT) {
             // override 204 if configured to do so
