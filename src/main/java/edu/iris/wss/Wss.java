@@ -537,11 +537,7 @@ public class Wss {
 		if (!ri.appConfig.isValid())
 			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
 
-		if (ri.appConfig.getIrisEndpointClassName() != null) {
-			return runJava();
-		} else {
-			return runCommand();
-		}
+		return runJava();
 	}
 	
 	// [end region]
@@ -630,135 +626,7 @@ public class Wss {
 	    
 		return builder.build();
 	}
-		
-    private Response runCommand()  {
 
-    	// Create the 'command' array by first adding on the program to 
-    	// be invoked.  Then parse the query parameters.  These are appended
-    	// to the cmd argument.
-    	
-    	// The handler program string from the config file may contain multiple space-delimited
-    	// text. These need to be split and added to the cmd collection
-		ArrayList<String> cmd = null;
-
-		switch (ri.callType) {
-			case NORMAL:
-				// Handler string can't be NULL per configuration requirements in AppConfigurator
-                cmd = new ArrayList<String>(Arrays.asList(ri.appConfig.getHandlerProgram().split(" ")));
-                System.out.println("******************** cmd.len: " + cmd.size());
-                System.out.println("******************** cmd: " + cmd);
-                if (cmd.size() > 0) {System.out.println("******************** cmd.get(0): " + cmd.get(0));}
-                
-				try {
-					ParameterTranslator.parseQueryParams(cmd, ri);
-				} catch (Exception e) {
-					shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
-				}
-                System.out.println("************rc*after cmd.len: " + cmd.size());
-                System.out.println("************rc*after cmd: " + cmd);
-                if (cmd.size() > 0) {System.out.println("************rc*after cmd.get(0): " + cmd.get(0));}
-				break;
-			case CATALOGS:
-				String catalogsHandlerString = ri.appConfig.getCatalogsHandlerProgram();
-				if (!isOkString(catalogsHandlerString))
-					shellException(Status.NOT_FOUND,
-                            "catalogHandler msg: " + catalogsHandlerString);
-
-				cmd = new ArrayList<>(Arrays.asList(catalogsHandlerString.split(" ")));
-				try {
-					ri.setPerRequestOutputType("XML");
-				} catch (Exception e) { ; }
-				break;
-				
-			case CONTRIBUTORS:
-				String contributorsHandlerString = ri.appConfig.getContributorsHandlerProgram();
-
-				if (!isOkString(contributorsHandlerString))
-					shellException(Status.NOT_FOUND,
-                            "contributorsHandler msg: " + contributorsHandlerString);
-				
-				cmd = new ArrayList<>(Arrays.asList(contributorsHandlerString.split(" ")));
-				try {
-					ri.setPerRequestOutputType("XML");
-				} catch (Exception e) { ; }
-				break;
-				
-			case COUNTS:
-				String countsHandlerString = ri.appConfig.getCountsHandlerProgram();
-
-				if (!isOkString(countsHandlerString))
-					shellException(Status.NOT_FOUND,
-                            "countsHandler msg: " + countsHandlerString);
-				
-				cmd = new ArrayList<>(Arrays.asList(countsHandlerString.split(" ")));
-				try {
-					ri.setPerRequestOutputType("XML");
-				} catch (Exception e) { ; }
-				break;
-		}
-        
-        if (ri.request.getMethod().equals("HEAD")) {
-            // return to Jersey before any more processing
-            String noData = "";
-            ResponseBuilder builder = Response.status(Status.OK)
-                  .type("text/plain")
-                  .entity(noData);
-            addCORSHeadersIfConfigured(builder, ri);
-            return builder.build();
-        }
-
-		//	logger.info("CMD array: " + cmd);	
-        ProcessBuilder pb0 = new ProcessBuilder(cmd);
-        System.out.println("******************** pb0.dir: " + pb0.directory());
-        System.out.println("******************** user.dir: " + System.getProperty("user.dir"));
-
-	    ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(new File(ri.appConfig.getWorkingDirectory()));
-
-	    pb.environment().put("REQUESTURL", WebUtils.getUrl(request));
-	    pb.environment().put("USERAGENT", WebUtils.getUserAgent(request));
-	    pb.environment().put("IPADDRESS", WebUtils.getClientIp(request));
-	    pb.environment().put("APPNAME", ri.appConfig.getAppName());
-	    pb.environment().put("VERSION", ri.appConfig.getVersion());
-        pb.environment().put("CLIENTNAME", WebUtils.getClientName(request));
-        pb.environment().put("HOSTNAME", WebUtils.getHostname());
-        if (WebUtils.getAuthenticatedUsername(requestHeaders) != null) {
-            pb.environment().put("AUTHENTICATEDUSERNAME",
-                    WebUtils.getAuthenticatedUsername(requestHeaders));
-        }
-
-		//CmdProcessIrisEP iso = new CmdProcessIrisEP(pb, ri);
-        CmdProcessorIrisEP iso = new CmdProcessorIrisEP();
-        iso.setRequestInfo(ri);
-
-		// Wait for an exit code, expecting the start of data transmission
-        // or exception or timeout.
-		Status status = iso.getResponse();
-        
-        status = adjustByCfg(status, ri);
-        if (status != Status.OK) {
-            newerShellException(status, ri, iso);
-		}
-		
-        String mediaType = null;
-        try {
-            mediaType = ri.getPerRequestMediaType();
-        } catch (Exception ex) {
-            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
-                    + " mediaTypeKey: " + ri.getPerRequestOutputTypeKey()
-                    + ServiceShellException.getErrorString(ex));
-        }
-        
-        ResponseBuilder builder = Response.status(status)
-              .type(mediaType)
-              .entity(iso);
-        builder.header("Content-Disposition", ri.createContentDisposition());
-		
-		addCORSHeadersIfConfigured(builder, ri);
-	    
-		return builder.build();
-	}
-	
 	private void shellException(Status status, String message) {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
