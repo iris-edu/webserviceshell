@@ -1,0 +1,19 @@
+# maven noise
+target/
+
+# osx noise
+.DS_Store
+
+# netbeans noise
+nbactions.xml
+nb-configuration.xml
+
+#eclipse noise
+.settings
+.settings/*
+.project
+.classpath
+
+# subversion
+.svn
+
