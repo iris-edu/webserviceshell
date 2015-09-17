@@ -183,24 +183,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 					"No valid process found.");
 		}
 
-        if (ri.isCurrentTypeKey(InternalTypes.ZIP)) {
-			// Create a sub-directory for the results based off of the working
-			// Directory
-			String wd = ri.appConfig.getWorkingDirectory();
-			try {
-				Path p = Paths.get(wd);
-				Path tempDir = Files.createTempDirectory(p, "wsszip");
-				ri.workingSubdirectory = tempDir.toString();
-
-				processBuilder.command().add("--" + outputDirSignature);
-				processBuilder.command().add(ri.workingSubdirectory);
-
-			} catch (IOException ioe) {
-				logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-						"Could not create temp directory in: " + wd);
-			}
-		}
-
 		logger.info("NEW CMD" + processBuilder.command());
 
 		try {
@@ -363,8 +345,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
         if (ri.isCurrentTypeKey(InternalTypes.MSEED)
                 || ri.isCurrentTypeKey(InternalTypes.MINISEED)) {
             writeMiniSeed(output);
-        } else if (ri.isCurrentTypeKey(InternalTypes.ZIP)) {
-            writeZip(output);
         } else {
             writeNormal(output);
         }
@@ -757,120 +737,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	}
 
 	// [end region]
-
-	// [region] Zip writer and temp directory utils.
-
-	public void writeZip(OutputStream output) {
-
-		long totalBytesTransmitted = 0L;
-		int bytesRead;
-		byte[] buffer = new byte[32768];
-
-		ReschedulableTimer rt = new ReschedulableTimer(
-				ri.appConfig.getTimeoutSeconds() * 1000);
-		rt.schedule(new killIt(output));
-
-		String line = null;
-		ZipOutputStream zipOutStream = new ZipOutputStream(output);
-
-        // processing time, but excluding while read is blocking
-        long timeNonBlockingStart = 0L;
-        long timeNonBlockingTotal = 0L;
-
-		// Read the InputStream is, a line at a time. Each line should be a
-		// filename
-		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(is));
-
-			while ((line = in.readLine()) != null) {
-                timeNonBlockingStart = System.currentTimeMillis();
-				rt.reschedule();
-				line = line.trim();
-				String fname = getBaseFilename(line);
-				if (fname.trim().equals(""))
-					continue;
-				logger.info("Line:#" + line + "# Filename: " + fname);
-
-				// Read the file (if it exists and put it on the Zip output
-				// stream
-				File inFile = new File(line);
-				FileInputStream fis = new FileInputStream(inFile);
-				BufferedInputStream bis = new BufferedInputStream(fis);
-
-				zipOutStream.putNextEntry(new ZipEntry(fname));
-				while ((bytesRead = bis.read(buffer)) > 0) {
-					totalBytesTransmitted += bytesRead;
-					zipOutStream.write(buffer, 0, bytesRead);
-				}
-				zipOutStream.flush();
-				zipOutStream.closeEntry();
-				if (bis != null)
-					bis.close();
-				if (fis != null)
-					fis.close();
-				deleteTempDirectory(inFile);
-                timeNonBlockingTotal += System.currentTimeMillis()
-                        - timeNonBlockingStart;
-			}
-		} catch (FileNotFoundException fnfe) {
-			logger.error("File not found: " + line
-            + "  ex: " + fnfe);
-		} catch (IOException ioe) {
-			logger.error("Got IOE (probable client disconnect): ", ioe);
-			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
-		} catch (Exception e) {
-			logger.error("Readline in writeZip exception: ", e);
-			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
-		} finally {
-            long processingTime = (new Date()).getTime() - startTime.getTime();
-            logger.info("writeZip done:  Wrote " + totalBytesTransmitted + " bytes"
-                    + "  processingTime: " + processingTime
-                    + "  timeNotBlocking: " + timeNonBlockingTotal);
-            ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
-
-            if (ri.appConfig.getUsageLog()) {
-                if (isKillingProcess.get()) {
-                    logUsageMessage(ri, "_KillitInWriteZip", 0L,
-                            processingTime,
-                            "killit was called, possible timeout waiting for data after intial data flow started",
-                            Status.INTERNAL_SERVER_ERROR, null);
-                } else {
-                    logUsageMessage(ri, null, totalBytesTransmitted,
-                            processingTime, null, Status.OK, null);
-                }
-            }
-
-			rt.cancel();
-
-			try {
-				zipOutStream.close();
-				output.close();
-				is.close();
-			} catch (IOException ioe) {
-				// What can one do?
-			}
-		}
-
-		// Clean up any working subdirectory and files / subdirectories it may
-		// contain.
-		if (ri.workingSubdirectory != null) {
-			deleteTempDirectory(new File(ri.workingSubdirectory));
-		}
-	}
-
-	public static void deleteTempDirectory(File f) {
-
-		try {
-			if (f.isDirectory()) {
-				for (File c : f.listFiles())
-					deleteTempDirectory(c);
-			}
-			if (!f.delete())
-				logger.error("Couldn't delete: " + f);
-		} catch (Exception e) {
-			logger.info("Exception in temporary directory cleaning: ", e);
-		}
-	}
 
 	public static String getBaseFilename(String filename) {
 		int slashIndex = filename.lastIndexOf('/');

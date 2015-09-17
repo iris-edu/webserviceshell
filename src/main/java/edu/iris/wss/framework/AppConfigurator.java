@@ -45,7 +45,7 @@ public class AppConfigurator {
     
     // this particular string is purposely matched is an error indicator
     // for timeout on miniseed data, although, unless changed, it will
-    // also be used for writeNormal and writeZip
+    // also be used for writeNormal
     public static final String miniseedStreamInterruptionIndicator =
             "000000##ERROR#######ERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
             "This data stream was interrupted and is likely incomplete.     \n" +
@@ -83,7 +83,7 @@ public class AppConfigurator {
     // An enum of the types supported internally. This is used in the code to
     // identify places in which the external typeKeys specified in the
     // service.cfg file must aggree with the respective items in this enum.
-    // An operator must have typeKeys "zip" and/or "miniseed" to enable access
+    // An operator must have typeKeys "miniseed" to enable access
     // to respective code.
     //
     // BINARY is defined as the default
@@ -91,7 +91,7 @@ public class AppConfigurator {
     // miniseed is an alias for mseed - to be consistent with FDSN standards
     //
 	public static enum InternalTypes {
-		MSEED, MINISEED, ZIP, BINARY
+		MSEED, MINISEED, BINARY
 	};
     
 	private final InternalTypes outputType = InternalTypes.BINARY;
