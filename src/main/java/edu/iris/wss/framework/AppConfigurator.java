@@ -131,7 +131,7 @@ public class AppConfigurator {
 
 	private String jndiUrl = null;
 
-	private String streamingOutputClassName = null;
+	private String irisEndpointClassName = null;
 	private String singletonClassName = null;
 
 	// Either a handler program or a Streaming Output Class is required.
@@ -144,12 +144,12 @@ public class AppConfigurator {
 		handlerProgram = s;
 	}
 
-	public String getStreamingOutputClassName() {
-		return streamingOutputClassName;
+	public String getIrisEndpointClassName() {
+		return irisEndpointClassName;
 	}
 
-	public void setStreamingOutputClassName(String s) {
-		streamingOutputClassName = s;
+	public void setIrisEndpointClassName(String s) {
+		irisEndpointClassName = s;
 	}
 
 	// Required configuration entries. Failure to find these will result in an
@@ -439,20 +439,20 @@ public class AppConfigurator {
 		// Only allow one of handler program or streaming output class
 		String handlerStr = configurationProps.getProperty("handlerProgram");
 		String soStr = configurationProps
-				.getProperty("streamingOutputClassName");
+				.getProperty("irisEndpointClassName");
 
 		if (!isOkString(handlerStr) && !isOkString(soStr))
 			throw new Exception("Missing handler program configuration");
 
 		if (isOkString(handlerStr) && isOkString(soStr))
 			throw new Exception(
-					"Handler program _AND_ StreamingOutput class specified.  Only one allowed.");
+					"Handler program _AND_ irisEndpoint class specified.  Only one allowed.");
 
 		if (isOkString(handlerStr))
 			this.handlerProgram = handlerStr;
 
 		if (isOkString(soStr))
-			this.streamingOutputClassName = soStr;
+			this.irisEndpointClassName = soStr;
 		// ------------------------------------------------------
 
 		String configStr;
@@ -622,9 +622,9 @@ public class AppConfigurator {
 			sb.append(strAppend("Singleton ClassName") + singletonClassName
 					+ "\n");
 
-		if (streamingOutputClassName != null)
+		if (irisEndpointClassName != null)
 			sb.append(strAppend("Streaming Output Class ")
-					+ streamingOutputClassName + "\n");
+					+ irisEndpointClassName + "\n");
 
 		return sb.toString();
 	}
@@ -700,9 +700,9 @@ public class AppConfigurator {
 			sb.append("<TR><TD>" + "Singleton ClassName" + "</TD><TD>"
 					+ singletonClassName + "</TD></TR>");
 
-		if (streamingOutputClassName != null)
+		if (irisEndpointClassName != null)
 			sb.append("<TR><TD>" + "Streaming Output Class " + "</TD><TD>"
-					+ streamingOutputClassName + "</TD></TR>");
+					+ irisEndpointClassName + "</TD></TR>");
 
 		sb.append("</TABLE>");
 

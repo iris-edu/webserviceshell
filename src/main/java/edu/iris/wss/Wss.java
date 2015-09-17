@@ -537,7 +537,7 @@ public class Wss {
 		if (!ri.appConfig.isValid())
 			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
 
-		if (ri.appConfig.getStreamingOutputClassName() != null) {
+		if (ri.appConfig.getIrisEndpointClassName() != null) {
 			return runJava();
 		} else {
 			return runCommand();
@@ -547,7 +547,7 @@ public class Wss {
 	// [end region]
 
 	private Response runJava() {
-		String className = ri.appConfig.getStreamingOutputClassName();
+		String className = ri.appConfig.getIrisEndpointClassName();
 		IrisStreamingOutput iso = null;
 		
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.

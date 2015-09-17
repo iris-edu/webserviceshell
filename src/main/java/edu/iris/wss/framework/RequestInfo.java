@@ -76,7 +76,7 @@ public  class RequestInfo {
 		
         // TBD since this is configurartion, look at doing this once at startup.
 		if ((ri.appConfig.getHandlerProgram() == null) && 
-				(ri.appConfig.getStreamingOutputClassName() == null)) {
+				(ri.appConfig.getIrisEndpointClassName() == null)) {
 			ServiceShellException.logAndThrowException(ri,
                     Status.INTERNAL_SERVER_ERROR, 
 					"Service configuration problem,"
