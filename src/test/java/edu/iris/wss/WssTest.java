@@ -113,13 +113,13 @@ public class WssTest  {
         
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        Response response = webTarget.path("status").request().get();
+        Response response = webTarget.path("wssstatus").request().get();
         String responseMsg = response.readEntity(String.class);
         
         assertEquals(200, response.getStatus());
         // test some content, this can break if the format of the status html changes
         assertTrue(
-            responseMsg.toString().indexOf("<TD>URL</TD><TD>/status</TD>") > -1);
+            responseMsg.toString().indexOf("<TD>URL</TD><TD>/wssstatus</TD>") > -1);
         assertTrue(
             responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
              + "</TD>") > -1);
@@ -132,13 +132,13 @@ public class WssTest  {
         
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        Response response = webTarget.path("status").request().get();
+        Response response = webTarget.path("wssstatus").request().get();
         String responseMsg = response.readEntity(String.class);
         
         assertEquals(200, response.getStatus());
         // test some content, this can break if the format of the status html changes
         assertTrue(
-            responseMsg.toString().indexOf("<TD>URL</TD><TD>/status</TD>") > -1);
+            responseMsg.toString().indexOf("<TD>URL</TD><TD>/wssstatus</TD>") > -1);
         assertTrue(
             responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
              + "</TD>") > -1);

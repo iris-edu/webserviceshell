@@ -105,7 +105,6 @@ public class AppConfigurator {
 		LOG4J, JMS
 	};
 
-	private String rootServicePath;
 	private String rootServiceDoc;
 	private String wadlPath;
     private String swaggerV2URL;
@@ -129,14 +128,11 @@ public class AppConfigurator {
 	private Integer timeoutSeconds = null;
 
 	private LoggingType loggingType = LoggingType.LOG4J;
-	private String connectionFactory = null;
-	private String topicDestination = null;
+
 	private String jndiUrl = null;
 
 	private String streamingOutputClassName = null;
 	private String singletonClassName = null;
-	
-	private String argPreProcessorClassName = null;
 
 	// Either a handler program or a Streaming Output Class is required.
 
@@ -158,14 +154,6 @@ public class AppConfigurator {
 
 	// Required configuration entries. Failure to find these will result in an
 	// exception.
-
-	public String getRootServicePath() {
-		return rootServicePath;
-	}
-
-	public void setRootServicePath(String s) {
-		rootServicePath = s;
-	}
 
 	public String getAppName() {
 		return appName;
@@ -340,31 +328,6 @@ public class AppConfigurator {
 		singletonClassName = s;
 	}
 
-	
-	public String getArgPreProcessorClassName() {
-		return argPreProcessorClassName;
-	}
-
-	public void setArgPreProcessorClassName(String s) {
-		argPreProcessorClassName = s;
-	}
-	
-	public String getConnectionFactory() {
-		return connectionFactory;
-	}
-
-	public void setConnectionFactory(String s) {
-		connectionFactory = s;
-	}
-
-	public String getTopicDestination() {
-		return topicDestination;
-	}
-
-	public void setTopicDestination(String s) {
-		topicDestination = s;
-	}
-
 	public String getJndiUrl() {
 		return jndiUrl;
 	}
@@ -494,12 +457,6 @@ public class AppConfigurator {
 
 		String configStr;
 
-		configStr = configurationProps.getProperty("rootServicePath");
-		if (isOkString(configStr))
-			this.rootServicePath = configStr;
-		else
-			throw new Exception("Missing rootServicePath configuration");
-
 		configStr = configurationProps.getProperty("appName");
 		if (isOkString(configStr))
 			this.appName = configStr;
@@ -558,14 +515,6 @@ public class AppConfigurator {
 		if (isOkString(configStr))
 			this.sigkillDelay = Integer.parseInt(configStr);
 
-		configStr = configurationProps.getProperty("connectionFactory");
-		if (isOkString(configStr))
-			this.connectionFactory = configStr;
-
-		configStr = configurationProps.getProperty("topicDestination");
-		if (isOkString(configStr))
-			this.topicDestination = configStr;
-
 		configStr = configurationProps.getProperty("jndiUrl");
 		if (isOkString(configStr))
 			this.jndiUrl = configStr;
@@ -573,10 +522,6 @@ public class AppConfigurator {
 		configStr = configurationProps.getProperty("singletonClassName");
 		if (isOkString(configStr))
 			this.singletonClassName = configStr;
-		
-		configStr = configurationProps.getProperty("argPreProcessorClassName");
-		if (isOkString(configStr))
-			this.argPreProcessorClassName = configStr;
 
 		configStr = configurationProps.getProperty("catalogsHandlerProgram");
 		if (isOkString(configStr))
@@ -643,7 +588,6 @@ public class AppConfigurator {
 
 		sb.append(strAppend("WSS Version") + wssVersion + "\n");
 
-		sb.append(strAppend("Root Service Path") + rootServicePath + "\n");
 		sb.append(strAppend("Root Service Doc") + rootServiceDoc + "\n");
 		sb.append(strAppend("WADL Path") + wadlPath + "\n");
 		sb.append(strAppend("Swagger V2 URL") + swaggerV2URL + "\n");
@@ -673,13 +617,6 @@ public class AppConfigurator {
 
 		if (jndiUrl != null)
 			sb.append(strAppend("JNDI URL") + jndiUrl + "\n");
-
-		if (connectionFactory != null)
-			sb.append(strAppend("Connection Factory") + connectionFactory
-					+ "\n");
-
-		if (topicDestination != null)
-			sb.append(strAppend("Topic Destination") + topicDestination + "\n");
 
 		if (singletonClassName != null)
 			sb.append(strAppend("Singleton ClassName") + singletonClassName
@@ -713,8 +650,6 @@ public class AppConfigurator {
 		sb.append("<TR><TD>" + "WSS Version" + "</TD><TD>" + wssVersion
 				+ "</TD></TR>");
 
-		sb.append("<TR><TD>" + "Root Service Path" + "</TD><TD>"
-				+ rootServicePath + "</TD></TR>");
 		sb.append("<TR><TD>" + "Root Service Doc" + "</TD><TD>"
 				+ rootServiceDoc + "</TD></TR>");
 		sb.append("<TR><TD>" + "WADL Path" + "</TD><TD>"
@@ -760,14 +695,6 @@ public class AppConfigurator {
 		if (jndiUrl != null)
 			sb.append("<TR><TD>" + "JNDI URL" + "</TD><TD>" + jndiUrl
 					+ "</TD></TR>");
-
-		if (connectionFactory != null)
-			sb.append("<TR><TD>" + "Connection Factory" + "</TD><TD>"
-					+ connectionFactory + "</TD></TR>");
-
-		if (topicDestination != null)
-			sb.append("<TR><TD>" + "Topic Destination" + "</TD><TD>"
-					+ topicDestination + "</TD></TR>");
 
 		if (singletonClassName != null)
 			sb.append("<TR><TD>" + "Singleton ClassName" + "</TD><TD>"

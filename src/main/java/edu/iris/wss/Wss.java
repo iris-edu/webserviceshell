@@ -37,7 +37,6 @@ import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.endpoints.CmdProcessorIrisEP;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
-import java.util.logging.Level;
 
 @Path ("/")
 public class Wss {
@@ -56,7 +55,7 @@ public class Wss {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}	
 	
-	@Path("status")
+	@Path("wssstatus")
 	@GET
 	public Response getStatus() {
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
@@ -183,9 +182,8 @@ public class Wss {
     			BufferedWriter writer = new BufferedWriter (new OutputStreamWriter(outputStream));
     			String inputLine = null ;
     			while ((inputLine = br.readLine()) != null) {
-    				inputLine = inputLine.replace("VERSION",ri.appConfig.getVersion()); 
-    				inputLine = inputLine.replace("HOST", WebUtils.getHostname()); 
-    				inputLine = inputLine.replace("BASEURL", ri.appConfig.getRootServicePath());
+                    inputLine = inputLine.replace("WSSBASEURL",
+                          WebUtils.getConfigFileBase(context));
     				writer.write(inputLine);
     				writer.newLine();
     			}
@@ -709,14 +707,6 @@ public class Wss {
             return builder.build();
         }
 
-		// Now run any Argument Preprocessor class if set.
-		if (ri.appConfig.getArgPreProcessorClassName() != null) {
-			try {
-				preProcess(ri, cmd);
-			} catch (Exception e) {
-				shellException(Status.BAD_REQUEST, e.getMessage());
-			}
-		}
 		//	logger.info("CMD array: " + cmd);	
         ProcessBuilder pb0 = new ProcessBuilder(cmd);
         System.out.println("******************** pb0.dir: " + pb0.directory());
@@ -767,32 +757,6 @@ public class Wss {
 		addCORSHeadersIfConfigured(builder, ri);
 	    
 		return builder.build();
-	}
-
-	private void preProcess(RequestInfo ri, List<String> cmd) throws Exception {
-		
-		String className = ri.appConfig.getArgPreProcessorClassName();
-		ArgPreProcessor argpp = null;
-		
-		try {
-    		Class<?> argppClass;
-    		argppClass = Class.forName(className);
-    		argpp = (ArgPreProcessor) argppClass.newInstance();
-		} catch (ClassNotFoundException e) {
-			String err = "Could not find class with name: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		} catch (InstantiationException e) {
-			String err = "Could not instantiate class: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		} catch (IllegalAccessException e) {
-			String err = "Illegal access while instantiating class: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		}
-		
-		argpp.process(ri,  cmd);
 	}
 	
 	private void shellException(Status status, String message) {
