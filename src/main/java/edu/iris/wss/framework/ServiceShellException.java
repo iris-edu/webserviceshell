@@ -26,7 +26,6 @@ import java.util.Date;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import edu.iris.wss.IrisStreamingOutput.PrevProcessStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 
 import org.apache.log4j.Logger;
@@ -65,12 +64,7 @@ public class ServiceShellException extends WebApplicationException {
     public static final String usageDetailsSignature = "Usage Details ...";
     
     public static void logAndThrowException(RequestInfo ri, Status status, String message, Exception e) {
-    	
-    	if (ri.workingSubdirectory != null) {
-            System.out.println("ouchouch**** is this ever used, ri.workingSubdirectory: " + ri.workingSubdirectory);
-    		PrevProcessStreamingOutput.deleteTempDirectory(new File(ri.workingSubdirectory));
-    	}
-    	
+
     	ri.statsKeeper.logError();
     	
     	logger.error(message + getErrorString(e));

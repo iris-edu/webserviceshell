@@ -17,7 +17,7 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.endpoints;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -42,24 +42,30 @@ import java.util.zip.ZipOutputStream;
 import org.apache.log4j.Logger;
 
 import com.Ostermiller.util.CircularByteBuffer;
+import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 
 import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.ServiceShellException;
+import edu.iris.wss.utils.WebUtils;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class PrevProcessStreamingOutput extends IrisStreamingOutput {
+public class CmdProcessorIrisEP extends IrisStreamingOutput {
 
 	public static final String outputDirSignature = "outputdir";
 
 	private static final int responseThreadDelayMsec = 50;
 	public static final Logger logger = Logger
-			.getLogger(PrevProcessStreamingOutput.class);
+			.getLogger(CmdProcessorIrisEP.class);
 
 	private Date startTime;
 
@@ -75,27 +81,63 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 
 	// [region] Constructors and Getters
 
-	public PrevProcessStreamingOutput() {
+	public CmdProcessorIrisEP() {
+        System.out.println("**************** SrvProcessStreamingOutput no arg constructor");
 	}
 
-	public PrevProcessStreamingOutput(RequestInfo ri) {
-		this();
-		this.ri = ri;
-	}
-
-	public PrevProcessStreamingOutput(ProcessBuilder pb, RequestInfo ri) {
-		this();
-		this.initialize(pb, ri);
-	}
-
-	public void initialize(ProcessBuilder pb, RequestInfo ri) {
-		this.processBuilder = pb;
-		this.ri = ri;
-	}
+//	public SrvProcessStreamingOutput(RequestInfo ri) {
+//		this();
+//		this.ri = ri;
+//	}
+//
+//	public SrvProcessStreamingOutput(ProcessBuilder pb, RequestInfo ri) {
+//		this();
+//		this.initialize(pb, ri);
+//	}
+//
+//	public void initialize(ProcessBuilder pb, RequestInfo ri) {
+//		this.processBuilder = pb;
+//		this.ri = ri;
+//	}
 
 	@Override
 	public void setRequestInfo(RequestInfo ri) {
-		this.ri = ri;
+        this.ri = ri;
+        
+        // this needs to be done again since it is not part of the IrisStreamingOutput
+        // interface, but any errors should have already been reported
+        ArrayList<String> cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
+		try {
+            // this modifies the cmd list and adds each parameter.
+			ParameterTranslator.parseQueryParams(cmd, ri);
+		} catch (Exception ex) {
+            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST, "CmdProcessStreamingOutput - " + ex.getMessage()); 
+		}
+                System.out.println("***********srv*after cmd.len: " + cmd.size());
+                System.out.println("***********srv*after cmd: " + cmd);
+                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
+
+        
+        ProcessBuilder pb0 = new ProcessBuilder(cmd);
+        System.out.println("*************srv**** pb0.dir: " + pb0.directory());
+        System.out.println("*************srv**** user.dir: " + System.getProperty("user.dir"));
+
+	    processBuilder = new ProcessBuilder(cmd);
+        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory()));
+
+	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
+	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
+	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
+	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
+	    processBuilder.environment().put("VERSION", ri.appConfig.getVersion());
+        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
+        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
+        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
+            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
+                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        }
+        System.out.println("*************srv**** processBuilder.dir: " + processBuilder.directory());
+        System.out.println("*************srv**** user.dir: " + System.getProperty("user.dir"));
 	}
 
     // Note: this is broken if ever threaded, exitVal should be
@@ -171,7 +213,7 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 			// + ioe.getMessage());
 		}
 
-		PrevReschedulableTimer rt = new PrevReschedulableTimer(
+		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(null));
 
@@ -353,9 +395,9 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 		// Must be bigger (and a multiple) of maxSeedRecordSize
 		byte[] buffer = new byte[32768];
 
-		HashMap<String, PrevRecordMetaData> logHash = new HashMap<>();
+		HashMap<String, RecordMetaData> logHash = new HashMap<>();
 
-		PrevReschedulableTimer rt = new PrevReschedulableTimer(
+		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(output));
 
@@ -525,7 +567,7 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
                 }
 
                 for (String key : logHash.keySet()) {
-                    PrevRecordMetaData rmd = logHash.get(key);
+                    RecordMetaData rmd = logHash.get(key);
                     logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
                             Status.OK, null, LogKey.getNetwork(key).trim(),
                             LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
@@ -582,7 +624,7 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 	}
 
 	private void processRecord(SeedRecord sr,
-			HashMap<String, PrevRecordMetaData> logHash) throws ParseException {
+			HashMap<String, RecordMetaData> logHash) throws ParseException {
 		if (sr instanceof DataRecord) {
 
 			DataRecord dr = (DataRecord) sr;
@@ -592,14 +634,14 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
                     dh.getStationIdentifier(), dh.getLocationIdentifier(),
                     dh.getChannelIdentifier(), dh.getQualityIndicator());
 
-			PrevRecordMetaData rmd = logHash.get(key);
+			RecordMetaData rmd = logHash.get(key);
             
 			if (rmd != null) {
 				rmd.setIfEarlier(dh.getStartBtime());
 				rmd.setIfLater(dh.getLastSampleBtime());
 				rmd.setSize(rmd.getSize() + (long) dr.getRecordSize());
 			} else {
-				rmd = new PrevRecordMetaData();
+				rmd = new RecordMetaData();
 				rmd.setSize((long) dr.getRecordSize());
 				rmd.setIfEarlier(dh.getStartBtime());
 				rmd.setIfLater(dh.getLastSampleBtime());
@@ -624,7 +666,7 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 		int bytesRead;
 		byte[] buffer = new byte[1024];
 
-		PrevReschedulableTimer rt = new PrevReschedulableTimer(
+		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(output));
 
@@ -724,7 +766,7 @@ public class PrevProcessStreamingOutput extends IrisStreamingOutput {
 		int bytesRead;
 		byte[] buffer = new byte[32768];
 
-		PrevReschedulableTimer rt = new PrevReschedulableTimer(
+		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds() * 1000);
 		rt.schedule(new killIt(output));
 

@@ -87,7 +87,7 @@ public class MyAppRC extends ResourceConfig {
         addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
         addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
         addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
-        addEndpoint("v3/query", edu.iris.wss.services.SrvProcessStreamingOutput.class, "doIrisStreaming");
+        addEndpoint("v3/query", edu.iris.wss.endpoints.CmdProcessorIrisEP.class, "doIrisStreaming");
         
     // -------------------
     System.out.println("*****constr MyAppRC servletContextConstr: " + servletContext);

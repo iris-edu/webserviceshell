@@ -17,12 +17,12 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.services;
+package edu.iris.wss.endpoints;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SrvReschedulableTimer extends Timer {
+public class ReschedulableTimer extends Timer {
 	
 	// Default delay for timeout timers: 30 seconds
 	public final static int defaultDelayMsec = 30 * 1000;
@@ -31,11 +31,11 @@ public class SrvReschedulableTimer extends Timer {
 	private TimerTask timerTask;
 	private int delayMsec = defaultDelayMsec;
 	
-	public SrvReschedulableTimer() {
+	public ReschedulableTimer() {
 		
 	}
 	
-	public SrvReschedulableTimer(Integer timeout) {
+	public ReschedulableTimer(Integer timeout) {
 		if (timeout != null) delayMsec = timeout;
 	}
 	

@@ -17,8 +17,9 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.endpoints;
 
+import edu.iris.wss.endpoints.RecordMetaData;
 import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -66,7 +67,7 @@ public class RecordMetaDataTest {
     @Test
     public void testGetSize() {
         System.out.println("getSize");
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         Long expResult = null;
         Long result = instance.getSize();
         assertEquals(expResult, result);
@@ -78,7 +79,7 @@ public class RecordMetaDataTest {
     @Test
     public void testSetSize() {
         Long size = null;
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         instance.setSize(size);
     }
 
@@ -88,7 +89,7 @@ public class RecordMetaDataTest {
     @Test
     public void testSetAndGetSize() {
         Long size = new Long(23);
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         instance.setSize(size);
         Long result = instance.getSize();
         assertTrue(result.equals(size));
@@ -99,7 +100,7 @@ public class RecordMetaDataTest {
      */
     @Test
     public void testGetStartAndEndAreNull() {
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         Btime expResult = null;
         Btime result = instance.getStart();
         assertEquals(expResult, result);
@@ -113,7 +114,7 @@ public class RecordMetaDataTest {
      */
     @Test
     public void testGetStartAndEnd() {
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         Btime expStart = new Btime(new Date());
         instance.setStart(expStart);
         Btime result = instance.getStart();
@@ -136,7 +137,7 @@ public class RecordMetaDataTest {
      */
     @Test
     public void testSetIfEarlier() throws Exception {
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         assertEquals(instance.getStart(), null);
                 
         //start = "2011,036,17:24:50.9999";
@@ -155,7 +156,7 @@ public class RecordMetaDataTest {
         
         // creating format everytime because SimpleDataFormat is not
         // thread safe
-        SimpleDateFormat fmt = new SimpleDateFormat(PrevRecordMetaData.SeisFileDataFormat);
+        SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
         fmt.setTimeZone(UTC);
         String startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
         // using the same formatter, I should get the same string from date
@@ -191,7 +192,7 @@ public class RecordMetaDataTest {
      */
     @Test
     public void testSetIfLater() throws Exception {
-        PrevRecordMetaData instance = new PrevRecordMetaData();
+        RecordMetaData instance = new RecordMetaData();
         assertEquals(instance.getEnd(), null);
         
         //end = "2011,036,17:24:50.9999";
@@ -208,7 +209,7 @@ public class RecordMetaDataTest {
         String endExpected = "2011,036,17:24:50.999";
         // creating format everytime because SimpleDataFormat is not
         // thread safe
-        SimpleDateFormat fmt = new SimpleDateFormat(PrevRecordMetaData.SeisFileDataFormat);
+        SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
         fmt.setTimeZone(UTC);
         String endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
         assertTrue(endResult.equals(endExpected));

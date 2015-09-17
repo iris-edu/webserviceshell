@@ -12,7 +12,7 @@
     <name>WebServiceShell</name>
     <groupId>edu.iris</groupId>
     <artifactId>webserviceshell</artifactId>
-    <version>1.2-yazspr-SNAPSHOT</version>
+    <version>mastr_v2x-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>http://iris.edu</url>

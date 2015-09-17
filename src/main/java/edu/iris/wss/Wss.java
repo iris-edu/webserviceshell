@@ -34,7 +34,7 @@ import edu.iris.wss.framework.RequestInfo.CallType;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
-import edu.iris.wss.IrisStreamingOutput.PrevProcessStreamingOutput;
+import edu.iris.wss.endpoints.CmdProcessorIrisEP;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
 import java.util.logging.Level;
@@ -555,7 +555,7 @@ public class Wss {
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
 		ArrayList<String> cmd = null;
         System.out.println("***************** className: " + className);
-        if (className.equals("edu.iris.wss.services.SrvProcessStreamingOutput")) { // i.e. if it is a command based, use CmdProcessing class
+        if (className.equals("edu.iris.wss.endpoints.CmdProcessIrisEP")) { // i.e. if it is a command based, use CmdProcessing class
             cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
         } else {
             cmd = new ArrayList<String>();
@@ -737,7 +737,9 @@ public class Wss {
                     WebUtils.getAuthenticatedUsername(requestHeaders));
         }
 
-		PrevProcessStreamingOutput iso = new PrevProcessStreamingOutput(pb, ri);      
+		//CmdProcessIrisEP iso = new CmdProcessIrisEP(pb, ri);
+        CmdProcessorIrisEP iso = new CmdProcessorIrisEP();
+        iso.setRequestInfo(ri);
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
@@ -766,7 +768,7 @@ public class Wss {
 	    
 		return builder.build();
 	}
-	
+
 	private void preProcess(RequestInfo ri, List<String> cmd) throws Exception {
 		
 		String className = ri.appConfig.getArgPreProcessorClassName();

@@ -17,13 +17,13 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.endpoints;
 
 import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
 
 
-public class PrevRecordMetaData {
+public class RecordMetaData {
 
 	private Long size;
 	private Btime start;
@@ -84,7 +84,7 @@ public class PrevRecordMetaData {
 	}
 
     public static void main(String[] args) {
-        PrevRecordMetaData rmd = new PrevRecordMetaData();
+        RecordMetaData rmd = new RecordMetaData();
 
             Btime input = new Btime(2011, 36, 17, 24, 50, 9999);
             rmd.setIfEarlier(input);

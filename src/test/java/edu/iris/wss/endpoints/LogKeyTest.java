@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.endpoints;
 
-import edu.iris.wss.IrisStreamingOutput.PrevProcessStreamingOutput.LogKey;
+import edu.iris.wss.endpoints.CmdProcessorIrisEP.LogKey;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
