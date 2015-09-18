@@ -17,7 +17,7 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss;
+package edu.iris.wss.endpoints;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +25,7 @@ import java.io.InputStream;
 import org.apache.log4j.Logger;
 
 public class StreamEater implements Runnable  {
+	public static final Logger logger = Logger.getLogger(StreamEater.class);
 
 	InputStream inputStream;
 
@@ -33,8 +34,6 @@ public class StreamEater implements Runnable  {
 
 	String      output = null;
 	IOException ioException = null;
-
-	public static final Logger logger = Logger.getLogger(StreamEater.class);
 
 	public StreamEater(Process process, InputStream is ) throws Exception {
 
@@ -54,28 +53,27 @@ public class StreamEater implements Runnable  {
 	}
 	
 	public synchronized String getOutputString() throws IOException {
-
 		// wait until done, then return the string
 		if (!done) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				logger.info("interrupted");
+				logger.info("interrupted while doing getOutputString");
 			}
 		}
 			
 		// Probably timed out if an IO exception has occurred
 		if( ioException != null )  {
 			// throw ioException;
-			return "Request time out.";
+			return "ioException occurred, probably because request timed out.";
 		}
 		return output;
 	}
 
+    @Override
 	public void run() {
-
 		// accumulate lines in this buffer
-		StringBuffer sb = new StringBuffer();		
+		StringBuilder sb = new StringBuilder();		
 		
 		byte [] buffer = new byte[1024];
 		
@@ -91,7 +89,8 @@ public class StreamEater implements Runnable  {
 		} finally {
 			output = sb.toString();
 			synchronized (this) {
-				// Set done and notify any waiting threads.  Typically, somebody calling getOutputString()
+				// Set done and notify any waiting threads.
+                //Typically, somebody calling getOutputString()
 				done = true;
 				notify();
 			}

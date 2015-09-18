@@ -442,11 +442,11 @@ public class AppConfigurator {
 				.getProperty("irisEndpointClassName");
 
 		if (!isOkString(handlerStr) && !isOkString(soStr))
-			throw new Exception("Missing handler program configuration");
+			throw new Exception("Missing handlerProgram parameter");
 
 		if (isOkString(handlerStr) && isOkString(soStr))
 			throw new Exception(
-					"Handler program _AND_ irisEndpoint class specified.  Only one allowed.");
+					"Both handlerProgram and irisEndpointClassName are specified.  Only one allowed.");
 
 		if (isOkString(handlerStr))
 			this.handlerProgram = handlerStr;

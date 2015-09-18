@@ -28,7 +28,7 @@ import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
 import edu.iris.wss.utils.WebUtils;
 
 public class SingletonWrapper {
-//	public ServletContext context;
+	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
 
 	public AppConfigurator appConfig = new AppConfigurator();
 	public ParamConfigurator paramConfig = new ParamConfigurator();
@@ -36,18 +36,10 @@ public class SingletonWrapper {
 	public IrisSingleton singleton = null;
         
     public static WebLogService webLogService = null;
-
-	
-	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
-
-	// Will be loaded in application scope via the AppScope class.  
-	// This is essentially, a singleton.  But nothing happens until the configure method is 
-	// called from the AppScope class which can only occur once the AppScope class has
-	// the servlet context.
 	
 	public SingletonWrapper()  {
-    System.out.println("***** SingletonWrapper construct this: " + this);
-  }
+        System.out.println("***** SingletonWrapper no-arg construct");
+    }
 	
 	public void configure(ServletContext context) {		
 		// If we've already configured the application, don't do it again.
@@ -93,12 +85,5 @@ public class SingletonWrapper {
     			logger.fatal("Illegal access while instantiating class: " + appConfig.getSingletonClassName());
     		}
     	}
-
-	}
-	
-	public SingletonWrapper(AppConfigurator ac, ParamConfigurator pc) {
-    System.out.println("***** SingletonWrapper construct 2");
-		this.appConfig = ac;
-		this.paramConfig = pc;
 	}
 }

@@ -20,65 +20,107 @@
  */
 package edu.iris.wss.framework;
 
-import edu.iris.wss.Wss;
 import edu.iris.wss.utils.WebUtils;
 import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 
 // Set up application for injection and loading to container
 
 // Don't use annotation ApplicationPath here because it is explicitely
 // set in web.xml along with some security and other settings
 //@ApplicationPath("/")
-public class MyApplication extends Application {
-
-  @Inject
-  public MyApplication(ServiceLocator serviceLocator, @Context ServletContext servletContextConstr) {
-    System.out.println("*****constr MyApplication Inject, serviceLocator: " + serviceLocator);
-    WebUtils.myInitLog4j(servletContextConstr);
-
-    SingletonWrapper sw = new SingletonWrapper();
-    sw.configure(servletContextConstr);
-    
-    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
-//    AppScope appScope = new AppScope();
-//    Injections.addBinding(
-//        Injections.newBinder(appScope).to(AppScope.class), dc);
-//    Injections.addBinding(
-//        Injections.newBinder(appScope.getSingletonWrapper()).to(SingletonWrapper.class), dc);
-    
-    Injections.addBinding(
-        Injections.newBinder(sw).to(SingletonWrapper.class), dc);
-
-    
-    dc.commit();
-//    System.out.println("*****constr MyApplication Inject, appScope: " + appScope);
-    System.out.println("*****constr MyApplication servletContextConstr: " + servletContextConstr);
-    System.out.println("*****constr MyApplication ctxPath: " + servletContextConstr.getContextPath());
-  }
-  
-  @Override
-  public Set<Class<?>> getClasses() {
-    System.out.println("***** MyApplication getClasses start");
-    final Set<Class<?>> classes = new HashSet<>();
-    classes.add(Wss.class);
-    System.out.println("***** MyApplicatiosn getClasses, classes size: " + classes.size());
-    //new Throwable().printStackTrace();
-    return classes;
-  }
+public class MyApplication extends ResourceConfig {
     
   public static final Logger logger = Logger.getLogger(MyApplication.class);
+
+  @Inject
+  public MyApplication(ServiceLocator serviceLocator, @Context ServletContext servletContext) {
+    System.out.println("*****constr MyApplicationRC Inject, serviceLocator: " + serviceLocator);
+
+    // always setup log4j first
+    WebUtils.myInitLog4j(servletContext);
+
+    // get configuration information now
+    SingletonWrapper sw = new SingletonWrapper();
+    sw.configure(servletContext);
+
+    // bind classes as needed to be available via a CONTEXT annotation
+    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+    Injections.addBinding(
+        Injections.newBinder(sw).to(SingletonWrapper.class), dc);
+    dc.commit();
+    
+    register(edu.iris.wss.Wss.class);
+    
+    final Resource.Builder resourceBuilder = Resource.builder();
+    resourceBuilder.path("helloworld");
+
+    final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
+    methodBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
+            .handledBy(new Inflector<ContainerRequestContext, String>() {
+
+        @Override
+        public String apply(ContainerRequestContext containerRequestContext) {
+            return "Hello hk2 World!";
+        }
+    });
+
+    final Resource resource = resourceBuilder.build();
+    registerResources(resource);
+
+    // --------------
+    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion");
+    addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
+    addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
+    addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
+    addEndpoint("v3/query", edu.iris.wss.endpoints.CmdProcessorIrisEP.class, "doIrisStreaming");
+
+    // -------------------
+    System.out.println("*****constr MyApplicationRC servletContextConstr: " + servletContext);
+    System.out.println("*****constr MyApplicationRC ctxPath: " + servletContext.getContextPath());
+  }
   
   public MyApplication() {
-    System.out.println("*****regconstr MyApplication regular constructor");
+    System.out.println("*****regconstr MyApplicationRC regular constructor");
+  }
+
+  private void addEndpoint(String epPath, Class epClass, String methodName) {
+    final Resource.Builder resourceBuilder = Resource.builder();
+    resourceBuilder.path(epPath);
+
+    final ResourceMethod.Builder methodForGet = resourceBuilder.addMethod("GET");
+    try {
+        methodForGet.produces(MediaType.TEXT_PLAIN_TYPE)
+              .handledBy(epClass, epClass.getMethod(methodName, null));
+
+    } catch (NoSuchMethodException ex) {
+        System.out.println("*****constr MyApplicationRC endpoint: " + epPath
+              + "  class: " + epClass.getName() + "  NoSuchMethodException: " + ex);
+    } catch (SecurityException ex) {
+        System.out.println("*****constr MyApplicationRC endpoint: " + epPath
+              + "  class: " + epClass.getName() + "  SecurityException: " + ex);
+    }
+
+    final Resource endpointRes = resourceBuilder.build();
+    registerResources(endpointRes);
+    
+    
+    System.out.println("*****constr MyApplicationRC Inject, res_dwv: " + endpointRes);
+    System.out.println("*****constr MyApplicationRC Inject, res_dwv name: " + endpointRes.getName());
+    System.out.println("*****constr MyApplicationRC Inject, res_dwv path: " + endpointRes.getPath());
   }
 }
 

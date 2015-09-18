@@ -19,32 +19,21 @@
 
 package edu.iris.wss.endpoints;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
 
 import com.Ostermiller.util.CircularByteBuffer;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 
-import edu.iris.wss.StreamEater;
 import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import edu.iris.wss.framework.FdsnStatus.Status;
@@ -60,12 +49,11 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CmdProcessorIrisEP extends IrisStreamingOutput {
+	public static final Logger logger = Logger.getLogger(CmdProcessorIrisEP.class);
 
 	public static final String outputDirSignature = "outputdir";
 
 	private static final int responseThreadDelayMsec = 50;
-	public static final Logger logger = Logger
-			.getLogger(CmdProcessorIrisEP.class);
 
 	private Date startTime;
 

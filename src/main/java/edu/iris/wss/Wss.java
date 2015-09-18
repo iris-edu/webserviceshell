@@ -34,7 +34,6 @@ import edu.iris.wss.framework.RequestInfo.CallType;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
-import edu.iris.wss.endpoints.CmdProcessorIrisEP;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
 
