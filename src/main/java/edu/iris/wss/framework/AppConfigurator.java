@@ -125,7 +125,7 @@ public class AppConfigurator {
 
 	private Integer sigkillDelay = 100; // 100 msec delay from SIGTERM to SIGKILL
 
-	private Integer timeoutSeconds = null;
+	private Integer timeoutSeconds = 30;
 
 	private LoggingType loggingType = LoggingType.LOG4J;
 
