@@ -94,7 +94,7 @@ public class ServiceShellException extends WebApplicationException {
     	
    	
     	sb.append("\n\nService version:\n");
-    	sb.append(ri.appConfig.getAppName() + ": v " + ri.appConfig.getVersion() + "\n");
+    	sb.append(ri.appConfig.getAppName() + ": v " + ri.appConfig.getAppVersion() + "\n");
     	
 //    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());

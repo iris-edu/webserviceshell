@@ -119,7 +119,7 @@ public class Wss {
               + "<div><b>Web Service Shell version:</b> "
               + ri.appConfig.getWssVersion() + "</div>"
               + "<div><b>appName:</b> " + ri.appConfig.getAppName()
-              + "&nbsp&nbsp<b>version:</b> " + ri.appConfig.getVersion() + "</div>"
+              + "&nbsp&nbsp<b>version:</b> " + ri.appConfig.getAppVersion() + "</div>"
               + "</div>"
 
               + "<div id=\"message\">"
@@ -234,12 +234,12 @@ public class Wss {
 	
 	@Path("version")
 	@GET @Produces("text/plain")
-	public Response getVersion() {
+	public Response getAppVersion() {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
-              .entity(ri.appConfig.getVersion());
+              .entity(ri.appConfig.getAppVersion());
 
         addCORSHeadersIfConfigured(builder, ri);
 

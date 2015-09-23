@@ -117,7 +117,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
 	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
 	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
-	    processBuilder.environment().put("VERSION", ri.appConfig.getVersion());
+	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
         processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
         processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
         if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {

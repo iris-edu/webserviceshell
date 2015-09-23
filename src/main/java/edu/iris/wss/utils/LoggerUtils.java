@@ -29,7 +29,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.AppConfigurator.LoggingType;
+import edu.iris.wss.framework.AppConfigurator.LoggingMethod;
 import edu.iris.wss.framework.SingletonWrapper;
 
 public class LoggerUtils {
@@ -140,9 +140,9 @@ public class LoggerUtils {
 	}
 	
 	public static void logWssUsageMessage(Level level, WebUsageItem wui, RequestInfo ri) {
-		AppConfigurator.LoggingType loggingType = ri.appConfig.getLoggingType();
+		AppConfigurator.LoggingMethod loggingType = ri.appConfig.getLoggingType();
         
-		if (loggingType == LoggingType.LOG4J) {
+		if (loggingType == LoggingMethod.LOG4J) {
             String msg = makeUsageLogString(wui);
             
 			switch (level.toInt()) {
@@ -156,7 +156,7 @@ public class LoggerUtils {
 				usageLogger.debug(msg);
 				break;	
 			}
-		} else if (loggingType == LoggingType.JMS) {
+		} else if (loggingType == LoggingMethod.JMS) {
             // for now, webLogService startup is here as in the original code
             // rather than in AppContextListener, if placed in AppContextListener, 
             // startup timing between components needs to be checked
