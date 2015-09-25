@@ -19,6 +19,7 @@
 
 package edu.iris.wss.framework;
 
+import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.utils.WebUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,12 +28,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
 
@@ -47,6 +49,7 @@ public class AppConfigurator {
 
 	private static final String defaultConfigFileName = "META-INF/service.cfg";
 	private static final String userParamConfigSuffix = "-service.cfg";
+    private static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
     
     // this particular string is purposely matched is an error indicator
     // for timeout on miniseed data, although, unless changed, it will
@@ -61,13 +64,10 @@ public class AppConfigurator {
 	private Boolean isValid = false;
     
     public AppConfigurator() {
-        // set default type
-        outputTypes.put("BINARY", "application/octet-stream");
-        
         init();
     }
     
-    private void init() {
+    private void init()  {
         // set defaults, all parameters must be set here with
         // defaults of the correct (i.e. desired) object type.
         globals.put(GL_CFGS.appName.toString(), "notnamed");
@@ -82,10 +82,16 @@ public class AppConfigurator {
 
         ep_defaults.put(EP_CFGS.irisEndpointClassName,
               edu.iris.wss.endpoints.CmdProcessorIrisEP.class);
-        ep_defaults.put(EP_CFGS.handlerProgram, null);
+        ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
-        ep_defaults.put(EP_CFGS.handlerWorkingDirectory, null);
-        ep_defaults.put(EP_CFGS.outputTypes, null);
+        ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
+        try {
+            //   default_outputTypes.put("BINARY", "application/octet-stream");
+            ep_defaults.put(EP_CFGS.outputTypes, createOutputTypes(""));
+        } catch (Exception ex) {
+            System.out.println("************** ERR ERR ERR in init ");
+            java.util.logging.Logger.getLogger(AppConfigurator.class.getName()).log(Level.SEVERE, null, ex);
+        }
         ep_defaults.put(EP_CFGS.usageLog, true);
         ep_defaults.put(EP_CFGS.postEnabled, false);
         ep_defaults.put(EP_CFGS.use404For204, false);
@@ -117,29 +123,44 @@ public class AppConfigurator {
         irisEndpointClassName
     }
 
-    Set<String> endpointNames = new HashSet();
-    HashMap<String, Object> globals = new HashMap();
-    HashMap<EP_CFGS, Object> ep_defaults = new HashMap();
-    HashMap<EP_CFGS, Object> endpoints = new HashMap();
+    private Map<String, Map> endpoints = new HashMap();
+    private Map<String, Object> globals = new HashMap();
+    private Map<EP_CFGS, Object> ep_defaults = new HashMap();
+    //private Map<EP_CFGS, Object> endpoint = new HashMap();
+    //private Map<String, String> default_outputTypes = createOutputTypes();
     
-    
-	private final InternalTypes outputType = InternalTypes.BINARY;
-    private String defaultOutputTypeKey = "BINARY";
-    public String defaultOutputTypeKey() {
-		return defaultOutputTypeKey;
-	}
-    private Map<String, String> outputTypes = new HashMap<>();
+//	private final InternalTypes outputType = InternalTypes.BINARY;
+//    private String defaultOutputTypeKey = "BINARY";
 
 	public static enum LoggingMethod {
 		LOG4J, JMS
 	};
 
-
-	private String workingDirectory = "/";
-	private String handlerProgram;
-	private String catalogsHandlerProgram;
-	private String contributorsHandlerProgram;
-	private String countsHandlerProgram;
+    // newTypes may be null or empty, which means return the default list
+    
+    // must use LinkedHashMap or equivalent to preserve order of types
+    // to enable using the first element as "the default type"
+    
+    // must always have at least one element, binary is the designated default
+    // at this time.
+    public Map<String, String> createOutputTypes(String newTypes)
+          throws Exception
+    {
+        Map<String, String> types = new LinkedHashMap<>();
+        
+        // set newTypes first so as to preserve order from configuration file
+        if (isOkString(newTypes)) {
+            setOutputTypes(types, newTypes);
+        }
+        
+        // set default last
+        setOutputTypes(types, "BINARY: application/octet-stream");
+        
+        return types;
+    }
+//	private String catalogsHandlerProgram;
+//	private String contributorsHandlerProgram;
+//	private String countsHandlerProgram;
 
 	//private String appName;
 	//private String appVersion;
@@ -152,20 +173,16 @@ public class AppConfigurator {
 	//private String singletonClassName = null;
 
     //private String irisEndpointClassName = null;
-
-	private Boolean usageLog = true;
-	private Boolean postEnabled = false;
-	private Boolean use404For204 = false;
-
-
+	//private String handlerProgram;
 	//private Integer timeoutSeconds = 30;
+	//private String workingDirectory = "/";
+    //private Map<String, String> outputTypes = new HashMap<>();
+	//private Boolean usageLog = true;
+	//private Boolean postEnabled = false;
+	//private Boolean use404For204 = false;
 
 
-	// Either a handler program or a Streaming Output Class is required.
 
-	public String getHandlerProgram() {
-		return handlerProgram;
-	}
 
 
 	// Required configuration entries. Failure to find these will result in an
@@ -173,45 +190,90 @@ public class AppConfigurator {
 
 	public String getAppName() { return (String)globals.get(GL_CFGS.appName.toString()); }
 	public String getAppVersion() { return (String)globals.get(GL_CFGS.appVersion.toString()); }
-	public boolean getCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())).booleanValue(); }
+	public boolean getCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())); }
     public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
     public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
     public String getRootServiceDoc() { return (String)globals.get(GL_CFGS.rootServiceDoc.toString()); }
     public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.rootServiceDoc.toString()); }
-    public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())).intValue(); }
+    public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())); }
     public String getSingletonClassName() { return (String)globals.get(GL_CFGS.singletonClassName.toString()); }
     
-	public String getWssVersion() {
-		return wssVersion;
-	}
+	public String getWssVersion() { return wssVersion; }
     
-    public String getIrisEndpointClassName() { return endpoints.get(EP_CFGS.irisEndpointClassName).toString(); }
-
-
-    public boolean isConfiguredForTypeKey(String outputTypeKey) throws Exception {
-        return outputTypes.containsKey(outputTypeKey);
+    public String getIrisEndpointClassName(String epName) {
+        return endpoints.get(epName).get(EP_CFGS.irisEndpointClassName).toString();
+    }
+    public String getHandlerProgram(String epName) {
+        System.out.println("---- **** epName: " + epName);
+        System.out.println("---- **** get(epName)): " + endpoints.get(epName));
+        System.out.println("---- **** get(epName).get(EP_CFGS.handlerProgram): " + endpoints.get(epName).get(EP_CFGS.handlerProgram));
+        return endpoints.get(epName).get(EP_CFGS.handlerProgram).toString();
+    }
+	public int getTimeoutSeconds(String epName) {
+		return (int)endpoints.get(epName).get(EP_CFGS.handlerTimeout);
 	}
+    public String getWorkingDirectory(String epName) {
+        return endpoints.get(epName).get(EP_CFGS.handlerWorkingDirectory).toString();
+    }
+    public boolean isConfiguredForTypeKey(String epName, String outputTypeKey)
+          throws Exception {
+        Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName).get(EP_CFGS.outputTypes);
+        return outTypes.containsKey(outputTypeKey);
+	}
+    public String getMediaType(String epName, String outputTypeKey) throws Exception {
+        if (endpoints.containsKey(epName)) {
+            Map<String, String> outputTypes = (Map<String, String>)endpoints
+                  .get(epName).get(EP_CFGS.outputTypes);
 
-    public String getMediaType(String outputTypeKey) throws Exception {
-        // Note: do the same operation on outputTypeKey as the setter, e.g. trim
-        //       and toUpperCase
-        String mediaType = outputTypes.get(outputTypeKey.trim().toUpperCase());
-        if (mediaType == null) {
-            throw new Exception("WebserviceShell getOutputTypes, no Content-Type"
-                    + " found for outputType: " + outputTypeKey);
+            // Note: do the same operation on outputTypeKey as the setter, e.g. trim
+            //       and toUpperCase
+            String mediaType = outputTypes.get(outputTypeKey.trim().toUpperCase());
+            if (mediaType == null) {
+                throw new Exception("WebServiceShell getMediaType, no mediaType"
+                      + " found for outputType: " + outputTypeKey
+                      + "  on endpoint:" + epName);
+            }
+            return mediaType;
         }
-		return mediaType;
+        throw new Exception("WebServiceShell getMediaType, there is no endpoint"
+                      + " configured for endpoint name: " + epName);
+	}
+	public boolean getUsageLog(String epName) {
+        return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
+	}
+	public Boolean getPostEnabled(String epName) {
+		return (boolean)endpoints.get(epName).get(EP_CFGS.postEnabled);
+	}
+	public Boolean getUse404For204(String epName) {
+		return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
 	}
     
-	public void setOutputTypes(String s) throws Exception {
+    // Note: this implements the rule that the first item in outputTypes
+    //       is the default output type
+    //       
+    public String getDefaultOutputTypeKey(String epName) throws Exception {
+        if (endpoints.containsKey(epName)) {
+            Map<String, String> types = (Map<String, String>)endpoints
+                  .get(epName).get(EP_CFGS.outputTypes);
+            
+            String defaultOutputTypeKey = (String)types.keySet().toArray()[0];
+            
+            return defaultOutputTypeKey;
+        }
+        throw new Exception("WebServiceShell getDefaultOutputTypeKey, there is no endpoint"
+                      + " configured for endpoint name: " + epName);
+	}
+
+    // ---------------------------------
+	public void setOutputTypes(Map<String, String> outTypes, String s)
+          throws Exception {
         if (!isOkString(s)) {
-			throw new Exception("Missing outputTypes, at least one pair must"
-                    + " be set");
+			throw new Exception("WebServiceShell setOutputTypes, outputTypes"
+                  + " pair values are null or empty string.");
         }
         
         String[] pairs = s.split(java.util.regex.Pattern.quote(","));
 
-        int count = 0;
         for (String pair : pairs) {
             String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
             if (oneKV.length != 2) {
@@ -225,79 +287,15 @@ public class AppConfigurator {
             }
 
             String key = oneKV[0].trim().toUpperCase();
-            outputTypes.put(key, oneKV[1].trim());
-            
-            // the first item in the list shall be the new default
-            count++;
-            if (count == 1) {
-                defaultOutputTypeKey = key;
-            }
+            outTypes.put(key, oneKV[1].trim());
         }
     }
 
-	public String getWorkingDirectory() {
-		return workingDirectory;
-	}
-
-	public void setWorkingDirectory(String s) {
-		workingDirectory = s;
-	}
-
-	public Boolean getUsageLog() {
-		return usageLog;
-	}
-
-	public void setUsageLog(Boolean b) {
-		usageLog = b;
-	}
-
-	public Boolean getPostEnabled() {
-		return postEnabled;
-	}
-
-	public void setPostEnabled(Boolean b) {
-		postEnabled = b;
-	}
-
-	public Boolean getUse404For204() {
-		return use404For204;
-	}
-
-	public void setUse404For204(Boolean b) {
-		use404For204 = b;
-	}
 
 	// Not required. Might be defaulted elsewhere.
 
-	public int getTimeoutSeconds() {
-		return (int)globals.get(EP_CFGS.handlerTimeout.toString());
-	}
 
 	// Other Getters. Not defaulted
-
-	public String getCatalogsHandlerProgram() {
-		return catalogsHandlerProgram;
-	}
-
-	public void setCatalogsHandlerProgram(String s) {
-		catalogsHandlerProgram = s;
-	}
-
-	public String getContributorsHandlerProgram() {
-		return contributorsHandlerProgram;
-	}
-
-	public void setContributorsHandlerProgram(String s) {
-		contributorsHandlerProgram = s;
-	}
-
-	public String getCountsHandlerProgram() {
-		return countsHandlerProgram;
-	}
-
-	public void setCountsHandlerProgram(String s) {
-		countsHandlerProgram = s;
-	}
 
 	
 	public Boolean isValid() {
@@ -387,26 +385,8 @@ public class AppConfigurator {
 	public void loadConfigurationParameters(Properties inputProps,
           ServletContext context)
 			throws Exception {
-		// Only allow one of handler program or streaming output class
-		String handlerStr = inputProps.getProperty("handlerProgram");
-		String soStr = inputProps
-				.getProperty("irisEndpointClassName");
-
-		if (!isOkString(handlerStr) && !isOkString(soStr))
-			throw new Exception("Missing handlerProgram parameter");
-
-		if (isOkString(handlerStr) && isOkString(soStr)) {
-//			throw new Exception(
-//					"Both handlerProgram and irisEndpointClassName are specified.  Only one allowed.");
-            System.out.println("*** *** *** Both handlerProgram and irisEndpointClassName are specified.  Only one allowed.");
-        }
-
-		if (isOkString(handlerStr))
-			this.handlerProgram = handlerStr;
 
 		// ------------------------------------------------------
-
-		String valueStr;
 
         loadGlobalParameter(inputProps, globals, GL_CFGS.appName);
         loadGlobalParameter(inputProps, globals, GL_CFGS.appVersion);
@@ -418,123 +398,98 @@ public class AppConfigurator {
         loadGlobalParameter(inputProps, globals, GL_CFGS.sigkillDelay);
         loadGlobalParameter(inputProps, globals, GL_CFGS.singletonClassName);
 
-        loadEndpointParameter(inputProps, ep_defaults, endpoints, EP_CFGS.irisEndpointClassName);
-
-        Set<String> endpointText = new HashSet();
         Enumeration keys = inputProps.propertyNames();
         while (keys.hasMoreElements()) {
-            String name = (String)keys.nextElement();      
-            System.out.println("**** name: " + name
-                + "  value: " + inputProps.getProperty(name));
+            String propName = (String)keys.nextElement();      
+            System.out.println("**** ---- **** propName: " + propName
+                + "  value: " + inputProps.getProperty(propName));
             
-            String[] withDots = name.split(java.util.regex.Pattern.quote("."));
+            // by design, in this version of WSS, a global parameter is 
+            // defined as a string with no epname. decoration.
+            // An endpoint parameter must have a epname. in front of the 
+            // WSS to designate endpoint and endpoint parameters
+            String[] withDots = propName.split(java.util.regex.Pattern.quote(
+                  ENDPOINT_TO_PROPERTIES_DELIMITER));
             if (withDots.length == 1) {
                 // should be already loaded, noop
-                System.out.println("*** glb: " + withDots[0]);
+                //System.out.println("*** glb: " + withDots[0]);
             } else if (withDots.length == 2) {
                 try {
-                        EP_CFGS trial = EP_CFGS.valueOf(withDots[1]);
-                        // add endpoint only if there is a valid parameter
-                        endpointText.add(withDots[0]);
-                    } catch (IllegalArgumentException ex) {
-                        System.out.println("****** ignoring ex: " + ex);
-                        //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
+                    String epName = withDots[0];
+                    String inputParmStr = withDots[1];
+                    
+                    // relying on throwing IllegalArgumentException if it is
+                    // not a defined WSS endpoint configuration parameter
+                    EP_CFGS inputParm = EP_CFGS.valueOf(inputParmStr);
+
+                    Map<EP_CFGS, Object> endpoint = null;
+                    if (endpoints.containsKey(epName)) {
+                        endpoint = endpoints.get(epName);
+                    } else {
+                        endpoint = new HashMap();
+                        endpoint.putAll(ep_defaults);
+                        endpoints.put(epName, endpoint);
                     }
+                    
+                    loadEndpointParameter(inputProps, ep_defaults, endpoint, inputParm, propName);
+                } catch (IllegalArgumentException ex) {
+                    System.out.println("****** ignoring ex: " + ex);
+                    //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
+                }
             } else if (withDots.length > 2) {
                 System.out.println("*** ERR *** multiple dots not allowed, key: "
-                + name);
+                + propName);
             }
         }
-        
-        System.out.println("-------------------------- epTexts");
-        Iterator<String> endpointsIter = endpointText.iterator();
-        while (endpointsIter.hasNext()) {
-            String epText = endpointsIter.next();
-            System.out.println("******* epText: " + epText);
-        }
-        System.out.println("-------------------------- epTexts2");
 
 
-		// ------------------------------------------------------------------
-		
-		valueStr = inputProps.getProperty("outputTypes");
-		if (isOkString(valueStr))
-			this.setOutputTypes(valueStr);
+		// ------------------------------------------------------------------;
 
-        String keyStr = EP_CFGS.handlerTimeout.toString();
-		valueStr = inputProps.getProperty(keyStr);
-		if (isOkString(valueStr)) {
-            globals.put(keyStr, Integer.parseInt(valueStr));
-        }
 
-		valueStr = inputProps.getProperty("usageLog");
-		if (isOkString(valueStr))
-			this.usageLog = Boolean.parseBoolean(valueStr);
-
-		valueStr = inputProps.getProperty("postEnabled");
-		if (isOkString(valueStr))
-			this.postEnabled = Boolean.parseBoolean(valueStr);
-
-		valueStr = inputProps.getProperty("use404For204");
-		if (isOkString(valueStr))
-			this.use404For204 = Boolean.parseBoolean(valueStr);
-
-		valueStr = inputProps.getProperty("catalogsHandlerProgram");
-		if (isOkString(valueStr))
-			this.catalogsHandlerProgram = valueStr;
-
-		valueStr = inputProps.getProperty("contributorsHandlerProgram");
-		if (isOkString(valueStr))
-			this.contributorsHandlerProgram = valueStr;
-		
-		valueStr = inputProps.getProperty("countsHandlerProgram");
-		if (isOkString(valueStr))
-			this.countsHandlerProgram = valueStr;
-
-		// Load the configuration for the working directory and substitute
-		// System properties and environment properties.
-		valueStr = inputProps.getProperty("handlerWorkingDirectory");
-		if (isOkString(valueStr)) {
-
-			if (!valueStr.matches("/.*|.*\\$\\{.*\\}.*")) {
-				this.workingDirectory = valueStr;
-			} else {
-				Properties props = System.getProperties();
-				for (Object key : props.keySet()) {
-					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-							+ "\\}", props.getProperty(key.toString()));
-				}
-				Map<String, String> map = System.getenv();
-				for (String key : map.keySet()) {
-					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-							+ "\\}", map.get(key));
-				}
-			}
-
-			// If the working directory is and absolute path then just use it
-			// If it's relative, then reference it to the servlet context.
-			if (!this.workingDirectory.matches("/.*")) {
-				this.workingDirectory = context
-						.getRealPath(this.workingDirectory);
-			}
-
-			File f = new File(this.workingDirectory);
-			if (!f.exists())
-				throw new Exception("Working Directory: "
-						+ this.workingDirectory + " does not exist");
-
-			if (!f.canWrite() || !f.canRead())
-				throw new Exception(
-						"Improper permissions on working Directory: "
-								+ this.workingDirectory);
-		}
+////		// Load the configuration for the working directory and substitute
+////		// System properties and environment properties.
+////		valueStr = inputProps.getProperty("handlerWorkingDirectory");
+////		if (isOkString(valueStr)) {
+////
+////			if (!valueStr.matches("/.*|.*\\$\\{.*\\}.*")) {
+////				this.workingDirectory = valueStr;
+////			} else {
+////				Properties props = System.getProperties();
+////				for (Object key : props.keySet()) {
+////					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+////							+ "\\}", props.getProperty(key.toString()));
+////				}
+////				Map<String, String> map = System.getenv();
+////				for (String key : map.keySet()) {
+////					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+////							+ "\\}", map.get(key));
+////				}
+////			}
+////
+////			// If the working directory is and absolute path then just use it
+////			// If it's relative, then reference it to the servlet context.
+////			if (!this.workingDirectory.matches("/.*")) {
+////				this.workingDirectory = context
+////						.getRealPath(this.workingDirectory);
+////			}
+////
+////			File f = new File(this.workingDirectory);
+////			if (!f.exists())
+////				throw new Exception("Working Directory: "
+////						+ this.workingDirectory + " does not exist");
+////
+////			if (!f.canWrite() || !f.canRead())
+////				throw new Exception(
+////						"Improper permissions on working Directory: "
+////								+ this.workingDirectory);
+////		}
 
 		// Finished w/o problems.
 		this.isValid = true;
 		logger.info(this.toString());
 	}
     
-	public void loadGlobalParameter(Properties input, HashMap cfgs, GL_CFGS eKey)
+	public void loadGlobalParameter(Properties input, Map cfgs, GL_CFGS eKey)
           throws Exception {
         
         String key = eKey.toString();
@@ -576,7 +531,6 @@ public class AppConfigurator {
             }
         } else {
             // TBD add logging
-            System.out.println("*** property is null or empty for key: " + key);
             if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.appVersion)) {
                 throw new Exception("Missing required parameter: " + key );
             }
@@ -584,58 +538,141 @@ public class AppConfigurator {
 	}
 
     
-	public void loadEndpointParameter(Properties input, HashMap epDefaults,
-          HashMap endPts, EP_CFGS eKey)
+	public void loadEndpointParameter(Properties input, Map epDefaults,
+          Map endPt, EP_CFGS epParm, String propName)
           throws Exception {
         
-        String keyStr = eKey.toString();
-		String newVal = input.getProperty(keyStr);
+		String newVal = input.getProperty(propName);
         
 		if (isOkString(newVal)) {
-            // use type set for default value to do additional processing
-            Object defaultz = epDefaults.get(eKey);
+            // use type defined in a default object to do additional processing
+            Object defaultz = epDefaults.get(epParm);
             
             if (defaultz != null) {
                 if (defaultz instanceof Boolean) {
-                    endPts.put(eKey, Boolean.parseBoolean(newVal));
+                    endPt.put(epParm, Boolean.parseBoolean(newVal));
                 } if (defaultz instanceof Integer) {
                     try {
-                        endPts.put(eKey, Integer.parseInt(newVal));
+                        endPt.put(epParm, Integer.parseInt(newVal));
                     } catch (NumberFormatException ex) {
-                        throw new Exception("Unrecognized value for paramater: " + eKey
+                        throw new Exception("Unrecognized Integer for paramater: " + propName
                               + "  value found: " + newVal
                               + "  it should be an integer");
                     }
                 } else if(defaultz instanceof Class) {
+                    Class<?> irisClass = null;
+                    IrisStreamingOutput iso = null;
                     try {
-                        Class<?> irisClass = Class.forName(newVal);
-                        endPts.put(eKey, irisClass);
+                        irisClass = Class.forName(newVal);
+                        iso = (IrisStreamingOutput) irisClass.newInstance();
                     } catch (Exception ex) {
-                        throw new Exception("Unrecognized value for paramater: " + eKey
-                              + "  value found: " + newVal
-                              + "  should be a valid class name", ex);
+                        String msg = "Unrecognized Class for paramater: "
+                              + propName + "  value found: " + newVal
+                              + "  it should be a valid class name";
+                        logger.fatal(msg);
+                        throw new Exception(msg, ex);
+                    }
+//                    try {
+//                        Class<?> irisClass;
+//                        irisClass = Class.forName(newVal);
+//                        iso = (IrisStreamingOutput) irisClass.newInstance();
+//                        endPt.put(epParm, irisClass);
+//                    } catch (ClassNotFoundException e) {
+//                        String err = "Could not find class with name: " + newVal;
+//                        logger.fatal(err);
+//                        throw new RuntimeException(err);
+//                    } catch (InstantiationException e) {
+//                        String err = "Could not instantiate class: " + newVal;
+//                        logger.fatal(err);
+//                        throw new RuntimeException(err);
+//                    } catch (IllegalAccessException e) {
+//                        String err = "Illegal access while instantiating class: " + newVal;
+//                        logger.fatal(err);
+//                        throw new RuntimeException(err);
+//                    }
+
+                    endPt.put(epParm, irisClass);
+                } else if(defaultz instanceof Map) {
+                    if (epParm.equals(EP_CFGS.outputTypes)) {
+                        // note: for references to mutable objects,
+                        //       dont get the previous value as this
+                        //       might look like a concatenation of values
+                        //       if there is more than one entry in the
+                        //       config file, instead use only this newVal
+                        Map<String, String> new_outputTypes = createOutputTypes(newVal);
+
+//                        new_outputTypes.putAll(default_outputTypes);
+                        endPt.put(EP_CFGS.outputTypes, new_outputTypes);
+                    } else {
+                        String msg = "Unexpected Map type for paramater: "
+                              + propName + "  value found: " + newVal
+                              + "  only handling outputTypes";
+                        logger.fatal(msg);
+                        throw new Exception(msg);
                     }
                 } else {
                     // should be String type if here
-                    endPts.put(eKey, newVal);
+                    
+                    if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                        if (!newVal.matches("/.*|.*\\$\\{.*\\}.*")) {
+                            //this.workingDirectory = valueStr;
+                            //noop, fall through and put newVal
+                        } else {
+                            Properties props = System.getProperties();
+                            System.out.println("------- ------ --- WD newVal1: " + newVal);
+                            for (Object key : props.keySet()) {
+                                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+                                newVal = newVal.replaceAll("\\$\\{" + key
+                                        + "\\}", props.getProperty(key.toString()));
+                            }
+                            System.out.println("------- ------ --- WD newVal2: " + newVal);
+                            Map<String, String> map = System.getenv();
+                            for (String key : map.keySet()) {
+                                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+                                newVal = newVal.replaceAll("\\$\\{" + key
+                                        + "\\}", map.get(key));
+                            }
+                            System.out.println("------- ------ --- WD newVal3: " + newVal);
+                        }
+
+                        // If the working directory is an absolute path then just use it
+                        // If it's relative, then reference it to the servlet context.
+//                        if (!newVal.matches("/.*")) {
+//                            newVal = context.getRealPath(newVal);
+//                        }
+                        System.out.println("------- WARNING --- may need context");
+                        System.out.println("------- ------ --- WD newVal4: " + newVal);
+                        
+                        File f = new File(newVal);
+                        if (!f.exists()) {
+                            throw new Exception("Working Directory: "
+                                    + newVal + " does not exist");
+                        }
+
+                        if (!f.canWrite() || !f.canRead()) {
+                            throw new Exception(
+                                    "Improper permissions on working Directory: "
+                                            + newVal);
+                        }
+                    } else {
+                    }
+                    endPt.put(epParm, newVal);
                 }
             } else {
                 // TBD add logging
-                System.out.println("*** default value not defined for key: " + eKey);
-                throw new Exception("Missing required default for parameter: " + eKey);
+                System.out.println("*** default value not defined for key: " + epParm + "  input property: " + propName);
+                if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                    throw new Exception("Missing required default for parameter: " + epParm + "  input property: " + propName);
+                }
             }
         } else {
             // TBD add logging
-            System.out.println("*** property is null or empty for key: " + eKey);
-            if (eKey.equals(EP_CFGS.irisEndpointClassName) | eKey.equals(EP_CFGS.handlerWorkingDirectory)) {
-                throw new Exception("Missing required parameter: " + eKey );
+            System.out.println("*** property is null or empty for key: " + epParm + "  input property: " + propName);
+            if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                throw new Exception("Missing required parameter: " + epParm + "  input property: " + propName);
             }
         }
 	}
-
-    public String formatOutputTypes() {
-        return formatOutputTypes(outputTypes);
-    }
 
     private static String formatOutputTypes(Map<String, String> outputTypes) {
         StringBuilder s = new StringBuilder();
@@ -656,13 +693,20 @@ public class AppConfigurator {
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
+    
+    public static String createEPPropertiesName(String epName, EP_CFGS cfgName) {
+        return epName + ENDPOINT_TO_PROPERTIES_DELIMITER + cfgName.toString();
+    }
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("WSS Service Configuration" + "\n");
+        String line = "----------------------";
+        
+		sb.append(line).append(" WebServiceShell Configuration").append("\n");
 
-		sb.append(strAppend("WSS Version") + wssVersion + "\n");
+		sb.append(strAppend("WSS Version")).append(wssVersion).append("\n");
 
+        sb.append(line).append(" globals\n");
         List<String> keyList = new ArrayList();
         keyList.add(GL_CFGS.appName.toString());
         keyList.add(GL_CFGS.appVersion.toString());
@@ -673,49 +717,51 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.loggingMethod.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());
         keyList.add(GL_CFGS.singletonClassName.toString());
-        
+
         for (String key: keyList) {
-            if (globals.get(key) != null) {
-                sb.append(strAppend(key)).append(globals.get(key).toString()).append("\n");
-            }
-        }
-        
-        List<EP_CFGS> keyLis2 = new ArrayList();
-        keyLis2.add(EP_CFGS.irisEndpointClassName);
-        
-        for (EP_CFGS key: keyLis2) {
-            if (endpoints.get(key) != null) {
-                sb.append(strAppend(key.toString())).append(endpoints.get(key).toString()).append("\n");
-            }
+            Object value = globals.get(key) != null ? globals.get(key) : "null";
+            sb.append(strAppend(key)).append(value.toString()).append("\n");
         }
 
-		sb.append(strAppend("Handler Working Directory") + workingDirectory
-				+ "\n");
-		sb.append(strAppend("Handler Program") + handlerProgram + "\n");
-        String keyStr = EP_CFGS.handlerTimeout.toString();
-		sb.append(strAppend("Handler Timeout") + globals.get(keyStr) + "\n");
+        sb.append(line).append(" endpoints\n");
+        for (String epName : endpoints.keySet()) {
+            Map endpoint = endpoints.get(epName);
+            for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
+                Object value = endpoint.get(cfgName);
+                if (value == null) {
+                    value = "null";
+                } else if(value instanceof Class) {
+                    value = ((Class)value).getName();
+                } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
+                    value = formatOutputTypes((Map<String, String>)value);
+                }
+                
+                sb.append(strAppend(createEPPropertiesName(epName, cfgName)))
+                      .append(value).append("\n");
+            }
+            sb.append("\n");
+            
+            try {
+                sb.append(strAppend(epName + " - default output type"))
+                      .append(getDefaultOutputTypeKey(epName)).append("\n");
+            } catch (Exception ex) {
+                // ignore this, it should have been tested in the testcode
+            }
+            sb.append("\n");
+        }
+        sb.append(line).append(" endpoints end\n");
 
-		sb.append(strAppend("Catalog Handler Program") + catalogsHandlerProgram
-				+ "\n");
-		sb.append(strAppend("Contributor Handler Program")
-				+ contributorsHandlerProgram + "\n");
 
-		sb.append(strAppend("Usage Log") + usageLog + "\n");
-		sb.append(strAppend("Post Enabled") + postEnabled + "\n");
-		sb.append(strAppend("Use 404 for 204") + use404For204 + "\n");
-
-		sb.append(strAppend("Default Output Type Key") + defaultOutputTypeKey + "\n");
-
-		sb.append(strAppend("Output Types") + formatOutputTypes(outputTypes) + "\n");
+		
 
 		return sb.toString();
 	}
 
-	private final int colSize = 30;
+	private final int colSize = 40;
 
 	private String strAppend(String s) {
-		int len = s.length();
-		for (int i = 0; i < colSize - len; i++) {
+        int colWidth = s.length() >= colSize ? 1 : colSize - s.length();
+		for (int i = 0; i < colWidth; i++) {
 			s += " ";
 		}
 		return s;
@@ -751,43 +797,32 @@ public class AppConfigurator {
             }
         }
 
-        
-        List<EP_CFGS> keyLis2 = new ArrayList();
-        keyLis2.add(EP_CFGS.irisEndpointClassName);
-        
-        for (EP_CFGS key: keyLis2) {
-            if (endpoints.get(key) != null) {
-                sb.append("<TR><TD>").append(key.toString()).append("</TD><TD>")
-                      .append(endpoints.get(key).toString()).append("</TD></TR>");
+        for (String epName : endpoints.keySet()) {
+            Map endpoint = endpoints.get(epName);
+            for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
+                Object value = endpoint.get(cfgName);
+                if (value == null) {
+                    value = "null";
+                } else if(value instanceof Class) {
+                    value = ((Class)value).getName();
+                } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
+                    value = formatOutputTypes((Map<String, String>)value);
+                }
+                
+                sb.append("<TR><TD>").append(createEPPropertiesName(epName, cfgName))
+                      .append("</TD><TD>").append(value).append("</TD></TR>");
             }
-        }
+            sb.append("\n");
+            
+            try {
+                sb.append("<TR><TD>" + "Default Output Type Key" + "</TD><TD>")
+                      .append(getDefaultOutputTypeKey(epName)).append("</TD></TR>");
+            } catch (Exception ex) {
+                // ignore this, it should have been tested in the testcode
+            }
+            sb.append("\n");
+        };
 
-		sb.append("<TR><TD>" + "Handler Working Directory" + "</TD><TD>"
-				+ workingDirectory + "</TD></TR>");
-		sb.append("<TR><TD>" + "Handler Program" + "</TD><TD>" + handlerProgram
-				+ "</TD></TR>");
-        String keyStr = EP_CFGS.handlerTimeout.toString();
-		sb.append("<TR><TD>" + "Handler Timeout" + "</TD><TD>" + globals.get(keyStr)
-				+ "</TD></TR>");
-
-		sb.append("<TR><TD>" + "Catalogs Handler Program" + "</TD><TD>"
-				+ catalogsHandlerProgram + "</TD></TR>");
-		sb.append("<TR><TD>" + "Contributors Handler Program" + "</TD><TD>"
-				+ contributorsHandlerProgram + "</TD></TR>");
-		sb.append("<TR><TD>" + "Counts Handler Program" + "</TD><TD>"
-				+ countsHandlerProgram + "</TD></TR>");
-		sb.append("<TR><TD>" + "Usage Log" + "</TD><TD>" + usageLog
-				+ "</TD></TR>");
-		sb.append("<TR><TD>" + "Post Enabled" + "</TD><TD>" + postEnabled
-				+ "</TD></TR>");
-		sb.append("<TR><TD>" + "Use 404 for 204" + "</TD><TD>" + use404For204
-				+ "</TD></TR>");
-
-		sb.append("<TR><TD>" + "Default Output Type Key" + "</TD><TD>"
-                + defaultOutputTypeKey + "</TD></TR>");
-        
-		sb.append("<TR><TD>").append("Output Types").append("</TD><TD>")
-                .append(formatOutputTypes(outputTypes)).append("</TD></TR>");
 
 		sb.append("</TABLE>");
 

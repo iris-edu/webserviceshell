@@ -44,68 +44,68 @@ public class AppConfig_2x_1Test {
         
         thisAppCfg.loadConfigurationParameters(props, null);
         System.out.println("******* ** ** toString\n" + thisAppCfg.toString());
-        System.out.println("/n/n******* toHtmlString\n" + thisAppCfg.toHtmlString());
+        System.out.println("\n\n******* toHtmlString\n" + thisAppCfg.toHtmlString());
         
-//        HashMap<String, HashMap> endpoints = new HashMap();
-        HashMap<String, Set> endpoints = new HashMap();
-        Enumeration names = props.propertyNames();
-        while (names.hasMoreElements()) {
-            String name = (String)names.nextElement();      
-            System.out.println("**** name: " + name
-                + "  value: " + props.getProperty(name));
-            
-            String[] withEPs = name.split(java.util.regex.Pattern.quote("."));
-            if (withEPs.length == 1) {
-                System.out.println("*** glb: " + withEPs[0]);
-            } else if (withEPs.length == 2) {
-                String epName = withEPs[0];
-        //        String epAttr = withEPs[1];
-//                HashMap<String, String> endpoint = null;
-//                if (endpoints.containsKey(epName)) {
-//                    endpoint = endpoints.get(epName);
-//                } else {
-//                    endpoint = new HashMap();
-//                }
-//                endpoint.put(epAttr, props.getProperty(name));
-//                endpoints.put(epName, endpoint);
-                Set<String> endpoint = null;
-        //        if (endpoints.containsKey(epName)) {
-        //            endpoint = endpoints.get(epName);
-        //        } else {
-        //            endpoint = new HashSet();
-        //        }
-        //        endpoint.add(epAttr);
-        //        endpoints.put(epName, endpoint);
-                if (endpoints.containsKey(epName)) {
-                    endpoint = endpoints.get(epName);
-                } else {
-                    endpoint = new HashSet();
-                }
-                endpoint.add(name);
-                endpoints.put(epName, endpoint);
-            } else if (withEPs.length > 2) {
-                System.out.println("*** ERR *** multiple dots not allowed, key: "
-                + name);
-            }
-        }
-        
-        System.out.println("-------------------------- epName");
-        for (String epName: endpoints.keySet()) {
-            System.out.println("******* epName: " + epName);
-        }
-        
-        System.out.println("-------------------------- all");
-        for (String epName: endpoints.keySet()) {
-//            HashMap<String, String> endpoint = endpoints.get(epName);
-            Set<String> endpoint = endpoints.get(epName);
-            Iterator<String> epAttrs = endpoint.iterator();
-//            for (String epAttr: endpoint.iterator().) {
-            while(epAttrs.hasNext()) {
-        //        String wholeName = epName + "." + epAttrs.next();
-                String wholeName = epAttrs.next();
-                System.out.println("******* wholeName: " + wholeName
-                    + "  val: " + props.getProperty(wholeName));                
-            }
-        }
+//////        HashMap<String, HashMap> endpoints = new HashMap();
+////        HashMap<String, Set> endpoints = new HashMap();
+////        Enumeration names = props.propertyNames();
+////        while (names.hasMoreElements()) {
+////            String name = (String)names.nextElement();      
+////            System.out.println("**** name: " + name
+////                + "  value: " + props.getProperty(name));
+////            
+////            String[] withEPs = name.split(java.util.regex.Pattern.quote("."));
+////            if (withEPs.length == 1) {
+////                System.out.println("*** glb: " + withEPs[0]);
+////            } else if (withEPs.length == 2) {
+////                String epName = withEPs[0];
+////        //        String epAttr = withEPs[1];
+//////                HashMap<String, String> endpoint = null;
+//////                if (endpoints.containsKey(epName)) {
+//////                    endpoint = endpoints.get(epName);
+//////                } else {
+//////                    endpoint = new HashMap();
+//////                }
+//////                endpoint.put(epAttr, props.getProperty(name));
+//////                endpoints.put(epName, endpoint);
+////                Set<String> endpoint = null;
+////        //        if (endpoints.containsKey(epName)) {
+////        //            endpoint = endpoints.get(epName);
+////        //        } else {
+////        //            endpoint = new HashSet();
+////        //        }
+////        //        endpoint.add(epAttr);
+////        //        endpoints.put(epName, endpoint);
+////                if (endpoints.containsKey(epName)) {
+////                    endpoint = endpoints.get(epName);
+////                } else {
+////                    endpoint = new HashSet();
+////                }
+////                endpoint.add(name);
+////                endpoints.put(epName, endpoint);
+////            } else if (withEPs.length > 2) {
+////                System.out.println("*** ERR *** multiple dots not allowed, key: "
+////                + name);
+////            }
+////        }
+////        
+////        System.out.println("-------------------------- epName");
+////        for (String epName: endpoints.keySet()) {
+////            System.out.println("******* epName: " + epName);
+////        }
+////        
+////        System.out.println("-------------------------- all");
+////        for (String epName: endpoints.keySet()) {
+//////            HashMap<String, String> endpoint = endpoints.get(epName);
+////            Set<String> endpoint = endpoints.get(epName);
+////            Iterator<String> epAttrs = endpoint.iterator();
+//////            for (String epAttr: endpoint.iterator().) {
+////            while(epAttrs.hasNext()) {
+////        //        String wholeName = epName + "." + epAttrs.next();
+////                String wholeName = epAttrs.next();
+////                System.out.println("******* wholeName: " + wholeName
+////                    + "  val: " + props.getProperty(wholeName));                
+////            }
+////        }
     }
 }

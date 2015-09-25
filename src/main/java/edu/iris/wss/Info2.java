@@ -4,9 +4,12 @@ package edu.iris.wss;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 
 public class Info2 extends IrisStreamingOutput {
@@ -17,6 +20,8 @@ public class Info2 extends IrisStreamingOutput {
     
     private String errorString;
     private String myWssVersion;
+    
+	@Context 	ServletContext context;
     
 	public Info2()  {
         System.out.println("***************&&& Info2 constr");
@@ -47,7 +52,7 @@ System.out.println("***************&&& Info2 write wssVersion: " + myWssVersion)
             logger.info("Info2 write done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  totalBytesTransmitted: " + totalBytesTransmitted
-                    + "  usageLog: " + ri.appConfig.getUsageLog());
+                    + "  usageLog: " + ri.appConfig.getUsageLog(WebUtils.getConfigFileBase(context)));
 
             logUsageMessage(ri, null, totalBytesTransmitted,
                   processingTime, null, Status.OK, null);

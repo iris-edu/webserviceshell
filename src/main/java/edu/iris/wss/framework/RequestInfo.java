@@ -25,6 +25,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.utils.WebUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -55,17 +56,20 @@ public  class RequestInfo {
 	// Used (set) by ProcessStreamingOutput class on ZIP output
 	public String workingSubdirectory = null;
     
+    //String endpointName;
+    
     // as per StackOverflow, make sure the object is fully created before
     // passing it to another constructor, use createInstance factory to create.
     private RequestInfo() {
-        // noop
     }
     
     public static RequestInfo createInstance(SingletonWrapper sw,
 			UriInfo uriInfo, 
 			javax.servlet.http.HttpServletRequest request,
 			HttpHeaders requestHeaders) {
+        
         RequestInfo ri = new RequestInfo();
+        
         ri.sw = sw;
         ri.uriInfo = uriInfo;
         ri.request = request;
@@ -73,10 +77,15 @@ public  class RequestInfo {
 		ri.appConfig = sw.appConfig;
 		ri.paramConfig = sw.paramConfig;
 		ri.statsKeeper = sw.statsKeeper;
+        
+        System.out.println("^^^^^^^^^^^^^ request.getSession(): " +  request.getSession());
+        System.out.println("^^^^^^^^^^^^^ request.getSession().getServletContext(): " +  request.getSession().getServletContext());
+        System.out.println("^^^^^^^^^^^^^ path: " +  request.getSession().getServletContext().getContextPath());
+        String endpointName = WebUtils.getConfigFileBase(request.getSession().getServletContext());
 		
         // TBD since this is configurartion, look at doing this once at startup.
-		if ((ri.appConfig.getHandlerProgram() == null) && 
-				(ri.appConfig.getIrisEndpointClassName() == null)) {
+		if ((ri.appConfig.getHandlerProgram(endpointName) == null) && 
+				(ri.appConfig.getIrisEndpointClassName(endpointName) == null)) {
 			ServiceShellException.logAndThrowException(ri,
                     Status.INTERNAL_SERVER_ERROR, 
 					"Service configuration problem,"
@@ -94,20 +103,21 @@ public  class RequestInfo {
     /**
      * Validate and store the value from format parameter in query
      * 
+     * @param epName
      * @param trialKey
      * @throws Exception 
      */
-	public void setPerRequestOutputType(String trialKey) throws Exception {
+	public void setPerRequestOutputType(String epName, String trialKey) throws Exception {
         if (trialKey == null) {
-            throw new Exception("format value is null");
+            throw new Exception("format type requested is null");
         }
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
         
-        if (appConfig.isConfiguredForTypeKey(key)) {
+        if (appConfig.isConfiguredForTypeKey(epName, key)) {
             this.perRequestOutputTypeKey = key;
         } else {
-            throw new Exception("Unrecognized format value: " + trialKey);
+            throw new Exception("Unrecognized format type requested: " + trialKey);
         }
 	}
 	
@@ -117,18 +127,19 @@ public  class RequestInfo {
      * 
      * @return 
      */
-	public String getPerRequestOutputTypeKey() {
+	public String getPerRequestOutputTypeKey(String epName) throws Exception {
         // Note: Callers should expect the return value to be
         //       validated, trimmed, and uppercase
         String key = perRequestOutputTypeKey;
         if (key == null) {
-            key = appConfig.defaultOutputTypeKey();
+            key = appConfig.getDefaultOutputTypeKey(epName);
 		}
         return key;
 	}
     
-    public boolean isCurrentTypeKey(InternalTypes typeKey) {
-        return getPerRequestOutputTypeKey().equals(typeKey.toString());
+    private boolean isCurrentTypeKey(String epName, InternalTypes typeKey)
+          throws Exception {
+        return getPerRequestOutputTypeKey(epName).equals(typeKey.toString());
     }
     
     /**
@@ -138,8 +149,8 @@ public  class RequestInfo {
      * @return 
      * @throws java.lang.Exception 
      */
-    public String getPerRequestMediaType() throws Exception {
-        return appConfig.getMediaType(getPerRequestOutputTypeKey());
+    public String getPerRequestMediaType(String epName) throws Exception {
+        return appConfig.getMediaType(epName, getPerRequestOutputTypeKey(epName));
     }
 
     /**
@@ -148,13 +159,13 @@ public  class RequestInfo {
      * 
      * @return 
      */
-    public String createContentDisposition() {
+    public String createContentDisposition(String epName) throws Exception {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         StringBuilder sb = new StringBuilder();
         
-        if (isCurrentTypeKey(InternalTypes.MSEED)
-                || isCurrentTypeKey(InternalTypes.MINISEED)
-                || isCurrentTypeKey(InternalTypes.BINARY)) {
+        if (isCurrentTypeKey(epName, InternalTypes.MSEED)
+                || isCurrentTypeKey(epName, InternalTypes.MINISEED)
+                || isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             sb.append("attachment");
         } else {
             sb.append("inline");
@@ -165,9 +176,9 @@ public  class RequestInfo {
         sb.append("_");
         sb.append(sdf.format(new Date()));
                 
-        if (! isCurrentTypeKey(InternalTypes.BINARY)) {
+        if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             // no suffix for binary
-            sb.append(".").append(getPerRequestOutputTypeKey().toLowerCase());
+            sb.append(".").append(getPerRequestOutputTypeKey(epName).toLowerCase());
         }
                 
         return sb.toString();

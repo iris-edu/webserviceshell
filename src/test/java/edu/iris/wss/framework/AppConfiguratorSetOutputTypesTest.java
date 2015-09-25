@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.fail;
@@ -25,7 +26,8 @@ public class AppConfiguratorSetOutputTypesTest {
     @Test
     public void testForMSeExceptionInOutputTypesSetter() throws Exception {
         try {
-            thisAppCfg.setOutputTypes("miniseed");
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, "miniseed");
             fail("no colon try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -36,7 +38,8 @@ public class AppConfiguratorSetOutputTypesTest {
     @Test
     public void testForZeroLengthExceptionInOutputTypesSetter() throws Exception {
         try {
-            thisAppCfg.setOutputTypes("");
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, "");
             fail("zero length try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -47,7 +50,8 @@ public class AppConfiguratorSetOutputTypesTest {
     @Test
     public void testForNullExceptionInOutputTypesSetter() throws Exception {
         try {
-            thisAppCfg.setOutputTypes(null);
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, null);
             fail("null try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -61,7 +65,8 @@ public class AppConfiguratorSetOutputTypesTest {
                 + " BINARY: application/octet-stream"
                 + " TEXT: text/plain";
         try {
-            thisAppCfg.setOutputTypes(outputTypes);
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, outputTypes);
             fail("comma try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -75,7 +80,8 @@ public class AppConfiguratorSetOutputTypesTest {
                 + " BINARY| application/octet-stream,"
                 + " TEXT: text/plain";
         try {
-            thisAppCfg.setOutputTypes(outputTypes);
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, outputTypes);
             fail("colon try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result

@@ -6,6 +6,7 @@
 package edu.iris.wss.framework;
 
 import java.io.IOException;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNotNull;
@@ -38,14 +39,12 @@ public class AppConfigurator0Test {
            fail("file name misspelled, does not exist, or is not in classpath,"
                    + "  filename: " + filename);
         }
-        
+
         try {
-            thisAppCfg.setOutputTypes((String)props.get("outputTypes"));
+            thisAppCfg.loadConfigurationParameters(props, null);
         } catch (Exception ex) {
-           fail("Error setting configuration properties, excp: "
-                   + ex);
+            fail("Unexpected failure in test setup, this is not a test, ex: " + ex);
         }
-        
     }
     
     @AfterClass
@@ -61,53 +60,58 @@ public class AppConfigurator0Test {
     }
 
     @Test
-    public void testLoadOfOutputTypes() throws Exception {        
+    public void testLoadOfOutputTypes() throws Exception {
         RequestInfo ri = new RequestInfo(thisAppCfg);
         
         // test for default
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
+        // endpoint name is taken from the service.cfg file
+        String endpointName = "queryEP";
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
         
         // Note, these tests are determined by the values in service.cfg
-        ri.setPerRequestOutputType("xml");
-        assert(ri.getPerRequestMediaType().equals("application/xml"));
-        ri.setPerRequestOutputType("xMl");
-        assert(ri.getPerRequestMediaType().equals("application/xml"));
-        ri.setPerRequestOutputType("text");
-        assert(ri.getPerRequestMediaType().equals("text/plain"));
-        ri.setPerRequestOutputType("texttree");
-        assert(ri.getPerRequestMediaType().equals("text/plain"));
-        ri.setPerRequestOutputType("json");
-        assert(ri.getPerRequestMediaType().equals("application/json"));
+        ri.setPerRequestOutputType(endpointName, "xml");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/xml"));
+        ri.setPerRequestOutputType(endpointName, "xMl");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/xml"));
+        ri.setPerRequestOutputType(endpointName, "text");
+        assert(ri.getPerRequestMediaType(endpointName).equals("text/plain"));
+        ri.setPerRequestOutputType(endpointName, "texttree");
+        assert(ri.getPerRequestMediaType(endpointName).equals("text/plain"));
+        ri.setPerRequestOutputType(endpointName, "json");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/json"));
     
-        ri.setPerRequestOutputType("miniseed");
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType("miniseed ");
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType(" Miniseed");
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType("    minisEed ");
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
+        ri.setPerRequestOutputType(endpointName, "miniseed");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
+        ri.setPerRequestOutputType(endpointName, "miniseed ");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
+        ri.setPerRequestOutputType(endpointName, " Miniseed");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
+        ri.setPerRequestOutputType(endpointName, "    minisEed ");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
         
-        ri.setPerRequestOutputType("mseed");
-        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType("binary");
-        assert(ri.getPerRequestMediaType().equals("application/octet-stream"));
-
-        try {
-            ri.setPerRequestOutputType(null);
-            fail("getting null type succeeded unexpectedly,"
-                    + " should have had an Exception");
-        } catch (Exception ex) {
-            // noop - this is expected result
-        }
+        ri.setPerRequestOutputType(endpointName, "mseed");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
+        ri.setPerRequestOutputType(endpointName, "binary");
+        assert(ri.getPerRequestMediaType(endpointName).equals("application/octet-stream"));
     }
 
     @Test
     public void testLoadExceptionOfOutputTypes() throws Exception {
         RequestInfo ri = new RequestInfo(thisAppCfg);
 
+        // endpoint name is taken from the service.cfg file
+        String endpointName = "queryEP";
+
         try {
-            ri.setPerRequestOutputType("unknown2");
+            ri.setPerRequestOutputType(endpointName, null);
+            fail("getting null type succeeded unexpectedly,"
+                    + " should have had an Exception");
+        } catch (Exception ex) {
+            // noop - this is expected result
+        }
+
+        try {
+            ri.setPerRequestOutputType(endpointName, "unknown2");
             fail("getting unknown2 type succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {

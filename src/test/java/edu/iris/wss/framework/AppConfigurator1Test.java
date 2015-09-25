@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNotNull;
@@ -34,7 +35,8 @@ public class AppConfigurator1Test {
         props.load(url.openStream());
         
         try {
-            thisAppCfg.setOutputTypes((String)props.get("outputTypes"));
+            Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, (String)props.get("outputTypes"));
             fail("should be seeing null properties setter succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch(Exception ex) {

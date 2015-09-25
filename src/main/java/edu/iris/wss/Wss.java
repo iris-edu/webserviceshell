@@ -464,7 +464,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled()) 
+		if (! ri.appConfig.getPostEnabled(WebUtils.getConfigFileBase(context))) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 		
 		ri.statsKeeper.logAuthPost();
@@ -477,7 +477,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled()) 
+		if (! ri.appConfig.getPostEnabled(WebUtils.getConfigFileBase(context))) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 
 		ri.statsKeeper.logPost();
@@ -542,7 +542,7 @@ public class Wss {
 	// [end region]
 
 	private Response runJava() {
-		String className = ri.appConfig.getIrisEndpointClassName();
+		String className = ri.appConfig.getIrisEndpointClassName(ri.request.getContextPath());
 		IrisStreamingOutput iso = null;
 		
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.

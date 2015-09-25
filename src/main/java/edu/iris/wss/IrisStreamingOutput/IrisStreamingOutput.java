@@ -20,11 +20,14 @@
 package edu.iris.wss.IrisStreamingOutput;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.SingletonWrapper;
 import edu.iris.wss.utils.LoggerUtils;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -121,13 +124,15 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
         RequestInfo localRi = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
         System.out.println("***************&&& doIrisStreaming");
         logger.info("doIrisStreaming" + "do I keep this message here");
+        
         setRequestInfo(localRi);
 		
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		Status status = getResponse();
     	if (status == null) {
-            shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
+            shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Null status from IrisStreamingOutput class");
         }
         
         status = adjustByCfg(status, ri);
@@ -151,6 +156,97 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 
         addCORSHeadersIfConfigured(builder, ri);
 
+		return builder.build();
+    }
+
+    /**
+     * This drives execution for dynamic endpoints, it wraps what was
+     * the IRIS processing steps for webserviceshell query endpoint.
+     * 
+     * controls the life cycle of the implementing class, i.e.
+     * wss does setRequestInfo
+     * wss does getResponse
+     * framework does write
+     * 
+     * error handling will call getErrorString.
+     * 
+     * @return 
+     */
+    public Response doIrisStreamin2() {
+        RequestInfo localRi = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        System.out.println("***************&&& doIrisStreaming");
+        logger.info("doIrisStreaming" + "do I keep this message here");
+        
+        String className = ri.appConfig.getIrisEndpointClassName(ri.request.getContextPath());
+        // assert this
+        className = this.getClass().getName();
+		ArrayList<String> cmd = null;
+    
+        System.out.println("***************** className: " + className);
+        if (className.equals("edu.iris.wss.endpoints.CmdProcessIrisEP")) { // i.e. if it is a command based, use CmdProcessing class
+            // TBD get handler name here
+            cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
+        } else {
+            cmd = new ArrayList<String>();
+        }
+
+		try {
+			ParameterTranslator.parseQueryParams(cmd, ri);
+		} catch (Exception e) {
+			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
+		}
+                System.out.println("************ja*after cmd.len: " + cmd.size());
+                System.out.println("************ja*after cmd: " + cmd);
+                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
+
+    
+                
+            
+        if (ri.request.getMethod().equals("HEAD")) {
+            // return to Jersey before any more processing
+            String noData = "";
+            Response.ResponseBuilder builder = Response.status(Status.OK)
+                  .type("text/plain")
+                  .entity(noData);
+            
+            addCORSHeadersIfConfigured(builder, ri);
+            return builder.build();
+        }
+            
+                
+                
+                
+                
+        setRequestInfo(localRi);
+		
+		// Wait for an exit code, expecting the start of data transmission
+        // or exception or timeout.
+		Status status = getResponse();
+    	if (status == null) {
+            shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Null status from IrisStreamingOutput class");
+        }
+        
+        status = adjustByCfg(status, ri);
+        if (status != Status.OK) {
+            newerShellException(status, ri, this);
+		}
+
+        String mediaType = null;
+        try {
+            mediaType = ri.getPerRequestMediaType();
+        } catch (Exception ex) {
+            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+                    + " mediaTypeKey: " + ri.getPerRequestOutputTypeKey()
+                    + ServiceShellException.getErrorString(ex));
+        }
+    
+        Response.ResponseBuilder builder = Response.status(status)
+              .type(mediaType)
+              .entity(this);
+        builder.header("Content-Disposition", ri.createContentDisposition());
+
+        addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
     

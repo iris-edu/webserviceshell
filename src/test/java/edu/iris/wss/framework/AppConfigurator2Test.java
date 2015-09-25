@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertNotNull;
@@ -33,7 +34,8 @@ public class AppConfigurator2Test {
         
         props.load(url.openStream());
 
-        thisAppCfg.setOutputTypes((String)props.get("outputTypes"));
+        Map<String, String> map = thisAppCfg.createOutputTypes("");
+            thisAppCfg.setOutputTypes(map, (String)props.get("outputTypes"));
         
         RequestInfo ri = new RequestInfo(thisAppCfg);
         // before setting any request format, the new default should be the first
