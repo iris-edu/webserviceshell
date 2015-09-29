@@ -5,7 +5,6 @@
  */
 package edu.iris.wss.framework;
 
-import static edu.iris.wss.framework.AppConfigurator_getters_Test.createTestObjs;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -31,7 +30,6 @@ import static org.junit.Assert.fail;
  * @author mike
  */
 public class RequestInfo_1_Test {
-//    private static final AppConfigurator thisAppCfg = new AppConfigurator();
 
     public RequestInfo_1_Test() {
     }
@@ -39,24 +37,6 @@ public class RequestInfo_1_Test {
     
     @BeforeClass
     public static void setUpClass() {
-//        System.out.println("***************** setupclass1");
-//        java.util.Properties props = new java.util.Properties();
-//
-//        // add required cfg items
-//        props.setProperty(
-//              AppConfigurator.GL_CFGS.appName.toString(), "mock_appname");
-//        props.setProperty(
-//              AppConfigurator.GL_CFGS.appVersion.toString(), "mock_version");
-//
-//        
-//        props.setProperty("endpnt1.outputTypes", "text: text/plain,"
-//              + " IAGA2002: text/plain, xml: application/xml");
-//        try {
-//            thisAppCfg.loadConfigurationParameters(props, null);
-//        } catch (Exception ex) {
-//            Logger.getLogger(RequestInfo_1_Test.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        System.out.println("******* ** ** toString\n" + thisAppCfg.toString());
     }
     
     @AfterClass
@@ -74,7 +54,7 @@ public class RequestInfo_1_Test {
 
     @Test
     public void test_getPerRequestOutputTypeKey() throws Exception {
-        Object[] items = createTestObjs();
+        Object[] items = AppConfigurator_getters_Test.createTestObjs();
         AppConfigurator appCfg = (AppConfigurator)items[0];
         Properties props = (Properties)items[1];
 
@@ -126,46 +106,28 @@ public class RequestInfo_1_Test {
         }
     }
 
-//    @Test
-//    public void testLoadOfOutputTypes() throws Exception {
-//        System.out.println("***************** testLoadOfOutputTypes");
-//        RequestInfo ri = new RequestInfo(thisAppCfg);
-//        
-//        // test for default
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        
-//        // Note, these tests are determined by the values in service.cfg
-//        ri.setPerRequestOutputType("xml");
-//        assert(ri.getPerRequestMediaType().equals("application/xml"));
-//        ri.setPerRequestOutputType("xMl");
-//        assert(ri.getPerRequestMediaType().equals("application/xml"));
-//        ri.setPerRequestOutputType("text");
-//        assert(ri.getPerRequestMediaType().equals("text/plain"));
-//        ri.setPerRequestOutputType("texttree");
-//        assert(ri.getPerRequestMediaType().equals("text/plain"));
-//        ri.setPerRequestOutputType("json");
-//        assert(ri.getPerRequestMediaType().equals("application/json"));
-//    
-//        ri.setPerRequestOutputType("miniseed");
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        ri.setPerRequestOutputType("miniseed ");
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        ri.setPerRequestOutputType(" Miniseed");
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        ri.setPerRequestOutputType("    minisEed ");
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        
-//        ri.setPerRequestOutputType("mseed");
-//        assert(ri.getPerRequestMediaType().equals("application/vnd.fdsn.mseed"));
-//        ri.setPerRequestOutputType("binary");
-//        assert(ri.getPerRequestMediaType().equals("application/octet-stream"));
-//
-//        try {
-//            ri.setPerRequestOutputType(null);
-//            fail("getting null type succeeded unexpectedly,"
-//                    + " should have had an Exception");
-//        } catch (Exception ex) {
-//            // noop - this is expected result
-//        }
-//    }
+    @Test
+    public void testMiniseedAsDefaultOutputType() throws Exception {
+        AppConfigurator appCfg = 
+              AppConfigurator_getters_Test.createTestObjAppCfg(
+                    "AppConfiguratorTest/serviceFile2.cfg");
+        RequestInfo ri = new RequestInfo(appCfg);
+
+        // before setting any request format, the new default should be the first
+        // item in the properties list
+        assert(ri.getPerRequestMediaType("querysf2").equals("application/vnd.fdsn.mseed"));
+
+        // the default type should still be available
+        ri.setPerRequestOutputType("querysf2", "binary");
+        assert(ri.getPerRequestMediaType("querysf2").equals("application/octet-stream"));
+
+        // no other types should be found
+        try {
+            ri.setPerRequestOutputType("querysf2", "text");
+            fail("getting text type succeeded unexpectedly,"
+                    + " should have had an Exception");
+        } catch (Exception ex) {
+            // noop - this is expected result
+        }
+    }
 }

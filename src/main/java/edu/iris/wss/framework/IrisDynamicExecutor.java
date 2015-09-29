@@ -17,29 +17,27 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.framework;
 
+import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.endpoints.CmdProcessorIrisEP;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.SingletonWrapper;
-import edu.iris.wss.utils.LoggerUtils;
-import edu.iris.wss.utils.WebUtils;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
-public abstract class IrisStreamingOutput implements StreamingOutput {
-	public static final Logger logger = Logger.getLogger(IrisStreamingOutput.class);
+public class IrisDynamicExecutor {
+	public static final Logger logger = Logger.getLogger(IrisDynamicExecutor.class);
 
     @Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
@@ -48,65 +46,9 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 
     @Context 	SingletonWrapper sw;
 	
-	protected RequestInfo ri;
-
-	// These are helper routines as part of the basic interface IrisStreamingOutput
-	public static void logUsageMessage(RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Status httpStatus, String extraText,
-			String network, String station, String location, String channel, String quality,
-			Date startTime, Date endTime, String duration) {
-	
-		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-			errorType, httpStatus.getStatusCode(), extraText,
-			network, station, location, channel, quality,
-			startTime, endTime);
-	}
-	
-	public static void logUsageMessage(RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Status httpStatus, String extraText) {
-	
-		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-			errorType, httpStatus.getStatusCode(), extraText);
-	}
-	
-	public static void logAndThrowException(RequestInfo ri, Status httpStatus, String message) {
-		ServiceShellException.logAndThrowException(ri, httpStatus, message);
-	}	
-	
-	public IrisStreamingOutput() { }
-
-    /**
-     * Required by web framework to stream data out.
-     * 
-     * @param os 
-     */
-    @Override
-	public abstract void write(OutputStream os);
-
-    /**
-     * Do main processing here before the framework does write.
-     * @return 
-     */
-	public abstract Status getResponse();
-
-    /**
-     * Called by exception handlers, the returned string should be
-     * respective messages for the end user but include enough details
-     * to isolate the source of the error.
-     * 
-     * @return 
-     */
-	public abstract String getErrorString();
-	
-    /**
-     * Somewhat equivalent to an initialization, will be called first by
-     * topExec so as to make contextual information available to implementer
-     * 
-     * @param ri 
-     */
-	public abstract void setRequestInfo(RequestInfo ri);
+	public IrisDynamicExecutor() {
+        System.out.println("***************&&& IrisDynamicExecutor constr");
+    }
 
     /**
      * This does execution for dynamic endpoints, it wraps what was
@@ -121,94 +63,100 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
      * 
      * @return 
      */
-    public Response doIrisStreaming() {        
+    public Response doIrisStreaming() throws IOException {        
         // when run dynamically, this method does all the abstract methods,
         // so ri needs to be set here
-        RequestInfo localRi = RequestInfo.createInstance(sw, uriInfo, request,
+        System.out.println("** doIrisStreaming ");
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
               requestHeaders);
     
-        String requestedEpName = localRi.getEndpointNameForThisRequest();
-        if (localRi.isConfiguredForThisEndpoint()){
+        String requestedEpName = ri.getEndpointNameForThisRequest();
+        System.out.println("** doIrisStreaming requestedEpName: " + requestedEpName);
+        if (ri.isConfiguredForThisEndpoint()){
             // noop, continue with ;
         } else {
             shellException(Status.INTERNAL_SERVER_ERROR,
                   "Error, there is no configuration information for"
-                        + " endpoint: " + requestedEpName);
+                        + " endpoint: " + requestedEpName, ri);
         }
 
 		ArrayList<String> cmd = null;
 
-        // not, no class existance check done here as it should have been
+        // No object existance check done here as it should have been
         // done when the configuration parameters were loaded
-        IrisStreamingOutput iso = localRi.appConfig.getIrisEndpointClass(requestedEpName);
+        IrisStreamingOutput iso = ri.appConfig.getIrisEndpointClass(requestedEpName);
     
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
         // pulled in to cmd
         System.out.println("** Iris SO class name: " + iso.getClass().getName());
-        if (iso.getClass().getName().equals("edu.iris.wss.endpoints.CmdProcessIrisEP")) {
+        System.out.println("** Iris so test  name: " + edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName());
+        if (iso.getClass().getName().equals(edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
             // i.e. if it is a command based class, use CmdProcessing class
             // TBD get handler name here
-            String handlerPName = ri.appConfig.getHandlerProgram(requestedEpName);
-            System.out.println("***************** handlerPName: " + handlerPName);
-            cmd = new ArrayList<String>(Arrays.asList(handlerPName.split(" ")));
+            String handlerName = ri.appConfig.getHandlerProgram(requestedEpName);
+            System.out.println("***************** handlerPName: " + handlerName);
+            cmd = new ArrayList<String>(Arrays.asList(handlerName.split(" ")));
         } else {
             cmd = new ArrayList<String>();
         }
         
 		try {
-			ParameterTranslator.parseQueryParams(cmd, localRi, requestedEpName);
+			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
+			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage(), ri);
 		}
-                System.out.println("************ja*after cmd.len: " + cmd.size());
-                System.out.println("************ja*after cmd: " + cmd);
-                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
+                
+        
+        System.out.println("************ja*after cmd.len: " + cmd.size());
+        System.out.println("************ja*after cmd: " + cmd);
+        if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
 
     
                 
             
-        if (localRi.request.getMethod().equals("HEAD")) {
+        if (ri.request.getMethod().equals("HEAD")) {
             // return to Jersey before any more processing
             String noData = "";
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain")
                   .entity(noData);
             
-            addCORSHeadersIfConfigured(builder, localRi);
+            addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
         }
 
                 
-        iso.setRequestInfo(localRi);
+        iso.setRequestInfo(ri);
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		Status status = iso.getResponse();
+        System.out.println("** IrisDynamicExecutor after iso.getResponse, status: " + status);
     	if (status == null) {
             shellException(Status.INTERNAL_SERVER_ERROR,
-                  "Null status from IrisStreamingOutput class");
+                  "Null status from IrisStreamingOutput class", ri);
         }
         
         status = adjustByCfg(status, ri);
         if (status != Status.OK) {
-            newerShellException(status, ri, this);
+            newerShellException(status, ri, iso);
 		}
 
         String mediaType = null;
         String outputTypeKey = null;
         try {
-            outputTypeKey = localRi.getPerRequestOutputTypeKey(requestedEpName);
-            mediaType = localRi.getPerRequestMediaType(requestedEpName);
+            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
+            mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
             shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
                     + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex));
+                    + ServiceShellException.getErrorString(ex), ri);
         }
 
         Response.ResponseBuilder builder = Response.status(status)
               .type(mediaType)
-              .entity(this);
+              .entity(iso);
 
         try {
             builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
@@ -216,10 +164,10 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
             shellException(Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
                         + " endpoint: " + requestedEpName
-                        + ServiceShellException.getErrorString(ex));
+                        + ServiceShellException.getErrorString(ex), ri);
         }
-
-        addCORSHeadersIfConfigured(builder, localRi);
+System.out.println("** IrisDynamicExecutor almost end: ");
+        addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
     
@@ -242,7 +190,7 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 		}
     }
 	
-	private void shellException(Status status, String message) {
+	private void shellException(Status status, String message, RequestInfo ri) {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
 	

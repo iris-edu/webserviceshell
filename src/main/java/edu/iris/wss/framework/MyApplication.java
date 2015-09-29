@@ -63,33 +63,20 @@ public class MyApplication extends ResourceConfig {
         Injections.newBinder(sw).to(SingletonWrapper.class), dc);
     dc.commit();
     
+    // add in classes which have static endpoints via annotations
     register(edu.iris.wss.Wss.class);
-    
-    final Resource.Builder resourceBuilder = Resource.builder();
-    resourceBuilder.path("helloworld");
-
-    final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
-    methodBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
-            .handledBy(new Inflector<ContainerRequestContext, String>() {
-
-        @Override
-        public String apply(ContainerRequestContext containerRequestContext) {
-            return "Hello hk2 World!";
-        }
-    });
-
-    final Resource resource = resourceBuilder.build();
-    registerResources(resource);
+    System.out.println("****constr MyApplicationRC start addEndpoint\n");
 
     // --------------
     addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion");
     addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
     addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
     addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
-    addEndpoint("v3/query", edu.iris.wss.endpoints.CmdProcessorIrisEP.class, "doIrisStreaming");
+    addEndpoint("v3/query", edu.iris.wss.framework.IrisDynamicExecutor.class,
+          "doIrisStreaming");
 
     // -------------------
-    System.out.println("*****constr MyApplicationRC servletContextConstr: " + servletContext);
+    System.out.println("\n*****constr MyApplicationRC servletContextConstr: " + servletContext);
     System.out.println("*****constr MyApplicationRC ctxPath: " + servletContext.getContextPath());
   }
   

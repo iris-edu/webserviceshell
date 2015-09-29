@@ -28,6 +28,7 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.utils.WebUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import javax.servlet.http.HttpServletRequest;
 
 public  class RequestInfo {
 
@@ -56,7 +57,7 @@ public  class RequestInfo {
 	// Used (set) by ProcessStreamingOutput class on ZIP output
 	public String workingSubdirectory = null;
     
-    //String endpointName;
+    public boolean isWriteToMiniseed = false;
     
     // as per StackOverflow, make sure the object is fully created before
     // passing it to another constructor, use createInstance factory to create.
@@ -78,23 +79,81 @@ public  class RequestInfo {
 		ri.paramConfig = sw.paramConfig;
 		ri.statsKeeper = sw.statsKeeper;
         
-        System.out.println("^^^^^^^^^^^^^ request.getSession(): " +  request.getSession());
-        System.out.println("^^^^^^^^^^^^^ request.getSession().getServletContext(): " +  request.getSession().getServletContext());
-        System.out.println("^^^^^^^^^^^^^ path: " +  request.getSession().getServletContext().getContextPath());
-        String endpointName = WebUtils.getConfigFileBase(request.getSession().getServletContext());
-		
-        // TBD since this is configurartion, look at doing this once at startup.
-		if ((ri.appConfig.getHandlerProgram(endpointName) == null) && 
-				(ri.appConfig.getIrisEndpointClassName(endpointName) == null)) {
-			ServiceShellException.logAndThrowException(ri,
-                    Status.INTERNAL_SERVER_ERROR, 
-					"Service configuration problem,"
-                    + " handler program and StreamingOutputClassName not defined");
-		}
+        String contextPath = request.getSession().getServletContext().getContextPath();
+        System.out.println("^^^^^^^^^^^^^ path: " +  contextPath);
+        String requestURI = request.getRequestURI();
+        System.out.println("^^^^^^^^^^^^^ getRequestURI: " +  requestURI);
+        System.out.println("^^^^^^^^^^^^^ getRequestURL: " +  request.getRequestURL());
+        System.out.println("^^^^^^^^^^^^^ overlap: " +  requestURI.substring(requestURI.indexOf(contextPath), contextPath.length()));
+        String trialEndpoint = getEndpointNameForThisRequest(ri.request);
+        System.out.println("^^^^^^^^^^^^^ trialEndpoint: " +  trialEndpoint);
+        
+        // need this to avoid checking for endpoint information when global
+        // (i.e. non-endpoint) request are being handled
+        if (isConfiguredForThisEndpoint(request, sw.appConfig)) {
+            try {
+                if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
+                      | ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
+                    ri.isWriteToMiniseed = true;
+                }
+            } catch (Exception ex) {
+                String msg = "Service configuration problem,"
+                      + " endpointName or InternalTypes problem, endpointName: "
+                      + trialEndpoint;
+                System.out.println("^^^^^ msg: " + msg);
+                System.out.println("^^^^^ msg ex: " + ex);
+                ServiceShellException.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                      msg,  ex);
+            }
+
+
+            // TBD since this is configurartion, look at doing this once at startup.
+            if ((ri.appConfig.getHandlerProgram(trialEndpoint) == null) && 
+                    (ri.appConfig.getIrisEndpointClass(trialEndpoint) == null)) {
+                String msg = "Service configuration problem,"
+                        + " handler program and StreamingOutputClassName not defined";
+                System.out.println("^^^^^ msg: " + msg);
+                ServiceShellException.logAndThrowException(ri,
+                        Status.INTERNAL_SERVER_ERROR, msg);
+            }
+        }
         
         return ri;
     }
+
+    /**
+     * This method returns zero length string when the request is at root
+     * on the base URL or or base URL minus a trailing /
+     * 
+     * @return 
+     */
+    public String getEndpointNameForThisRequest() {
+        return getEndpointNameForThisRequest(request);
+    }
+
+    public static String getEndpointNameForThisRequest(HttpServletRequest req) {
+        String contextPath = req.getSession().getServletContext().getContextPath();
+        String requestURI = req.getRequestURI();
     
+        // remove any leading /
+        String epName = requestURI.substring(contextPath.length())
+              .replaceFirst(java.util.regex.Pattern.quote("/"), "");
+        
+        return epName;
+    }
+
+    public boolean isConfiguredForThisEndpoint() {
+        return isConfiguredForThisEndpoint(request, appConfig);
+    }
+
+    public static boolean isConfiguredForThisEndpoint(HttpServletRequest req,
+          AppConfigurator appCfg) {
+        String trialEpName = getEndpointNameForThisRequest(req);
+        
+        return trialEpName.length() > 0
+              && appCfg.isConfiguredForEndpoint(trialEpName);
+    }
+
     // For testing only
     protected RequestInfo(AppConfigurator appConfig) {
         this.appConfig = appConfig;

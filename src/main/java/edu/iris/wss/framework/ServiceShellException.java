@@ -95,7 +95,7 @@ public class ServiceShellException extends WebApplicationException {
    	
     	sb.append("\n\nService version:\n");
     	sb.append(ri.appConfig.getAppName() + ": v " + ri.appConfig.getAppVersion() + "\n");
-    	
+
 //    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());
         if (status == status.NO_CONTENT) {
@@ -106,7 +106,7 @@ public class ServiceShellException extends WebApplicationException {
             throw new ServiceShellException(status, sb.toString());
         }
     }
-    
+
     public static String getErrorString(Throwable e) {
         StringBuilder sb = new StringBuilder();
 

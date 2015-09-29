@@ -81,7 +81,7 @@ public class AppConfigurator {
         globals.put(GL_CFGS.singletonClassName.toString(), null);
 
         ep_defaults.put(EP_CFGS.irisEndpointClassName,
-              edu.iris.wss.endpoints.CmdProcessorIrisEP.class);
+              getIrisSOInstance("edu.iris.wss.endpoints.CmdProcessorIrisEP"));
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
@@ -194,15 +194,32 @@ public class AppConfigurator {
     public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
     public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
     public String getRootServiceDoc() { return (String)globals.get(GL_CFGS.rootServiceDoc.toString()); }
-    public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.rootServiceDoc.toString()); }
+    public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.loggingMethod.toString()); }
     public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())); }
     public String getSingletonClassName() { return (String)globals.get(GL_CFGS.singletonClassName.toString()); }
     
 	public String getWssVersion() { return wssVersion; }
     
-    public String getIrisEndpointClassName(String epName) {
-        return endpoints.get(epName).get(EP_CFGS.irisEndpointClassName).toString();
+//    public String getIrisEndpointClassName(String epName) throws Exception {
+//        if (endpoints.containsKey(epName)) {
+//            return endpoints.get(epName).get(EP_CFGS.irisEndpointClassName).toString();
+//        }
+//        throw new Exception("WebServiceShell getIrisEndpointClassName,"
+//              + " there is no endpoint configured for endpoint name: "
+//              + epName);
+//    }
+
+    /**
+     * Note: no parameter checking or configuration for endpoint checking
+     *       done here, it should be done when parameters are loaded.
+     * @param epName
+     * @return 
+     */
+    public IrisStreamingOutput getIrisEndpointClass(String epName) {
+        return (IrisStreamingOutput)endpoints.get(epName)
+              .get(EP_CFGS.irisEndpointClassName);
     }
+    
     public String getHandlerProgram(String epName) {
         System.out.println("---- **** epName: " + epName);
         System.out.println("---- **** get(epName)): " + endpoints.get(epName));
@@ -215,9 +232,16 @@ public class AppConfigurator {
     public String getWorkingDirectory(String epName) {
         return endpoints.get(epName).get(EP_CFGS.handlerWorkingDirectory).toString();
     }
-    public boolean isConfiguredForTypeKey(String epName, String outputTypeKey)
-          throws Exception {
-        Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName).get(EP_CFGS.outputTypes);
+    
+    // Note: this can throw NullPointerException and ClassCastException
+    public boolean isConfiguredForEndpoint(String epName) {
+        return endpoints.containsKey(epName);
+	}
+    
+    // Note: this can throw NullPointerException and ClassCastException
+    public boolean isConfiguredForTypeKey(String epName, String outputTypeKey) {
+        Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName)
+              .get(EP_CFGS.outputTypes);
         return outTypes.containsKey(outputTypeKey);
 	}
     public String getMediaType(String epName, String outputTypeKey) throws Exception {
@@ -431,7 +455,8 @@ public class AppConfigurator {
                         endpoints.put(epName, endpoint);
                     }
                     
-                    loadEndpointParameter(inputProps, ep_defaults, endpoint, inputParm, propName);
+                    loadEndpointParameter(inputProps, ep_defaults, endpoint,
+                          inputParm, propName, context);
                 } catch (IllegalArgumentException ex) {
                     System.out.println("****** ignoring ex: " + ex);
                     //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
@@ -526,20 +551,21 @@ public class AppConfigurator {
                 }
             } else {
                 // TBD add logging
-                System.out.println("*** *** *** default value not defined for key: " + key);
+                System.out.println("*** *** *** default global value not defined for key: " + key);
                 //throw new Exception("Missing required default for parameter: " + key);
             }
         } else {
             // TBD add logging
             if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.appVersion)) {
-                throw new Exception("Missing required parameter: " + key );
+                System.out.println("*** *** *** Missing required global parameter: " + key);
+                //throw new Exception("Missing required global parameter: " + key );
             }
         }
 	}
 
     
 	public void loadEndpointParameter(Properties input, Map epDefaults,
-          Map endPt, EP_CFGS epParm, String propName)
+          Map endPt, EP_CFGS epParm, String propName, ServletContext context)
           throws Exception {
         
 		String newVal = input.getProperty(propName);
@@ -559,39 +585,8 @@ public class AppConfigurator {
                               + "  value found: " + newVal
                               + "  it should be an integer");
                     }
-                } else if(defaultz instanceof Class) {
-                    Class<?> irisClass = null;
-                    IrisStreamingOutput iso = null;
-                    try {
-                        irisClass = Class.forName(newVal);
-                        iso = (IrisStreamingOutput) irisClass.newInstance();
-                    } catch (Exception ex) {
-                        String msg = "Unrecognized Class for paramater: "
-                              + propName + "  value found: " + newVal
-                              + "  it should be a valid class name";
-                        logger.fatal(msg);
-                        throw new Exception(msg, ex);
-                    }
-//                    try {
-//                        Class<?> irisClass;
-//                        irisClass = Class.forName(newVal);
-//                        iso = (IrisStreamingOutput) irisClass.newInstance();
-//                        endPt.put(epParm, irisClass);
-//                    } catch (ClassNotFoundException e) {
-//                        String err = "Could not find class with name: " + newVal;
-//                        logger.fatal(err);
-//                        throw new RuntimeException(err);
-//                    } catch (InstantiationException e) {
-//                        String err = "Could not instantiate class: " + newVal;
-//                        logger.fatal(err);
-//                        throw new RuntimeException(err);
-//                    } catch (IllegalAccessException e) {
-//                        String err = "Illegal access while instantiating class: " + newVal;
-//                        logger.fatal(err);
-//                        throw new RuntimeException(err);
-//                    }
-
-                    endPt.put(epParm, irisClass);
+                } else if(defaultz instanceof IrisStreamingOutput) {
+                    endPt.put(epParm, getIrisSOInstance(newVal));
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.outputTypes)) {
                         // note: for references to mutable objects,
@@ -614,47 +609,9 @@ public class AppConfigurator {
                     // should be String type if here
                     
                     if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                        if (!newVal.matches("/.*|.*\\$\\{.*\\}.*")) {
-                            //this.workingDirectory = valueStr;
-                            //noop, fall through and put newVal
-                        } else {
-                            Properties props = System.getProperties();
-                            System.out.println("------- ------ --- WD newVal1: " + newVal);
-                            for (Object key : props.keySet()) {
-                                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-                                newVal = newVal.replaceAll("\\$\\{" + key
-                                        + "\\}", props.getProperty(key.toString()));
-                            }
-                            System.out.println("------- ------ --- WD newVal2: " + newVal);
-                            Map<String, String> map = System.getenv();
-                            for (String key : map.keySet()) {
-                                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-                                newVal = newVal.replaceAll("\\$\\{" + key
-                                        + "\\}", map.get(key));
-                            }
-                            System.out.println("------- ------ --- WD newVal3: " + newVal);
-                        }
-
-                        // If the working directory is an absolute path then just use it
-                        // If it's relative, then reference it to the servlet context.
-//                        if (!newVal.matches("/.*")) {
-//                            newVal = context.getRealPath(newVal);
-//                        }
-                        System.out.println("------- WARNING --- may need context");
-                        System.out.println("------- ------ --- WD newVal4: " + newVal);
-                        
-                        File f = new File(newVal);
-                        if (!f.exists()) {
-                            throw new Exception("Working Directory: "
-                                    + newVal + " does not exist");
-                        }
-
-                        if (!f.canWrite() || !f.canRead()) {
-                            throw new Exception(
-                                    "Improper permissions on working Directory: "
-                                            + newVal);
-                        }
+                        newVal = getValidatedWorkingDir(newVal, context);
                     } else {
+                        // noop, use newVal as is
                     }
                     endPt.put(epParm, newVal);
                 }
@@ -662,14 +619,16 @@ public class AppConfigurator {
                 // TBD add logging
                 System.out.println("*** default value not defined for key: " + epParm + "  input property: " + propName);
                 if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                    throw new Exception("Missing required default for parameter: " + epParm + "  input property: " + propName);
+                    System.out.println("Missing required default for endpoint parameter: " + epParm + "  input property: " + propName);
+                    //throw new Exception("Missing required default for endpoint parameter: " + epParm + "  input property: " + propName);
                 }
             }
         } else {
             // TBD add logging
             System.out.println("*** property is null or empty for key: " + epParm + "  input property: " + propName);
             if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                throw new Exception("Missing required parameter: " + epParm + "  input property: " + propName);
+                System.out.println("*** *** *** Missing required endpoint parameter: " + epParm + "  input property: " + propName);
+                //throw new Exception("Missing required endpoint parameter: " + epParm + "  input property: " + propName);
             }
         }
 	}
@@ -689,7 +648,82 @@ public class AppConfigurator {
         
         return s.toString();
     }
+    
+    private String getValidatedWorkingDir(String newVal,
+          ServletContext context) throws Exception {
+        
+        String validVal = newVal;
+        if (!validVal.matches("/.*|.*\\$\\{.*\\}.*")) {
+                            //this.workingDirectory = valueStr;
+            //noop, fall through and put newVal
+        } else {
+            Properties props = System.getProperties();
+            System.out.println("------- ------ --- WD newVal1: " + validVal);
+            for (Object key : props.keySet()) {
+                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+                validVal = validVal.replaceAll("\\$\\{" + key
+                      + "\\}", props.getProperty(key.toString()));
+            }
+            System.out.println("------- ------ --- WD newVal2: " + validVal);
+            Map<String, String> map = System.getenv();
+            for (String key : map.keySet()) {
+                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+                validVal = validVal.replaceAll("\\$\\{" + key
+                      + "\\}", map.get(key));
+            }
+            System.out.println("------- ------ --- WD newVal3: " + validVal);
+        }
 
+        // If the working directory is an absolute path then just use it
+        // If it's relative, then reference it to the servlet context.
+//                        if (!newVal.matches("/.*")) {
+//                            newVal = context.getRealPath(newVal);
+//                        }
+// TBD, if not absolute, throw exception
+        if (context != null) {System.out.println("------- WARNING --- context realPath: " + context.getRealPath(validVal));}
+        else {System.out.println("------- WARNING --- context is null" );}
+        System.out.println("------- WARNING --- may need context");
+        System.out.println("------- ------ --- WD newVal4: " + validVal);
+
+        File f = new File(validVal);
+        if (!f.exists()) {
+            throw new Exception("Working Directory: "
+                  + validVal + " does not exist");
+        }
+
+        if (!f.canWrite() || !f.canRead()) {
+            throw new Exception(
+                  "Improper permissions on working Directory: "
+                  + validVal);
+        }
+
+        return validVal;
+    }
+
+    private IrisStreamingOutput getIrisSOInstance(String className) {
+        Class<?> irisClass = null;
+        IrisStreamingOutput iso = null;
+        try {
+            irisClass = Class.forName(className);
+            iso = (IrisStreamingOutput) irisClass.newInstance();
+        } catch (ClassNotFoundException ex) {
+            String msg = "Could not find "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (InstantiationException ex) {
+            String msg = "Could not instantiate "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (IllegalAccessException ex) {
+            String msg = "Illegal access while instantiating "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        }
+        return iso;
+    }
 	private static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
@@ -702,6 +736,7 @@ public class AppConfigurator {
 		StringBuilder sb = new StringBuilder();
         String line = "----------------------";
         
+        sb.append("\n");
 		sb.append(line).append(" WebServiceShell Configuration").append("\n");
 
 		sb.append(strAppend("WSS Version")).append(wssVersion).append("\n");
@@ -730,8 +765,8 @@ public class AppConfigurator {
                 Object value = endpoint.get(cfgName);
                 if (value == null) {
                     value = "null";
-                } else if(value instanceof Class) {
-                    value = ((Class)value).getName();
+                } else if(value instanceof IrisStreamingOutput) {
+                    value = value.getClass().getName();
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
                 }

@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.io.IOException;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -13,20 +14,6 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  *
@@ -52,6 +39,36 @@ public class AppConfigurator_getters_Test {
 
     @After
     public void tearDown() {
+    }
+
+    /**
+     * 
+     * @param propFileName - name of file with WSS service configuration parameters
+     * @return 
+     */
+    public static AppConfigurator createTestObjAppCfg(String propFileName) {
+        AppConfigurator appCfg = new AppConfigurator();
+        
+        java.util.Properties props = new java.util.Properties();
+
+        java.net.URL url = ClassLoader.getSystemResource(propFileName);
+        assertNotNull(url);
+        
+        try {
+            props.load(url.openStream());
+        } catch (IOException ex) {
+           fail("file name misspelled, does not exist, or is not in classpath,"
+                   + "  filename: " + propFileName);
+        }
+
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+        } catch (Exception ex) {
+            fail("Unexpected failure in test setup while trying to load file: "
+                  + propFileName + "  ex: " + ex);
+        }
+
+        return appCfg;
     }
 
     public static Object[] createTestObjs() {
@@ -93,7 +110,7 @@ public class AppConfigurator_getters_Test {
             fail("Unexpected failure in test setup, this is not a test, ex: " + ex);
         }
 
-        // start tests, check for correct operation
+        // test for known media types
         assert(appCfg.getMediaType(endpointName, "text").equals(textMediaType));
         assert(appCfg.getMediaType(endpointName, "xml").equals(xmlMediaType));
         assert(appCfg.getMediaType(endpointName, "json").equals(jsonMediaType));
@@ -132,7 +149,7 @@ public class AppConfigurator_getters_Test {
         }
 
         // start tests
-        // test default type, at this time, binary type is the default 
+        // test for default of default output type, it should be binary. 
         assert(appCfg.getDefaultOutputTypeKey(endpointName).equals("BINARY"));
 
         // *********************
@@ -150,13 +167,14 @@ public class AppConfigurator_getters_Test {
         props.setProperty(property, "text: " + textMediaType + ", "
               + "json: " + jsonMediaType + ", "
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
+        
         try {
             appCfg.loadConfigurationParameters(props, null);
         } catch (Exception ex) {
             fail("Unexpected failure in test setup, this is not a test, ex: " + ex);
         }
 
-        // test, should be first one in list
+        // test for default output type, should be first one in list
         assert(appCfg.getDefaultOutputTypeKey(endpointName).equals("TEXT"));
 
         try {

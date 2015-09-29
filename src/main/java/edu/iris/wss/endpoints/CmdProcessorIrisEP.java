@@ -67,7 +67,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
     
     private AtomicBoolean isKillingProcess = new AtomicBoolean(false);
     
-    private String endpointName = "noEPName";
+    private String epName = null;
 
 	// [region] Constructors and Getters
 
@@ -94,15 +94,16 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	public void setRequestInfo(RequestInfo ri) {
         this.ri = ri;
         
-        endpointName = WebUtils.getConfigFileBase(ri.request.getSession().getServletContext());
-        System.out.println("-------- --------- ------  endpointName: " + endpointName);
+        epName = ri.getEndpointNameForThisRequest();
+        System.out.println("-------- --------- ------ setRequestInfo  endpointName: " + epName);
         
         // this needs to be done again since it is not part of the IrisStreamingOutput
         // interface, but any errors should have already been reported
-        ArrayList<String> cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
-		try {
+		String handlerName = ri.appConfig.getHandlerProgram(epName);
+        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(handlerName.split(" ")));
+        try {
             // this modifies the cmd list and adds each parameter.
-			ParameterTranslator.parseQueryParams(cmd, ri);
+			ParameterTranslator.parseQueryParams(cmd, ri, epName);
 		} catch (Exception ex) {
             ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST, "CmdProcessStreamingOutput - " + ex.getMessage()); 
 		}
@@ -116,7 +117,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
         System.out.println("*************srv**** user.dir: " + System.getProperty("user.dir"));
 
 	    processBuilder = new ProcessBuilder(cmd);
-        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(endpointName)));
+        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
 
 	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
 	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
@@ -170,6 +171,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
     @Override
 	public Status getResponse() {
 		startTime = new Date();
+        System.out.println("****** CndProcessorIrisEP getResponse");
 
 		if (processBuilder == null) {
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
@@ -184,12 +186,13 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
             logger.error("getResponse processBuilder.start ex: ", ioe);
 
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"IOException when starting handler");
+					"IOException when starting handler: "
+                          + processBuilder.command());
 			// + ioe.getMessage());
 		}
-
+System.out.println("****** CndProcessorIrisEP getResponse after start");
 		ReschedulableTimer rt = new ReschedulableTimer(
-				ri.appConfig.getTimeoutSeconds("xyzendpoint") * 1000);
+				ri.appConfig.getTimeoutSeconds(epName) * 1000);
 		rt.schedule(new killIt(null));
 
 		try {
@@ -239,7 +242,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 						"Failure writing POST body\n" + ioe.getMessage());
 			}
 		}
-
+System.out.println("**-- staring cmd while loop");
 		// Wait for data, error or timeout.
 		while (true) {
 			Boolean gotExitValue = false;
@@ -299,7 +302,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 		// An exit value of '0' here indicates an 'OK' return, but obv.
 		// with no data. Therefore, interpret it as 204.
 		if ((exitVal == 0) || (exitVal == 2)) {
-			if (ri.appConfig.getUse404For204(endpointName))
+			if (ri.appConfig.getUse404For204(epName))
 				return Status.NOT_FOUND;
 			else
 				return Status.NO_CONTENT;
@@ -335,8 +338,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 
 	   @Override
     public void write(OutputStream output) {
-        if (ri.isCurrentTypeKey(InternalTypes.MSEED)
-                || ri.isCurrentTypeKey(InternalTypes.MINISEED)) {
+        if (ri.isWriteToMiniseed) {
             writeMiniSeed(output);
         } else {
             writeNormal(output);
@@ -371,7 +373,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 		HashMap<String, RecordMetaData> logHash = new HashMap<>();
 
 		ReschedulableTimer rt = new ReschedulableTimer(
-				ri.appConfig.getTimeoutSeconds("xyzendpoint") * 1000);
+				ri.appConfig.getTimeoutSeconds(epName) * 1000);
 		rt.schedule(new killIt(output));
 
 		CircularByteBuffer cbb = new CircularByteBuffer(
@@ -401,7 +403,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 
-                if (ri.appConfig.getUsageLog(endpointName)) {
+                if (ri.appConfig.getUsageLog(epName)) {
                     // All the below is only for usage logging.
 
                     // Write the newly read data into the circular buffer.
@@ -447,7 +449,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
                         - timeNonBlockingStart;
 			}
 
-            if (ri.appConfig.getUsageLog(endpointName)) {
+            if (ri.appConfig.getUsageLog(epName)) {
 			// Finally clear anything out in the buffer. There might be data
                 // left in the circular
                 // buffer whose length will be less than maxSeedRecordSize.
@@ -523,7 +525,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
                     + "  handler exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-            if (ri.appConfig.getUsageLog(endpointName)) {
+            if (ri.appConfig.getUsageLog(epName)) {
                 try {
                     if (isKillingProcess.get()) {
                         logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
@@ -640,7 +642,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 		byte[] buffer = new byte[1024];
 
 		ReschedulableTimer rt = new ReschedulableTimer(
-				ri.appConfig.getTimeoutSeconds("xyzendpoint") * 1000);
+				ri.appConfig.getTimeoutSeconds(epName) * 1000);
 		rt.schedule(new killIt(output));
 
         // processing time, but excluding while read is blocking
@@ -705,7 +707,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
                     + "  handler or writeNormal exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-            if (ri.appConfig.getUsageLog(endpointName)) {
+            if (ri.appConfig.getUsageLog(epName)) {
                 if (isKillingProcess.get()) {
                     logUsageMessage(ri, "_KillitInWriteNormal", 0L,
                             processingTime,

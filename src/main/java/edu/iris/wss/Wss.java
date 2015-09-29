@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
+import java.util.logging.Level;
 
 @Path ("/")
 public class Wss {
@@ -57,7 +58,9 @@ public class Wss {
 	@Path("wssstatus")
 	@GET
 	public Response getStatus() {
+        System.out.println("***** start getStatus");
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        System.out.println("***** start getStatus after ri");
 
         StringBuilder sb = new StringBuilder();
 		sb.append("<HTML><BODY>");
@@ -464,7 +467,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled(WebUtils.getConfigFileBase(context))) 
+		if (! ri.appConfig.getPostEnabled(ri.getEndpointNameForThisRequest())) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 		
 		ri.statsKeeper.logAuthPost();
@@ -477,7 +480,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled(WebUtils.getConfigFileBase(context))) 
+		if (! ri.appConfig.getPostEnabled(ri.getEndpointNameForThisRequest())) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 
 		ri.statsKeeper.logPost();
@@ -542,7 +545,7 @@ public class Wss {
 	// [end region]
 
 	private Response runJava() {
-		String className = ri.appConfig.getIrisEndpointClassName(ri.request.getContextPath());
+		String className = ri.appConfig.getIrisEndpointClass(ri.getEndpointNameForThisRequest()).getClass().getName();
 		IrisStreamingOutput iso = null;
 		
 		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
@@ -555,7 +558,7 @@ public class Wss {
         }
 
 		try {
-			ParameterTranslator.parseQueryParams(cmd, ri);
+			ParameterTranslator.parseQueryParams(cmd, ri, "deprecated");
 		} catch (Exception e) {
 			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
 		}
@@ -607,19 +610,29 @@ public class Wss {
             newerShellException(status, ri, iso);
 		}
 
+        String epName = "tbd_getrealone";
         String mediaType = null;
+        String outputTypeKey = null;
         try {
-            mediaType = ri.getPerRequestMediaType();
+            outputTypeKey = ri.getPerRequestOutputTypeKey(epName);
+            mediaType = ri.getPerRequestMediaType(epName);
         } catch (Exception ex) {
             shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
-                    + " mediaTypeKey: " + ri.getPerRequestOutputTypeKey()
+                    + " mediaTypeKey: " + outputTypeKey
                     + ServiceShellException.getErrorString(ex));
         }
         
         ResponseBuilder builder = Response.status(status)
               .type(mediaType)
               .entity(iso);
-        builder.header("Content-Disposition", ri.createContentDisposition());
+        try {
+            builder.header("Content-Disposition", ri.createContentDisposition(epName));
+        } catch (Exception ex) {
+            shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Error creating Content-Disposition header value"
+                        + " endpoint: " + epName
+                        + ServiceShellException.getErrorString(ex));
+        }
 		
 		addCORSHeadersIfConfigured(builder, ri);
 	    

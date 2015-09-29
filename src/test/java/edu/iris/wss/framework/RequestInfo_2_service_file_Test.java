@@ -14,37 +14,19 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  *
  * @author mike
  */
-public class AppConfigurator0Test {
-    private static final AppConfigurator thisAppCfg = new AppConfigurator();
-
-    public AppConfigurator0Test() {
+public class RequestInfo_2_service_file_Test {
+    public RequestInfo_2_service_file_Test() {
     }
     
     @BeforeClass
     public static void setUpClass() {
-        java.util.Properties props = new java.util.Properties();
-        // test file being used as default for loader
-        String filename = "META-INF/service.cfg";
-        java.net.URL url = ClassLoader.getSystemResource(filename);
-        assertNotNull(url);
-        
-        try {
-            props.load(url.openStream());
-        } catch (IOException ex) {
-           fail("file name misspelled, does not exist, or is not in classpath,"
-                   + "  filename: " + filename);
-        }
-
-        try {
-            thisAppCfg.loadConfigurationParameters(props, null);
-        } catch (Exception ex) {
-            fail("Unexpected failure in test setup, this is not a test, ex: " + ex);
-        }
     }
     
     @AfterClass
@@ -61,7 +43,9 @@ public class AppConfigurator0Test {
 
     @Test
     public void testLoadOfOutputTypes() throws Exception {
-        RequestInfo ri = new RequestInfo(thisAppCfg);
+        AppConfigurator appCfg = 
+              AppConfigurator_getters_Test.createTestObjAppCfg("META-INF/service.cfg");
+        RequestInfo ri = new RequestInfo(appCfg);
         
         // test for default
         // endpoint name is taken from the service.cfg file
@@ -97,7 +81,9 @@ public class AppConfigurator0Test {
 
     @Test
     public void testLoadExceptionOfOutputTypes() throws Exception {
-        RequestInfo ri = new RequestInfo(thisAppCfg);
+        AppConfigurator appCfg = 
+              AppConfigurator_getters_Test.createTestObjAppCfg("META-INF/service.cfg");
+        RequestInfo ri = new RequestInfo(appCfg);
 
         // endpoint name is taken from the service.cfg file
         String endpointName = "queryEP";

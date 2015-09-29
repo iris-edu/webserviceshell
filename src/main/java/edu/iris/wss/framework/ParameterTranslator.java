@@ -58,7 +58,8 @@ public class ParameterTranslator {
 	public static final Logger logger = Logger
 			.getLogger(ParameterTranslator.class);
 
-	public static void parseQueryParams(ArrayList<String> cmd, RequestInfo ri)
+	public static void parseQueryParams(ArrayList<String> cmd, RequestInfo ri,
+          String epName)
 			throws Exception {
 
 		List<String> keys = new ArrayList<String>();
@@ -210,7 +211,7 @@ public class ParameterTranslator {
 			if (queryKey.equalsIgnoreCase(outputControlSignature1)
 					|| queryKey.equalsIgnoreCase(outputControlSignature2)) {
                 
-				ri.setPerRequestOutputType(value);
+				ri.setPerRequestOutputType(epName, value);
 			}
 
 			// Add key and also value if valid.

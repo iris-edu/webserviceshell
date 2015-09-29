@@ -126,6 +126,10 @@ public class WssTest  {
         System.out.println("+++ *** status1 testMsg");
     }
 
+    @Test
+    public void testdummy() throws Exception {
+        
+    }
     // run test again to see if Singleton Configure does not run again
     @Test
     public void testGet_status2() throws Exception {
@@ -134,7 +138,7 @@ public class WssTest  {
         WebTarget webTarget = c.target(BASE_URI);
         Response response = webTarget.path("wssstatus").request().get();
         String responseMsg = response.readEntity(String.class);
-        
+
         assertEquals(200, response.getStatus());
         // test some content, this can break if the format of the status html changes
         assertTrue(
@@ -143,5 +147,18 @@ public class WssTest  {
             responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
              + "</TD>") > -1);
         System.out.println("+++ *** status2 testMsg");
+    }
+    
+    @Test
+    public void testGet_status3() throws Exception {
+        
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("").request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        // lightweigh test, just check status, it should return default doc page
+        System.out.println("*** responseMsg3: " + responseMsg);
+        assertEquals(200, response.getStatus());
     }
 }
