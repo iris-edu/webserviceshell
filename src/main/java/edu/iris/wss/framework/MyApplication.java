@@ -50,6 +50,8 @@ public class MyApplication extends ResourceConfig {
   public MyApplication(ServiceLocator serviceLocator, @Context ServletContext servletContext) {
     System.out.println("*****constr MyApplicationRC Inject, serviceLocator: " + serviceLocator);
 
+    System.out.println("\n*****constr MyApplicationRC getContextPath: " + servletContext.getContextPath());
+    System.out.println("*****constr MyApplicationRC cfgbase: " + WebUtils.getConfigFileBase(servletContext));
     // always setup log4j first
     WebUtils.myInitLog4j(servletContext);
 
@@ -69,15 +71,22 @@ public class MyApplication extends ResourceConfig {
 
     // --------------
     addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion");
-    addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
-    addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
-    addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
-    addEndpoint("v3/query", edu.iris.wss.framework.IrisDynamicExecutor.class,
+    
+    //addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
+    //addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
+    //addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
+//    addEndpoint("v3/query", edu.iris.wss.framework.IrisDynamicExecutor.class,
+//          "doIrisStreaming");
+
+    Set<String> epNames = sw.appConfig.getEndpoints();
+    for (String epName : epNames) {
+        addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
           "doIrisStreaming");
+    }
 
     // -------------------
     System.out.println("\n*****constr MyApplicationRC servletContextConstr: " + servletContext);
-    System.out.println("*****constr MyApplicationRC ctxPath: " + servletContext.getContextPath());
+    System.out.println("*****constr MyApplicationRCRC ctxPath: " + servletContext.getContextPath());
   }
   
   public MyApplication() {

@@ -91,7 +91,7 @@
                     <configuration>
                       <artifacts>
                         <artifact>
-                          <file>target/webserviceshell-${version}.war</file>
+                          <file>target/webserviceshell-${project.version}.war</file>
                           <type>war</type>
                           <classifier>wssapp</classifier>
                         </artifact>

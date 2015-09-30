@@ -237,6 +237,9 @@ public class AppConfigurator {
     public boolean isConfiguredForEndpoint(String epName) {
         return endpoints.containsKey(epName);
 	}
+    public Set<String> getEndpoints() {
+        return endpoints.keySet();
+	}
     
     // Note: this can throw NullPointerException and ClassCastException
     public boolean isConfiguredForTypeKey(String epName, String outputTypeKey) {

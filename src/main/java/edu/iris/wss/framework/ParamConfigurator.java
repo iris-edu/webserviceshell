@@ -29,21 +29,19 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
+import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 
 public class ParamConfigurator {
-
-	private static final String wssConfigDirSignature = "wssConfigDir";
+	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
     private static final String defaultConfigFileName = "META-INF/param.cfg";
     private static final String userParamConfigSuffix = "-param.cfg";
     private static final String aliasesKeyName = "aliases";
     
-	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
-
 	private Boolean isLoaded = false;
 
 	public static class ConfigParam {
@@ -96,10 +94,10 @@ public class ParamConfigurator {
 		// of context path), e.g. 'station' or 'webserviceshell'
 		String configFileName = null;
 
-        String wssConfigDir = System.getProperty(wssConfigDirSignature);
+        String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
  
-        String warnMsg1 = "***** check system property for " + wssConfigDirSignature
-            + ", value found: " + wssConfigDir;
+        String warnMsg1 = "***** check system property for "
+              + WebUtils.wssConfigDirSignature + ", value found: " + wssConfigDir;
         String warnMsg2 = "***** or check webapp name on cfg files, value found: "
             + configBase;
 
