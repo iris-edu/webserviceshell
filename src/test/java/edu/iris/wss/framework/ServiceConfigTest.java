@@ -132,7 +132,10 @@ public class ServiceConfigTest  {
 
     @Test
     public void testGet_wadl() throws Exception {
-        
+        // Note: this test can fail if the folder in which this test is being
+        //       run is different than what is hardcoded in
+        //       src/test/resources/ServiceConfigTest/dataselect-1-service.cfg
+        //
         Client c = Client.create();
         WebResource webResource = c.resource(BASE_URI);
         String responseMsg = webResource.path("application.wadl").get(String.class);
@@ -142,7 +145,10 @@ public class ServiceConfigTest  {
 
     @Test
     public void testGet_swagger_JSON() throws Exception {
-        
+        // Note: this test can fail if the folder in which this test is being
+        //       run is different than what is hardcoded in
+        //       src/test/resources/ServiceConfigTest/dataselect-1-service.cfg
+        //
         Client c = Client.create();
         WebResource webResource = c.resource(BASE_URI);
         String responseMsg = webResource.path("v2/swagger").get(String.class);
