@@ -22,6 +22,7 @@ package edu.iris.wss;
 import edu.iris.wss.framework.AppConfigurator;
 import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
 import edu.iris.wss.framework.MyApplication;
+import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -49,8 +50,14 @@ import org.junit.Test;
 public class WssTest  {
     public static final Logger logger = Logger.getLogger(WssTest.class);
     private static final String BASE_PORT = "8093";
+    
+    // set notional webapp name
+    // grizzley only seems to recognize the first path element
+//    private static final String SOME_CONTEXT = "/wsstest/wsstservice/1";
+    private static final String SOME_CONTEXT = "/";
+
     private static final URI BASE_URI = URI.create("http://localhost:"
-        + BASE_PORT + "/");
+        + BASE_PORT + SOME_CONTEXT);
 
     private static HttpServer server;
     
@@ -58,20 +65,24 @@ public class WssTest  {
     }
     
     @BeforeClass
-    public static void setUpClass() throws IOException {
-      
+    public static void setUpClass() throws IOException {;
         Map<String, String> initParams = new HashMap<>();
         initParams.put(
             ServletProperties.JAXRS_APPLICATION_CLASS,
             MyApplication.class.getName());
 
         logger.info("*** starting grizzly container with parameters: " + initParams);
-        System.out.println("********** start GrizzlyWebContainerFactory");
+        System.out.println("********** start GrizzlyWebContainerFactory in class: "
+            + WssTest.class.getName());
         
         server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
-      
+
+        // setup config dir for log4j
+        System.setProperty(WebUtils.wssConfigDirSignature,
+            "target/test-classes");
         server.start();
-        System.out.println("********** started GrizzlyWebContainerFactory");
+        System.out.println("********** started GrizzlyWebContainerFactory"
+              + WssTest.class.getName());
 
         // uncomment this code for manual test of server, e.g. mvn clean install
 //        System.out.println("***** Application started, try: " + BASE_URI);

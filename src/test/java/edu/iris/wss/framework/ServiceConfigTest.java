@@ -58,7 +58,8 @@ public class ServiceConfigTest  {
     private static final Integer BASE_PORT = 8093;
     
     // set notional webapp name
-    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
+//    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
+    private static final String SOME_CONTEXT = "/";
     
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
@@ -76,7 +77,6 @@ public class ServiceConfigTest  {
 
         logger.info("*********** starting grizzlyWebServer, BASE_URI: "
             + BASE_URI);
-        server.start();
         
         Map<String, String> initParams = new HashMap<>();
         initParams.put(
@@ -89,7 +89,10 @@ public class ServiceConfigTest  {
         server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
       
         server.start();
-        System.out.println("********** started GrizzlyWebContainerFactory");
+        System.out.println("********** started GrizzlyWebServer, class: "
+            + ServiceConfigTest.class.getName());
+        System.out.println("********** started GrizzlyWebServer, config: "
+            + server.getServerConfiguration());
 
         // for manual test of server, uncomment this code then mvn clean install
 //        System.out.println("***** Application started, try: " + BASE_URI);
@@ -97,8 +100,10 @@ public class ServiceConfigTest  {
 //        System.in.read();
     }
     
-   // @AfterClass
+    @AfterClass
     public static void tearDownClass() {
+        System.out.println("********** stopping grizzlyWebServer, class: "
+            + ServiceConfigTest.class.getName());
         logger.info("*********** stopping grizzlyWebServer");
         server.shutdownNow();
     }
@@ -111,10 +116,11 @@ public class ServiceConfigTest  {
     public void tearDown() {
     }
 
-    //@Test
+    @Test
     public void testGet_wssversion() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
+        System.out.println("************** wT: " + webTarget);
         Response response = webTarget.path("wssversion").request().get();
 
         assertNotNull(response);        
@@ -123,18 +129,18 @@ public class ServiceConfigTest  {
         assertTrue(testMsg.equals(AppConfigurator.wssVersion));
     }
 
-    //@Test
+    @Test
     public void testGet_status() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        Response response = webTarget.path("wssversion").request().get();
+        Response response = webTarget.path("wssstatus").request().get();
 
         String testMsg = response.readEntity(String.class);
         assertEquals(200, response.getStatus());
-        
+
         // test for some basic known content
         assertTrue(
-            testMsg.indexOf("<TD>URL</TD><TD>" + SOME_CONTEXT + "/status</TD>") > -1);
+            testMsg.indexOf("<TD>URL</TD><TD>" + SOME_CONTEXT + "wssstatus</TD>") > -1);
         assertTrue(
             testMsg.indexOf("<TD>Port</TD><TD>" + BASE_PORT + "</TD>") > -1);
     }
