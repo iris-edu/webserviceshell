@@ -47,8 +47,8 @@ public class AppConfigurator {
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
-	private static final String defaultConfigFileName = "META-INF/service.cfg";
-	private static final String userParamConfigSuffix = "-service.cfg";
+	private static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
+	private static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
     private static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
     
     // this particular string is purposely matched is an error indicator
@@ -123,8 +123,13 @@ public class AppConfigurator {
         irisEndpointClassName
     }
 
-    private Map<String, Map> endpoints = new HashMap();
+    // parameters that apply to all endpoints
     private Map<String, Object> globals = new HashMap();
+
+    // container for endpoints
+    private Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
+    
+    // an endpoint, i.e. the parameters per endpoint
     private Map<EP_CFGS, Object> ep_defaults = new HashMap();
     //private Map<EP_CFGS, Object> endpoint = new HashMap();
     //private Map<String, String> default_outputTypes = createOutputTypes();
@@ -329,32 +334,40 @@ public class AppConfigurator {
 		return isValid;
 	}
 
+    // split opening of properties file from parameter parsing to
+    // make it easier for testing
 	public void loadConfigFile(String configBase, ServletContext context)
-			throws Exception {
-        Properties configurationProps = loadPropertiesFile(configBase, context);
-        if (configurationProps != null) {
-            loadConfigurationParameters(configurationProps, context);
-        }
-    }
-
-	public Properties loadPropertiesFile(String configBase, ServletContext context)
 			throws Exception {
 
 		// Depending on the way the servlet context starts, this can be called
 		// multiple
 		// times via SingletonWrapper class.
 		if (isLoaded) {
-			return null;
+			return;
         }
 		isLoaded = true;
+
+        Class thisRunTimeClass = this.getClass();
+        
+        Properties configurationProps = loadPropertiesFile(configBase,
+              thisRunTimeClass, SERVICE_CFG_NAME_SUFFIX,
+              DEFAULT_SERVICE_FILE_NAME);
+        
+        if (configurationProps != null) {
+            loadConfigurationParameters(configurationProps, context);
+        }
+    }
+
+	public static Properties loadPropertiesFile(String configBase,
+          Class runtTimeClass, String cfgNameSuffix, String defaultCfgName)
+			throws Exception {
 
 		Properties configurationProps = new Properties();
 		Boolean userConfig = false;
 
 		// Now try to read a user config file from the location specified by the
 		// wssConfigDir property concatenated with the web application name
-		// (last part
-		// of context path), e.g. 'station' or 'webserviceshell'
+		// (last part of context path), e.g. 'station' or 'dataselect'
 		String configFileName = null;
 
         String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
@@ -371,7 +384,7 @@ public class AppConfigurator {
             }
 
             configFileName = wssConfigDir + configBase
-                + userParamConfigSuffix;
+                + cfgNameSuffix;
             logger.info("Attempting to load application configuration file from: "
                 + configFileName);
 
@@ -379,13 +392,13 @@ public class AppConfigurator {
                 configurationProps.load(new FileInputStream(configFileName));
                 userConfig = true;
             } catch (IOException ex) {
-                logger.warn("***** could not read service cfg file: " + configFileName);
+                logger.warn("***** could not read cfg file: " + configFileName);
                 logger.warn("***** ignoring exception: " + ex);
                 logger.warn(warnMsg1);
                 logger.warn(warnMsg2);
             }
         } else {
-            logger.warn("***** unexpected configuration for service cfg file");
+            logger.warn("***** unexpected inputs for cfg file: " + cfgNameSuffix);
             logger.warn(warnMsg1);
             logger.warn(warnMsg2);
         }
@@ -393,18 +406,18 @@ public class AppConfigurator {
 		// If no user config was successfully loaded, load the default config file
         // Exception at this point should propagate up.
         if (!userConfig) {
-            InputStream inStream = this.getClass().getClassLoader()
-                .getResourceAsStream(defaultConfigFileName);
+            InputStream inStream = runtTimeClass.getClassLoader()
+                .getResourceAsStream(defaultCfgName);
             if (inStream == null) {
                 throw new Exception("Default configuration file was not"
-                    + " found for name: " + defaultConfigFileName);
+                    + " found for name: " + defaultCfgName);
             }
             logger.info("Attempting to load default application"
-                + " configuration from here: " + defaultConfigFileName);
+                + " configuration from here: " + defaultCfgName);
 
             configurationProps.load(inStream);
             logger.info("Default application properties loaded, file: "
-                + defaultConfigFileName);
+                + defaultCfgName);
         }
         return configurationProps;
     }

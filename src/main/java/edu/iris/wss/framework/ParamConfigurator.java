@@ -38,9 +38,9 @@ import java.util.Set;
 public class ParamConfigurator {
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
-    private static final String defaultConfigFileName = "META-INF/param.cfg";
-    private static final String userParamConfigSuffix = "-param.cfg";
-    private static final String aliasesKeyName = "aliases";
+    private static final String DEFAULT_PARAM_FILE_NAME = "META-INF/param.cfg";
+    private static final String PARAM_CFG_NAME_SUFFIX = "-param.cfg";
+    private static final String ALIASES_KEY_NAME = "aliases";
     
 	private Boolean isLoaded = false;
 
@@ -69,7 +69,6 @@ public class ParamConfigurator {
 	public HashMap<String, ConfigParam> paramMap = new HashMap<>();
     
     // A map of aliases pointing to their respective parameter name
-    public static final String aliasesName = "aliases";
     // need empty map in case there are no aliases
 	public Map<String, String> aliasesMap = new HashMap<>();
 	
@@ -85,62 +84,68 @@ public class ParamConfigurator {
 		// times via SingletonWrapper class.
 		if (isLoaded) return;
 		isLoaded = true;
-				
-		Properties configurationProps = new Properties();
-		Boolean userConfig = false;
-				
-		// Initially to read a user config file from the location specified by the
-		// wssConfigDir property concatenated with the web application name (last part
-		// of context path), e.g. 'station' or 'webserviceshell'
-		String configFileName = null;
 
-        String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
- 
-        String warnMsg1 = "***** check system property for "
-              + WebUtils.wssConfigDirSignature + ", value found: " + wssConfigDir;
-        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
-            + configBase;
+        Class thisRunTimeClass = this.getClass();
+        
+        Properties configurationProps = AppConfigurator.loadPropertiesFile(
+              configBase, thisRunTimeClass, PARAM_CFG_NAME_SUFFIX,
+              DEFAULT_PARAM_FILE_NAME);
 
-        if (isOkString(wssConfigDir) && isOkString(configBase)) {
-            if (!wssConfigDir.endsWith("/")) {
-                wssConfigDir += "/";
-            }
-
-            configFileName = wssConfigDir + configBase + userParamConfigSuffix;
-            logger.info("Attempting to load parameter configuration file from: "
-                + configFileName);
-
-            try {
-                configurationProps.load(new FileInputStream(configFileName));
-                userConfig = true;
-            } catch (IOException ex) {
-                logger.warn("***** could not read param cfg file: " + configFileName);
-                logger.warn("***** ignoring exception: " + ex);
-                logger.warn(warnMsg1);
-                logger.warn(warnMsg2);
-            }
-        } else {
-            logger.warn("***** unexpected configuration for service cfg file");
-            logger.warn(warnMsg1);
-            logger.warn(warnMsg2);
-        }
-
-		// If no user config was successfully loaded, load the default config file
-        // Exception at this point should prop
-        if (!userConfig) {
-            InputStream inStream = this.getClass().getClassLoader()
-                .getResourceAsStream(defaultConfigFileName);
-            if (inStream == null) {
-                throw new Exception("Default parameter file was not"
-                    + " found for name: " + defaultConfigFileName);
-            }
-            logger.info("Attempting to load default parameter"
-                + " configuration from here: " + defaultConfigFileName);
-
-            configurationProps.load(inStream);
-            logger.info("Default parameter properties loaded, file: "
-                + defaultConfigFileName);
-        }
+//		Properties configurationProps = new Properties();
+//		Boolean userConfig = false;
+//				
+//		// Initially to read a user config file from the location specified by the
+//		// wssConfigDir property concatenated with the web application name (last part
+//		// of context path), e.g. 'station' or 'webserviceshell'
+//		String configFileName = null;
+//
+//        String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
+// 
+//        String warnMsg1 = "***** check system property for "
+//              + WebUtils.wssConfigDirSignature + ", value found: " + wssConfigDir;
+//        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
+//            + configBase;
+//
+//        if (isOkString(wssConfigDir) && isOkString(configBase)) {
+//            if (!wssConfigDir.endsWith("/")) {
+//                wssConfigDir += "/";
+//            }
+//
+//            configFileName = wssConfigDir + configBase + PARAM_CFG_NAME_SUFFIX;
+//            logger.info("Attempting to load parameter configuration file from: "
+//                + configFileName);
+//
+//            try {
+//                configurationProps.load(new FileInputStream(configFileName));
+//                userConfig = true;
+//            } catch (IOException ex) {
+//                logger.warn("***** could not read param cfg file: " + configFileName);
+//                logger.warn("***** ignoring exception: " + ex);
+//                logger.warn(warnMsg1);
+//                logger.warn(warnMsg2);
+//            }
+//        } else {
+//            logger.warn("***** unexpected configuration for service cfg file");
+//            logger.warn(warnMsg1);
+//            logger.warn(warnMsg2);
+//        }
+//
+//		// If no user config was successfully loaded, load the default config file
+//        // Exception at this point should prop
+//        if (!userConfig) {
+//            InputStream inStream = this.getClass().getClassLoader()
+//                .getResourceAsStream(DEFAULT_PARAM_FILE_NAME);
+//            if (inStream == null) {
+//                throw new Exception("Default parameter file was not"
+//                    + " found for name: " + DEFAULT_PARAM_FILE_NAME);
+//            }
+//            logger.info("Attempting to load default parameter"
+//                + " configuration from here: " + DEFAULT_PARAM_FILE_NAME);
+//
+//            configurationProps.load(inStream);
+//            logger.info("Default parameter properties loaded, file: "
+//                + DEFAULT_PARAM_FILE_NAME);
+//        }
 				
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		List<String> tmpKeys = new ArrayList(configurationProps.keySet());
@@ -154,7 +159,7 @@ public class ParamConfigurator {
                 type = null;
             }
             
-            if (key.equals(aliasesKeyName)) {
+            if (key.equals(ALIASES_KEY_NAME)) {
                 aliasesMap = createAliasesMap(type);
             } else {
                 ParamType paramType;
@@ -275,7 +280,7 @@ public class ParamConfigurator {
 			ConfigParam cp = paramMap.get(key);
 			sb.append("<TR><TD>" + cp.name + "</TD><TD>" + cp.type + "</TD></TR>");
 		}
-        sb.append("<TR><TD>" + aliasesName + "</TD><TD>" + aliasesMap + "</TD></TR>");
+        sb.append("<TR><TD>" + ALIASES_KEY_NAME + "</TD><TD>" + aliasesMap + "</TD></TR>");
 
 		sb.append("</TABLE>");
 
