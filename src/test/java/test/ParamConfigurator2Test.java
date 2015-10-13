@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ParamConfigurator2Test;
+package test;
 
 import edu.iris.wss.framework.ParamConfigurator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -16,10 +18,15 @@ import org.junit.Test;
  * @author mike
  */
 public class ParamConfigurator2Test {
-    ParamConfigurator thisParamCfg = new ParamConfigurator();
+    Set<String> testEpNames = new HashSet();
+    
+    ParamConfigurator thisParamCfg = null;
     
     public ParamConfigurator2Test() {
-        
+        testEpNames.add("epName1");
+        testEpNames.add("epName2");
+    
+        thisParamCfg = new ParamConfigurator(testEpNames);
     }
         
     @Test
@@ -34,6 +41,8 @@ public class ParamConfigurator2Test {
 
         Map<String, String> aliases = 
                 thisParamCfg.createAliasesMap((String)props.get("aliases"));
+        
+        System.out.println("********\n aliases" + aliases);
     }
         
     @Test
