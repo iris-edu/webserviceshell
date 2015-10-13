@@ -147,17 +147,26 @@ public class ParameterTranslator {
             }
             
             String typeKey;
-            if (ri.paramConfig.aliasesMap.containsKey(queryKey)) {
-                typeKey = ri.paramConfig.aliasesMap.get(queryKey);
-                if (qps.containsKey(typeKey)) {
-                    throw new Exception("Multiple query parameters for same type: "
-                          + queryKey + ", " + typeKey);
+            if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
+                typeKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
+                if (typeKey != null) {
+                    if (qps.containsKey(typeKey)) {
+                        throw new Exception(
+                              "Multiple query parameters for same query: "
+                              + queryKey + "  type: " + typeKey + "  on endpoint: "
+                              + epName);
+                    }
+                } else {
+                    throw new Exception(
+                            "Null query parameters for query: "
+                            + queryKey + "  type: " + typeKey + "  on endpoint: "
+                            + epName);
                 }
             } else {
                 typeKey = queryKey;
             }
 
-			ConfigParam cp = ri.paramConfig.paramMap.get(typeKey);
+			ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, typeKey);
 			if (cp == null) {
 				throw new Exception("No type defined or unknown query parameter: "
                       + queryKey);

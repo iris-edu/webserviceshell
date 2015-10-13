@@ -31,7 +31,7 @@ public class SingletonWrapper {
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
 
 	public AppConfigurator appConfig = new AppConfigurator();
-	public ParamConfigurator paramConfig = new ParamConfigurator();
+	public ParamConfigurator paramConfig = null;
 	public StatsKeeper statsKeeper = new StatsKeeper();
 	public IrisSingleton singleton = null;
         
@@ -63,6 +63,7 @@ public class SingletonWrapper {
     		return;
     	}
     	
+        paramConfig = new ParamConfigurator(appConfig.getEndpoints());
     	try {
     		paramConfig.loadConfigFile(configFileBase);
     	} catch (Exception e) {

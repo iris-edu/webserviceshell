@@ -19,19 +19,14 @@
 
 package edu.iris.wss.framework;
 
-import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
 
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam.ParamType;
-import edu.iris.wss.utils.WebUtils;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,8 +36,6 @@ public class ParamConfigurator {
     private static final String DEFAULT_PARAM_FILE_NAME = "META-INF/param.cfg";
     private static final String PARAM_CFG_NAME_SUFFIX = "-param.cfg";
     private static final String ALIASES_KEY_NAME = "aliases";
-    
-	private Boolean isLoaded = false;
 
 	public static class ConfigParam {
 		public static enum ParamType { TEXT, DATE, NUMBER, BOOLEAN, NONE };
@@ -66,20 +59,45 @@ public class ParamConfigurator {
 		}
 	}
 
-	public HashMap<String, ConfigParam> paramMap = new HashMap<>();
-    
+    public ParamConfigurator(Set<String> epNames) {
+        for (String epName : epNames) {
+            // create an empty param map per endpoint found in AppConfigurator
+            epParams.put(epName, new HashMap<String, ConfigParam>());
+
+            // create an empty Aliases map per endpoint found in AppConfigurator
+            epAliases.put(epName, new HashMap<String, String>());
+        }
+    }
+
+	private Boolean isLoaded = false;
+
+    private Map<String, Map<String, ConfigParam>> epParams = new HashMap<>();;
+
     // A map of aliases pointing to their respective parameter name
     // need empty map in case there are no aliases
-	public Map<String, String> aliasesMap = new HashMap<>();
-	
-	public String getValue(String key) {
-		ConfigParam cp = paramMap.get(key);
-		if (cp == null) return null;
-		else return cp.value;
+    private Map<String, Map<String, String>> epAliases = new HashMap<>();
+
+	public ConfigParam getConfigParamValue(String epName, String key) {
+        if (epParams.containsKey(epName)) {
+            return epParams.get(epName).get(key);
+        } else {
+            return null;
+        }
 	}
-	
+
+    public boolean containsParamAlias(String epName, String inputName) {
+        if (epAliases.containsKey(epName)) {
+            return epAliases.get(epName).containsKey(inputName);
+        }
+        return false;
+    }
+
+    public String getParamFromAlias(String epName, String inputName) {
+        return epAliases.get(epName).get(inputName);
+    }
+
 	public void loadConfigFile(String configBase) throws Exception {		
-		
+
 		// Depending on the way the servlet context starts, this can be called multiple
 		// times via SingletonWrapper class.
 		if (isLoaded) return;
@@ -91,95 +109,74 @@ public class ParamConfigurator {
               configBase, thisRunTimeClass, PARAM_CFG_NAME_SUFFIX,
               DEFAULT_PARAM_FILE_NAME);
 
-//		Properties configurationProps = new Properties();
-//		Boolean userConfig = false;
-//				
-//		// Initially to read a user config file from the location specified by the
-//		// wssConfigDir property concatenated with the web application name (last part
-//		// of context path), e.g. 'station' or 'webserviceshell'
-//		String configFileName = null;
-//
-//        String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
-// 
-//        String warnMsg1 = "***** check system property for "
-//              + WebUtils.wssConfigDirSignature + ", value found: " + wssConfigDir;
-//        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
-//            + configBase;
-//
-//        if (isOkString(wssConfigDir) && isOkString(configBase)) {
-//            if (!wssConfigDir.endsWith("/")) {
-//                wssConfigDir += "/";
-//            }
-//
-//            configFileName = wssConfigDir + configBase + PARAM_CFG_NAME_SUFFIX;
-//            logger.info("Attempting to load parameter configuration file from: "
-//                + configFileName);
-//
-//            try {
-//                configurationProps.load(new FileInputStream(configFileName));
-//                userConfig = true;
-//            } catch (IOException ex) {
-//                logger.warn("***** could not read param cfg file: " + configFileName);
-//                logger.warn("***** ignoring exception: " + ex);
-//                logger.warn(warnMsg1);
-//                logger.warn(warnMsg2);
-//            }
-//        } else {
-//            logger.warn("***** unexpected configuration for service cfg file");
-//            logger.warn(warnMsg1);
-//            logger.warn(warnMsg2);
-//        }
-//
-//		// If no user config was successfully loaded, load the default config file
-//        // Exception at this point should prop
-//        if (!userConfig) {
-//            InputStream inStream = this.getClass().getClassLoader()
-//                .getResourceAsStream(DEFAULT_PARAM_FILE_NAME);
-//            if (inStream == null) {
-//                throw new Exception("Default parameter file was not"
-//                    + " found for name: " + DEFAULT_PARAM_FILE_NAME);
-//            }
-//            logger.info("Attempting to load default parameter"
-//                + " configuration from here: " + DEFAULT_PARAM_FILE_NAME);
-//
-//            configurationProps.load(inStream);
-//            logger.info("Default parameter properties loaded, file: "
-//                + DEFAULT_PARAM_FILE_NAME);
-//        }
-				
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		List<String> tmpKeys = new ArrayList(configurationProps.keySet());
-		
-		for (String key: tmpKeys) {
-			if (paramMap.containsKey(key))
-				throw new Exception("Duplicated config parameter: " + key);
-			
-			String type = (String) configurationProps.get(key);
-			if (!isOkString(type)) {
-                type = null;
-            }
-            
-            if (key.equals(ALIASES_KEY_NAME)) {
-                aliasesMap = createAliasesMap(type);
-            } else {
-                ParamType paramType;
-                try {
-                    paramType = ParamType.valueOf(type.toUpperCase());	
-                } catch (Exception e) {
-                    throw new Exception("Unrecognized param type: " + type);
+        if (configurationProps != null) {
+            loadConfigurationParameters(configurationProps);
+        }
+    }
+
+	public void loadConfigurationParameters(Properties inputProps)
+			throws Exception {
+
+        Enumeration keys = inputProps.propertyNames();
+        while (keys.hasMoreElements()) {
+            String propName = (String)keys.nextElement();
+
+            String[] withDots = propName.split(java.util.regex.Pattern.quote(
+                  AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER));
+            if (withDots.length == 2) {
+                String epName = withDots[0];
+                String paramName = withDots[1];
+
+                if (!epParams.containsKey(epName)) {
+                    logger.warn("Ignoring property when endpoint name is not"
+                          + " previously defined in the service cfg parameters,"
+                          + " ignored epName: " + epName + "  propName: " + propName);
+                    continue;
                 }
 
-                paramMap.put(key, new ConfigParam(key, paramType));
+                // evedently this can never be triggered as loading Properties
+                // appears to only keep the last entry when multiple entires
+                // occurr
+                if (epParams.get(epName).containsKey(paramName)) {
+                    throw new Exception("Duplicated config parameter: "
+                          + paramName + "  on endpoint: " + epName);
+                }
+
+                // paramValue should be a type of representation, unless
+                // it is an alias definition property
+                String paramValue = (String) inputProps.get(propName);
+                if (!AppConfigurator.isOkString(paramValue)) {
+                    paramValue = null;
+                }
+
+                if (paramName.equals(ALIASES_KEY_NAME)) {
+                    // replace empty map rather than update
+                    epAliases.put(epName, createAliasesMap(paramValue));
+                } else {
+                    ParamType paramType;
+                    try {
+                        paramType = ParamType.valueOf(paramValue.toUpperCase());
+                    } catch (Exception e) {
+                        throw new Exception("Unrecognized param type: "
+                              + paramValue + "  on paramName: " + paramName
+                              + "  on endpoint: " + epName);
+                    }
+
+                    epParams.get(epName).put(paramName,
+                          new ConfigParam(paramName, paramType));
+                }
+            } else {
+                logger.warn("Ignoring property with no endpoint defined,"
+                      + " input: " + propName);
             }
-			configurationProps.remove(key);	
-		}
-		logger.info(this.toString());
+        }
+        logger.info("parameters loaded - \n" + this.toString());
 	}
-    
+
     public static Map<String, String> createAliasesMap(String aliasValues)
             throws Exception {
         Map<String, String> aliases = new HashMap<>();
-        
+
         StringBuilder s2 = new StringBuilder(aliasValues.length());
         
         // simple parsing, rebuild string with commas inside perenthesis
@@ -240,27 +237,41 @@ public class ParamConfigurator {
                 aliases.put(s.trim(), respectiveParam);
             }
         }
-        
+
         return aliases;
     }
 
-	private static boolean isOkString(String s) {
-		return ((s != null) && !s.isEmpty());
-	}		
-	
+    @Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("WSS Parameter Configuration\n");
 
-		for (String key: paramMap.keySet()) {	
-			ConfigParam cp = paramMap.get(key);
-			sb.append(strAppend(cp.name) + cp.type + "\n");
-		}
-        sb.append(aliasesMap).append("\n");
-              
+        for (String epName : epParams.keySet()) {
+            Map<String, ConfigParam> params = epParams.get(epName);
+            for (String key: params.keySet()) {
+                ConfigParam cp = params.get(key);
+                sb.append(epName)
+                      .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                      .append(strAppend(cp.name))
+                      .append(cp.type)
+                      .append("\n");
+            }
+
+            Map aliases = epAliases.get(epName);
+            if (aliases.isEmpty()) {
+                // noop, skip
+            } else {
+                sb.append(epName)
+                      .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                      .append(strAppend(ALIASES_KEY_NAME))
+                      .append(aliases)
+                      .append("\n");
+            }
+        }
+
 		return sb.toString();
 	}
-	
+
 	private final int colSize = 30;
 	private String strAppend(String s) {
 		int len = s.length();
@@ -276,11 +287,28 @@ public class ParamConfigurator {
 		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH colspan=\"2\" >" + "WSS Parameter Configuration" + "</TH></TR>");
 
-		for (String key: paramMap.keySet()) {	
-			ConfigParam cp = paramMap.get(key);
-			sb.append("<TR><TD>" + cp.name + "</TD><TD>" + cp.type + "</TD></TR>");
-		}
-        sb.append("<TR><TD>" + ALIASES_KEY_NAME + "</TD><TD>" + aliasesMap + "</TD></TR>");
+        for (String epName : epParams.keySet()) {
+            Map<String, ConfigParam> params = epParams.get(epName);
+            for (String key: params.keySet()) {
+                ConfigParam cp = params.get(key);
+                sb.append("<TR><TD>")
+                      .append(epName)
+                      .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                      .append(strAppend(cp.name))
+                      .append("</TD><TD>")
+                      .append(cp.type)
+                      .append("</TD></TR>");
+            }
+
+            Map aliases = epAliases.get(epName);
+            sb.append("<TR><TD>")
+                  .append(epName)
+                  .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                  .append(ALIASES_KEY_NAME )
+                  .append("</TD><TD>")
+                  .append(aliases)
+                  .append("</TD></TR>");
+        }
 
 		sb.append("</TABLE>");
 

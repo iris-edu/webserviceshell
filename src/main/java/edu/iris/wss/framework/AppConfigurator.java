@@ -49,7 +49,7 @@ public class AppConfigurator {
 
 	private static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
 	private static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
-    private static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
+    public static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
     
     // this particular string is purposely matched is an error indicator
     // for timeout on miniseed data, although, unless changed, it will
@@ -126,10 +126,11 @@ public class AppConfigurator {
     // parameters that apply to all endpoints
     private Map<String, Object> globals = new HashMap();
 
-    // container for endpoints
+    // container for endpoints where the key is defined in the cfg file
+    // as being the string in front of ENDPOINT_TO_PROPERTIES_DELIMITER
     private Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
     
-    // an endpoint, i.e. the parameters per endpoint
+    // an endpoint, i.e. contains the parameters per endpoint
     private Map<EP_CFGS, Object> ep_defaults = new HashMap();
     //private Map<EP_CFGS, Object> endpoint = new HashMap();
     //private Map<String, String> default_outputTypes = createOutputTypes();
@@ -441,7 +442,7 @@ public class AppConfigurator {
         Enumeration keys = inputProps.propertyNames();
         while (keys.hasMoreElements()) {
             String propName = (String)keys.nextElement();      
-            System.out.println("**** ---- **** propName: " + propName
+            System.out.println("**** ---- **** service propName: " + propName
                 + "  value: " + inputProps.getProperty(propName));
             
             // by design, in this version of WSS, a global parameter is 
@@ -740,7 +741,7 @@ public class AppConfigurator {
         }
         return iso;
     }
-	private static boolean isOkString(String s) {
+	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
     
@@ -748,6 +749,7 @@ public class AppConfigurator {
         return epName + ENDPOINT_TO_PROPERTIES_DELIMITER + cfgName.toString();
     }
 
+    @Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
         String line = "----------------------";
