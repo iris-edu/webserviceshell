@@ -5,17 +5,6 @@
  */
 package edu.iris.wss.framework;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -25,87 +14,105 @@ import static org.junit.Assert.fail;
  * @author mike
  */
 public class AppConfig_2x_1Test {
-    AppConfigurator thisAppCfg = new AppConfigurator();
     public AppConfig_2x_1Test() {
     }
+    private final String slpr = "sleeper";
+    private final String v99 = "v99/utepgm";
+    private final String itmg = "intermag";
+
+    private final String testFileName = "AppConfiguratorTest/service_mix1.cfg";
         
     @Test
     public void testAppConfigLoad() throws Exception {
         java.util.Properties props = new java.util.Properties();
-        // note: expecting serviceFile2.cfg to have one pair which is not binary
-        java.net.URL url = ClassLoader.getSystemResource(
-                "AppConfiguratorTest/service-file-2x-1.cfg");
+        java.net.URL url = ClassLoader.getSystemResource(testFileName);
         assertNotNull(url);
-        
+
         props.load(url.openStream());
 
-        System.out.println("************* ** names: " + props.stringPropertyNames());
+        AppConfigurator appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
         
+        //System.out.println("******* ** ** toString\n" + appCfg.toString());
+
+        // match output to values in cfg file
+        assert(appCfg.isUsageLogEnabled(v99) == true);
+        assert(appCfg.isUsageLogEnabled(itmg) == true);
+
+        assert(appCfg.isPostEnabled(v99) == true);
+        assert(appCfg.isPostEnabled(itmg) == false);
+
+        assert(appCfg.isUse404For204Enabled(v99) == false);
+        assert(appCfg.isUse404For204Enabled(itmg) == true);
+    }
+
+    @Test
+    public void testDefaultType() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        java.net.URL url = ClassLoader.getSystemResource(testFileName);
+        assertNotNull(url);
         
-        thisAppCfg.loadConfigurationParameters(props, null);
-        System.out.println("******* ** ** toString\n" + thisAppCfg.toString());
-        System.out.println("\n\n******* toHtmlString\n" + thisAppCfg.toHtmlString());
+        props.load(url.openStream());        
         
-//////        HashMap<String, HashMap> endpoints = new HashMap();
-////        HashMap<String, Set> endpoints = new HashMap();
-////        Enumeration names = props.propertyNames();
-////        while (names.hasMoreElements()) {
-////            String name = (String)names.nextElement();      
-////            System.out.println("**** name: " + name
-////                + "  value: " + props.getProperty(name));
-////            
-////            String[] withEPs = name.split(java.util.regex.Pattern.quote("."));
-////            if (withEPs.length == 1) {
-////                System.out.println("*** glb: " + withEPs[0]);
-////            } else if (withEPs.length == 2) {
-////                String epName = withEPs[0];
-////        //        String epAttr = withEPs[1];
-//////                HashMap<String, String> endpoint = null;
-//////                if (endpoints.containsKey(epName)) {
-//////                    endpoint = endpoints.get(epName);
-//////                } else {
-//////                    endpoint = new HashMap();
-//////                }
-//////                endpoint.put(epAttr, props.getProperty(name));
-//////                endpoints.put(epName, endpoint);
-////                Set<String> endpoint = null;
-////        //        if (endpoints.containsKey(epName)) {
-////        //            endpoint = endpoints.get(epName);
-////        //        } else {
-////        //            endpoint = new HashSet();
-////        //        }
-////        //        endpoint.add(epAttr);
-////        //        endpoints.put(epName, endpoint);
-////                if (endpoints.containsKey(epName)) {
-////                    endpoint = endpoints.get(epName);
-////                } else {
-////                    endpoint = new HashSet();
-////                }
-////                endpoint.add(name);
-////                endpoints.put(epName, endpoint);
-////            } else if (withEPs.length > 2) {
-////                System.out.println("*** ERR *** multiple dots not allowed, key: "
-////                + name);
-////            }
-////        }
-////        
-////        System.out.println("-------------------------- epName");
-////        for (String epName: endpoints.keySet()) {
-////            System.out.println("******* epName: " + epName);
-////        }
-////        
-////        System.out.println("-------------------------- all");
-////        for (String epName: endpoints.keySet()) {
-//////            HashMap<String, String> endpoint = endpoints.get(epName);
-////            Set<String> endpoint = endpoints.get(epName);
-////            Iterator<String> epAttrs = endpoint.iterator();
-//////            for (String epAttr: endpoint.iterator().) {
-////            while(epAttrs.hasNext()) {
-////        //        String wholeName = epName + "." + epAttrs.next();
-////                String wholeName = epAttrs.next();
-////                System.out.println("******* wholeName: " + wholeName
-////                    + "  val: " + props.getProperty(wholeName));                
-////            }
-////        }
+        AppConfigurator appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
+        
+        // match output to values in cfg file
+        assert(appCfg.getDefaultOutputTypeKey(slpr).equals("BINARY"));
+        assert(appCfg.getDefaultOutputTypeKey(v99).equals("TEXT"));
+        assert(appCfg.getDefaultOutputTypeKey(itmg).equals("JSON"));
+    }
+
+    @Test
+    public void testGlobals() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        java.net.URL url = ClassLoader.getSystemResource(testFileName);
+        assertNotNull(url);
+
+        props.load(url.openStream());
+
+        AppConfigurator appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
+
+        // match output to values in cfg file
+        assert(appCfg.getAppName().equals("services-mix1"));
+        assert(appCfg.getAppVersion().equals("0.5.0"));
+        assert(appCfg.isCorsEnabled() == true);
+        assert(appCfg.getSwaggerV2URL().equals(
+              "http://geows.ds.iris.edu/geows-uf/v2/intermagnet-2-swagger.json"));
+        assert(appCfg.getWadlPath() == null);
+        assert(appCfg.getRootServiceDoc().equals(
+              "file:///earthcube/tomcat-8091-7.0.56/wss_config/intermagnet-2-swaggerindex.html"));
+        assert(appCfg.getLoggingType().equals(AppConfigurator.LoggingMethod.LOG4J));
+        assert(appCfg.getSigkillDelay() == 123);
+        assert(appCfg.getSingletonClassName() == null);
+    }
+
+    @Test
+    public void testsigkillDelayExceptionsInGlobals() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.put(AppConfigurator.GL_CFGS.sigkillDelay.toString(), "abc");
+
+        AppConfigurator appCfg = new AppConfigurator();
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail();
+        } catch (Exception ex) {
+            //  noop - should throw exception
+        }
+    }
+
+    @Test
+    public void testloggingMethodExceptionsInGlobals() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.put(AppConfigurator.GL_CFGS.loggingMethod.toString(), "abc");
+        
+        AppConfigurator appCfg = new AppConfigurator();
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail();
+        } catch (Exception ex) {
+            //  noop - should throw exception
+        }
     }
 }

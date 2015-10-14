@@ -172,7 +172,7 @@ System.out.println("** IrisDynamicExecutor almost end: ");
     }
     
     private void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
-		if (ri.appConfig.getCorsEnabled()) {
+		if (ri.appConfig.isCorsEnabled()) {
             // Insert CORS header elements.
 		    rb.header("Access-Control-Allow-Origin", "*");
 

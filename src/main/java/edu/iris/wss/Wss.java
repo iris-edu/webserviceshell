@@ -217,7 +217,7 @@ public class Wss {
 	}
 
     private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
-		if (ri.appConfig.getCorsEnabled()) {
+		if (ri.appConfig.isCorsEnabled()) {
             // Insert CORS header elements.
 		    rb.header("Access-Control-Allow-Origin", "*");
 
@@ -467,7 +467,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled(ri.getEndpointNameForThisRequest())) 
+		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 		
 		ri.statsKeeper.logAuthPost();
@@ -480,7 +480,7 @@ public class Wss {
     	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	ri.postBody = pb;
     	
-		if (! ri.appConfig.getPostEnabled(ri.getEndpointNameForThisRequest())) 
+		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
 			shellException(Status.BAD_REQUEST, "POST Method not allowed");
 
 		ri.statsKeeper.logPost();

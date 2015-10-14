@@ -43,7 +43,7 @@ public class Info1 {
 	}
 
     private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
-		if (ri.appConfig.getCorsEnabled()) {
+		if (ri.appConfig.isCorsEnabled()) {
             // Insert CORS header elements.
 		    rb.header("Access-Control-Allow-Origin", "*");
 

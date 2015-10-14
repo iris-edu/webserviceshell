@@ -302,7 +302,7 @@ System.out.println("**-- staring cmd while loop");
 		// An exit value of '0' here indicates an 'OK' return, but obv.
 		// with no data. Therefore, interpret it as 204.
 		if ((exitVal == 0) || (exitVal == 2)) {
-			if (ri.appConfig.getUse404For204(epName))
+			if (ri.appConfig.isUse404For204Enabled(epName))
 				return Status.NOT_FOUND;
 			else
 				return Status.NO_CONTENT;
@@ -403,7 +403,7 @@ System.out.println("**-- staring cmd while loop");
 				output.write(buffer, 0, bytesRead);
 				output.flush();
 
-                if (ri.appConfig.getUsageLog(epName)) {
+                if (ri.appConfig.isUsageLogEnabled(epName)) {
                     // All the below is only for usage logging.
 
                     // Write the newly read data into the circular buffer.
@@ -449,7 +449,7 @@ System.out.println("**-- staring cmd while loop");
                         - timeNonBlockingStart;
 			}
 
-            if (ri.appConfig.getUsageLog(epName)) {
+            if (ri.appConfig.isUsageLogEnabled(epName)) {
 			// Finally clear anything out in the buffer. There might be data
                 // left in the circular
                 // buffer whose length will be less than maxSeedRecordSize.
@@ -525,7 +525,7 @@ System.out.println("**-- staring cmd while loop");
                     + "  handler exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-            if (ri.appConfig.getUsageLog(epName)) {
+            if (ri.appConfig.isUsageLogEnabled(epName)) {
                 try {
                     if (isKillingProcess.get()) {
                         logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
@@ -707,7 +707,7 @@ System.out.println("**-- staring cmd while loop");
                     + "  handler or writeNormal exitValue: " + localExitVal);
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
-            if (ri.appConfig.getUsageLog(epName)) {
+            if (ri.appConfig.isUsageLogEnabled(epName)) {
                 if (isKillingProcess.get()) {
                     logUsageMessage(ri, "_KillitInWriteNormal", 0L,
                             processingTime,

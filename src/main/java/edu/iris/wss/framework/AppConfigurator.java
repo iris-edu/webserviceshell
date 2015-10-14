@@ -196,7 +196,7 @@ public class AppConfigurator {
 
 	public String getAppName() { return (String)globals.get(GL_CFGS.appName.toString()); }
 	public String getAppVersion() { return (String)globals.get(GL_CFGS.appVersion.toString()); }
-	public boolean getCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())); }
+	public boolean isCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())); }
     public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
     public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
     public String getRootServiceDoc() { return (String)globals.get(GL_CFGS.rootServiceDoc.toString()); }
@@ -271,14 +271,14 @@ public class AppConfigurator {
         throw new Exception("WebServiceShell getMediaType, there is no endpoint"
                       + " configured for endpoint name: " + epName);
 	}
-	public boolean getUsageLog(String epName) {
+	public boolean isUsageLogEnabled(String epName) {
         return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
 	}
-	public Boolean getPostEnabled(String epName) {
+	public Boolean isPostEnabled(String epName) {
 		return (boolean)endpoints.get(epName).get(EP_CFGS.postEnabled);
 	}
-	public Boolean getUse404For204(String epName) {
-		return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
+	public Boolean isUse404For204Enabled(String epName) {
+		return (boolean)endpoints.get(epName).get(EP_CFGS.use404For204);
 	}
     
     // Note: this implements the rule that the first item in outputTypes
@@ -464,16 +464,25 @@ public class AppConfigurator {
                     EP_CFGS inputParm = EP_CFGS.valueOf(inputParmStr);
 
                     Map<EP_CFGS, Object> endpoint = null;
+                    //System.out.println("*-------------------------------------- ept1 class: " + endpoint.getClass());
                     if (endpoints.containsKey(epName)) {
                         endpoint = endpoints.get(epName);
                     } else {
-                        endpoint = new HashMap();
+                        endpoint = new HashMap<EP_CFGS, Object>();
                         endpoint.putAll(ep_defaults);
                         endpoints.put(epName, endpoint);
+                        System.out.println("*-------------------------------------- ept33 class: " + endpoint.getClass() + "  epName: " + epName);
+                        System.out.println("*----------------------------------us-- ept44 class: " + endpoint.get(EP_CFGS.use404For204).getClass()
+                        + "  val: " + endpoint.get(EP_CFGS.use404For204));
                     }
                     
                     loadEndpointParameter(inputProps, ep_defaults, endpoint,
                           inputParm, propName, context);
+                        System.out.println("*-------------------------------------- ept333 class: " + endpoint.getClass() + "  epName: " + epName
+                        + "  inputParm: " + inputParm);
+                        System.out.println("*----------------------------------us-- ept444 class: " + endpoint.get(EP_CFGS.use404For204).getClass()
+                        + "  val: " + endpoint.get(EP_CFGS.use404For204));
+                        System.out.println("*-------------------------------------- obj ept: " + endpoint);
                 } catch (IllegalArgumentException ex) {
                     System.out.println("****** ignoring ex: " + ex);
                     //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
@@ -483,7 +492,6 @@ public class AppConfigurator {
                 + propName);
             }
         }
-
 
 		// ------------------------------------------------------------------;
 
@@ -538,21 +546,24 @@ public class AppConfigurator {
 		String newVal = input.getProperty(key);
         
 		if (isOkString(newVal)) {
-            // use type set for default value to do additional processing
-            Object previous = cfgs.get(key);
+            // use type of object set in default map to choose processing
+            Object currentVal = cfgs.get(key);
             
-            if (previous != null) {
-                if (previous instanceof Boolean) {
-                    cfgs.put(key, Boolean.parseBoolean(newVal));
-                } if (previous instanceof Integer) {
-                    try {
-                        cfgs.put(key, Integer.parseInt(newVal));
+//            I am currently allowing null values for some things and assume
+//            that the else clause will handle input from properties file
+//            NOTE: this only works for Strings
+//            if (currentVal != null) {
+                if (currentVal instanceof Boolean) {
+                    cfgs.put(key, Boolean.valueOf(newVal));
+                } else if (currentVal instanceof Integer) {
+                    try {System.out.println("----------------- key: " + key + "  nV: " + newVal);
+                        cfgs.put(key, Integer.valueOf(newVal));
                     } catch (NumberFormatException ex) {
                         throw new Exception("Unrecognized value for paramater: " + key
                               + "  value found: " + newVal
                               + "  it should be an integer");
                     }
-                } else if(previous instanceof LoggingMethod) {
+                } else if(currentVal instanceof LoggingMethod) {
                     try {
                         LoggingMethod trial = LoggingMethod.valueOf(newVal.toUpperCase());
                         cfgs.put(key, trial);
@@ -566,15 +577,19 @@ public class AppConfigurator {
                     // should be String type if here
                     cfgs.put(key, newVal);
                 }
-            } else {
-                // TBD add logging
-                System.out.println("*** *** *** default global value not defined for key: " + key);
-                //throw new Exception("Missing required default for parameter: " + key);
-            }
+//            } else {
+//                // TBD add logging
+//                System.out.println("*** *** *** default global value not defined for key: " + key);
+//                //throw new Exception("Missing required default for parameter: " + key);
+//            }
         } else {
-            // TBD add logging
+            String msg =
+                  "The service cfg file did not contain a valid value for parameter: "
+                  + key + "  value: " + newVal;
+            System.out.println("** Info: " + msg);
+            logger.info(msg);
             if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.appVersion)) {
-                System.out.println("*** *** *** Missing required global parameter: " + key);
+                System.out.println("*** *** *** TBDE - is this needed and for what - Missing required global parameter: " + key);
                 //throw new Exception("Missing required global parameter: " + key );
             }
         }
@@ -582,7 +597,7 @@ public class AppConfigurator {
 
     
 	public void loadEndpointParameter(Properties input, Map epDefaults,
-          Map endPt, EP_CFGS epParm, String propName, ServletContext context)
+          Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName, ServletContext context)
           throws Exception {
         
 		String newVal = input.getProperty(propName);
@@ -590,13 +605,21 @@ public class AppConfigurator {
 		if (isOkString(newVal)) {
             // use type defined in a default object to do additional processing
             Object defaultz = epDefaults.get(epParm);
+            System.out.println("**************** propName: " + propName
+                  + "  newVal: " + newVal
+                  + "  epParm: " + epParm
+                  + "  defaultz class: " + defaultz.getClass());
             
             if (defaultz != null) {
                 if (defaultz instanceof Boolean) {
-                    endPt.put(epParm, Boolean.parseBoolean(newVal));
-                } if (defaultz instanceof Integer) {
+           System.out.println("**************** propName: " + propName
+                  + "  newVal: " + newVal
+                  + "  epParm: " + epParm
+                  + "  Boolean.valueOf(newVal): " + Boolean.valueOf(newVal));
+                    endPt.put(epParm, Boolean.valueOf(newVal));
+                } else if (defaultz instanceof Integer) {
                     try {
-                        endPt.put(epParm, Integer.parseInt(newVal));
+                        endPt.put(epParm, Integer.valueOf(newVal));
                     } catch (NumberFormatException ex) {
                         throw new Exception("Unrecognized Integer for paramater: " + propName
                               + "  value found: " + newVal
@@ -624,7 +647,6 @@ public class AppConfigurator {
                     }
                 } else {
                     // should be String type if here
-                    
                     if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
                         newVal = getValidatedWorkingDir(newVal, context);
                     } else {

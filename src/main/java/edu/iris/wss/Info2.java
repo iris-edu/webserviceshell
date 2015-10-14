@@ -52,7 +52,7 @@ System.out.println("***************&&& Info2 write wssVersion: " + myWssVersion)
             logger.info("Info2 write done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  totalBytesTransmitted: " + totalBytesTransmitted
-                    + "  usageLog: " + ri.appConfig.getUsageLog(WebUtils.getConfigFileBase(context)));
+                    + "  usageLog: " + ri.appConfig.isUsageLogEnabled(WebUtils.getConfigFileBase(context)));
 
             logUsageMessage(ri, null, totalBytesTransmitted,
                   processingTime, null, Status.OK, null);
