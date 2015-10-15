@@ -168,29 +168,6 @@ public class AppConfigurator {
 //	private String contributorsHandlerProgram;
 //	private String countsHandlerProgram;
 
-	//private String appName;
-	//private String appVersion;
-	//private Boolean corsEnabled = true;
-    //private String swaggerV2URL;
-	//private String wadlPath;
-	//private String rootServiceDoc;
-	//private LoggingType loggingType = LoggingType.LOG4J;
-	//private Integer sigkillDelay = 100; // 100 msec delay from SIGTERM to SIGKILL
-	//private String singletonClassName = null;
-
-    //private String irisEndpointClassName = null;
-	//private String handlerProgram;
-	//private Integer timeoutSeconds = 30;
-	//private String workingDirectory = "/";
-    //private Map<String, String> outputTypes = new HashMap<>();
-	//private Boolean usageLog = true;
-	//private Boolean postEnabled = false;
-	//private Boolean use404For204 = false;
-
-
-
-
-
 	// Required configuration entries. Failure to find these will result in an
 	// exception.
 
@@ -442,9 +419,7 @@ public class AppConfigurator {
         Enumeration keys = inputProps.propertyNames();
         while (keys.hasMoreElements()) {
             String propName = (String)keys.nextElement();      
-            System.out.println("**** ---- **** service propName: " + propName
-                + "  value: " + inputProps.getProperty(propName));
-            
+
             // by design, in this version of WSS, a global parameter is 
             // defined as a string with no epname. decoration.
             // An endpoint parameter must have a epname. in front of the 
@@ -453,7 +428,6 @@ public class AppConfigurator {
                   ENDPOINT_TO_PROPERTIES_DELIMITER));
             if (withDots.length == 1) {
                 // should be already loaded, noop
-                //System.out.println("*** glb: " + withDots[0]);
             } else if (withDots.length == 2) {
                 try {
                     String epName = withDots[0];
@@ -464,25 +438,17 @@ public class AppConfigurator {
                     EP_CFGS inputParm = EP_CFGS.valueOf(inputParmStr);
 
                     Map<EP_CFGS, Object> endpoint = null;
-                    //System.out.println("*-------------------------------------- ept1 class: " + endpoint.getClass());
+
                     if (endpoints.containsKey(epName)) {
                         endpoint = endpoints.get(epName);
                     } else {
                         endpoint = new HashMap<EP_CFGS, Object>();
                         endpoint.putAll(ep_defaults);
                         endpoints.put(epName, endpoint);
-                        System.out.println("*-------------------------------------- ept33 class: " + endpoint.getClass() + "  epName: " + epName);
-                        System.out.println("*----------------------------------us-- ept44 class: " + endpoint.get(EP_CFGS.use404For204).getClass()
-                        + "  val: " + endpoint.get(EP_CFGS.use404For204));
                     }
                     
                     loadEndpointParameter(inputProps, ep_defaults, endpoint,
                           inputParm, propName, context);
-                        System.out.println("*-------------------------------------- ept333 class: " + endpoint.getClass() + "  epName: " + epName
-                        + "  inputParm: " + inputParm);
-                        System.out.println("*----------------------------------us-- ept444 class: " + endpoint.get(EP_CFGS.use404For204).getClass()
-                        + "  val: " + endpoint.get(EP_CFGS.use404For204));
-                        System.out.println("*-------------------------------------- obj ept: " + endpoint);
                 } catch (IllegalArgumentException ex) {
                     System.out.println("****** ignoring ex: " + ex);
                     //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
@@ -494,45 +460,6 @@ public class AppConfigurator {
         }
 
 		// ------------------------------------------------------------------;
-
-
-////		// Load the configuration for the working directory and substitute
-////		// System properties and environment properties.
-////		valueStr = inputProps.getProperty("handlerWorkingDirectory");
-////		if (isOkString(valueStr)) {
-////
-////			if (!valueStr.matches("/.*|.*\\$\\{.*\\}.*")) {
-////				this.workingDirectory = valueStr;
-////			} else {
-////				Properties props = System.getProperties();
-////				for (Object key : props.keySet()) {
-////					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-////							+ "\\}", props.getProperty(key.toString()));
-////				}
-////				Map<String, String> map = System.getenv();
-////				for (String key : map.keySet()) {
-////					this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-////							+ "\\}", map.get(key));
-////				}
-////			}
-////
-////			// If the working directory is and absolute path then just use it
-////			// If it's relative, then reference it to the servlet context.
-////			if (!this.workingDirectory.matches("/.*")) {
-////				this.workingDirectory = context
-////						.getRealPath(this.workingDirectory);
-////			}
-////
-////			File f = new File(this.workingDirectory);
-////			if (!f.exists())
-////				throw new Exception("Working Directory: "
-////						+ this.workingDirectory + " does not exist");
-////
-////			if (!f.canWrite() || !f.canRead())
-////				throw new Exception(
-////						"Improper permissions on working Directory: "
-////								+ this.workingDirectory);
-////		}
 
 		// Finished w/o problems.
 		this.isValid = true;
@@ -605,17 +532,9 @@ public class AppConfigurator {
 		if (isOkString(newVal)) {
             // use type defined in a default object to do additional processing
             Object defaultz = epDefaults.get(epParm);
-            System.out.println("**************** propName: " + propName
-                  + "  newVal: " + newVal
-                  + "  epParm: " + epParm
-                  + "  defaultz class: " + defaultz.getClass());
-            
+
             if (defaultz != null) {
                 if (defaultz instanceof Boolean) {
-           System.out.println("**************** propName: " + propName
-                  + "  newVal: " + newVal
-                  + "  epParm: " + epParm
-                  + "  Boolean.valueOf(newVal): " + Boolean.valueOf(newVal));
                     endPt.put(epParm, Boolean.valueOf(newVal));
                 } else if (defaultz instanceof Integer) {
                     try {
@@ -648,7 +567,7 @@ public class AppConfigurator {
                 } else {
                     // should be String type if here
                     if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                        newVal = getValidatedWorkingDir(newVal, context);
+                        newVal = getValidatedWorkingDir(newVal);
                     } else {
                         // noop, use newVal as is
                     }
@@ -688,41 +607,29 @@ public class AppConfigurator {
         return s.toString();
     }
     
-    private String getValidatedWorkingDir(String newVal,
-          ServletContext context) throws Exception {
+    protected String getValidatedWorkingDir(String newVal) throws Exception {
         
         String validVal = newVal;
-        if (!validVal.matches("/.*|.*\\$\\{.*\\}.*")) {
-                            //this.workingDirectory = valueStr;
-            //noop, fall through and put newVal
-        } else {
-            Properties props = System.getProperties();
-            System.out.println("------- ------ --- WD newVal1: " + validVal);
-            for (Object key : props.keySet()) {
-                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-                validVal = validVal.replaceAll("\\$\\{" + key
-                      + "\\}", props.getProperty(key.toString()));
-            }
-            System.out.println("------- ------ --- WD newVal2: " + validVal);
-            Map<String, String> map = System.getenv();
-            for (String key : map.keySet()) {
-                //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
-                validVal = validVal.replaceAll("\\$\\{" + key
-                      + "\\}", map.get(key));
-            }
-            System.out.println("------- ------ --- WD newVal3: " + validVal);
+        if (!validVal.matches("/.*")) {
+            throw new Exception(
+                  "Working Directory must be an absolute path, value found: "
+                  + validVal);
         }
 
-        // If the working directory is an absolute path then just use it
-        // If it's relative, then reference it to the servlet context.
-//                        if (!newVal.matches("/.*")) {
-//                            newVal = context.getRealPath(newVal);
-//                        }
-// TBD, if not absolute, throw exception
-        if (context != null) {System.out.println("------- WARNING --- context realPath: " + context.getRealPath(validVal));}
-        else {System.out.println("------- WARNING --- context is null" );}
-        System.out.println("------- WARNING --- may need context");
-        System.out.println("------- ------ --- WD newVal4: " + validVal);
+        // for backward compatability, support embedded ${key} values
+        // from Java system properties or environment variables
+        Properties props = System.getProperties();
+        for (Object key : props.keySet()) {
+            //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+            validVal = validVal.replaceAll("\\$\\{" + key
+                  + "\\}", props.getProperty(key.toString()));
+        }
+        Map<String, String> map = System.getenv();
+        for (String key : map.keySet()) {
+            //this.workingDirectory = valueStr.replaceAll("\\$\\{" + key
+            validVal = validVal.replaceAll("\\$\\{" + key
+                  + "\\}", map.get(key));
+        }
 
         File f = new File(validVal);
         if (!f.exists()) {
@@ -848,11 +755,16 @@ public class AppConfigurator {
 		sb.append("<TABLE border=2 style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
 
-		sb.append("<TR><TH colspan=\"2\" >" + "WSS Service Configuration"
-				+ "</TH></TR>");
+		sb.append("<TR><TH colspan=\"2\" >")
+              .append("WSS Service Configuration")
+              .append("</TH></TR>");
 
-		sb.append("<TR><TD>" + "WSS Version" + "</TD><TD>" + wssVersion
-				+ "</TD></TR>");
+        sb.append("<TR><TH colspan=\"2\" >")
+              .append("global paramaters")
+              .append("</TH></TR>");
+
+		sb.append("<TR><TD>").append("WSS Version").append("</TD><TD>")
+              .append(wssVersion).append("</TD></TR>");
 
         List<String> keyList = new ArrayList();
         keyList.add(GL_CFGS.appName.toString());
@@ -873,6 +785,11 @@ public class AppConfigurator {
         }
 
         for (String epName : endpoints.keySet()) {
+            sb.append("<TR><TH colspan=\"2\" >")
+                  .append("endpoint: ")
+                  .append(epName)
+                  .append("</TH></TR>");
+            
             Map endpoint = endpoints.get(epName);
             for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
                 Object value = endpoint.get(cfgName);
@@ -883,21 +800,26 @@ public class AppConfigurator {
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
                 }
-                
-                sb.append("<TR><TD>").append(createEPPropertiesName(epName, cfgName))
-                      .append("</TD><TD>").append(value).append("</TD></TR>");
+
+                sb.append("<TR><TD>")
+                      .append(createEPPropertiesName(epName, cfgName))
+                      .append("</TD><TD>")
+                      .append(value)
+                      .append("</TD></TR>");
             }
-            sb.append("\n");
-            
+            //sb.append("\n");
+
             try {
-                sb.append("<TR><TD>" + "Default Output Type Key" + "</TD><TD>")
-                      .append(getDefaultOutputTypeKey(epName)).append("</TD></TR>");
+                sb.append("<TR><TD>")
+                      .append("Default Output Type Key")
+                      .append("</TD><TD>")
+                      .append(getDefaultOutputTypeKey(epName))
+                      .append("</TD></TR>");
             } catch (Exception ex) {
                 // ignore this, it should have been tested in the testcode
             }
-            sb.append("\n");
-        };
-
+            //sb.append("\n");
+        }
 
 		sb.append("</TABLE>");
 

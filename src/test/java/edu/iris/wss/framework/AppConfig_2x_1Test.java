@@ -21,7 +21,7 @@ public class AppConfig_2x_1Test {
     private final String itmg = "intermag";
 
     private final String testFileName = "AppConfiguratorTest/service_mix1.cfg";
-        
+
     @Test
     public void testAppConfigLoad() throws Exception {
         java.util.Properties props = new java.util.Properties();
