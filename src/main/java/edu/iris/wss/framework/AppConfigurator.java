@@ -483,7 +483,7 @@ public class AppConfigurator {
                 if (currentVal instanceof Boolean) {
                     cfgs.put(key, Boolean.valueOf(newVal));
                 } else if (currentVal instanceof Integer) {
-                    try {System.out.println("----------------- key: " + key + "  nV: " + newVal);
+                    try {
                         cfgs.put(key, Integer.valueOf(newVal));
                     } catch (NumberFormatException ex) {
                         throw new Exception("Unrecognized value for paramater: " + key
@@ -513,10 +513,9 @@ public class AppConfigurator {
             String msg =
                   "The service cfg file did not contain a valid value for parameter: "
                   + key + "  value: " + newVal;
-            System.out.println("** Info: " + msg);
             logger.info(msg);
             if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.appVersion)) {
-                System.out.println("*** *** *** TBDE - is this needed and for what - Missing required global parameter: " + key);
+                System.out.println("*** *** *** TBD - is this needed and for what - Missing required global parameter: " + key);
                 //throw new Exception("Missing required global parameter: " + key );
             }
         }

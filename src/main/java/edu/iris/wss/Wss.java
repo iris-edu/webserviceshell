@@ -58,9 +58,7 @@ public class Wss {
 	@Path("wssstatus")
 	@GET
 	public Response getStatus() {
-        System.out.println("***** start getStatus");
         ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-        System.out.println("***** start getStatus after ri");
 
         StringBuilder sb = new StringBuilder();
 		sb.append("<HTML><BODY>");

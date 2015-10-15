@@ -39,19 +39,15 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 
 // Set up application for injection and loading to container
 
-// Don't use annotation ApplicationPath here because it is explicitely
-// set in web.xml along with some security and other settings
+// Don't use annotation ApplicationPath here 
 //@ApplicationPath("/")
 public class MyApplication extends ResourceConfig {
     
   public static final Logger logger = Logger.getLogger(MyApplication.class);
 
+  // first thing to run, setup logging, load configuration, etc.
   @Inject
   public MyApplication(ServiceLocator serviceLocator, @Context ServletContext servletContext) {
-    System.out.println("*****constr MyApplicationRC Inject, serviceLocator: " + serviceLocator);
-
-    System.out.println("\n*****constr MyApplicationRC getContextPath: " + servletContext.getContextPath());
-    System.out.println("*****constr MyApplicationRC cfgbase: " + WebUtils.getConfigFileBase(servletContext));
     // always setup log4j first
     WebUtils.myInitLog4j(servletContext);
 
@@ -64,33 +60,23 @@ public class MyApplication extends ResourceConfig {
     Injections.addBinding(
         Injections.newBinder(sw).to(SingletonWrapper.class), dc);
     dc.commit();
-    
+
     // add in classes which have static endpoints via annotations
     register(edu.iris.wss.Wss.class);
-    System.out.println("****constr MyApplicationRC start addEndpoint\n");
 
-    // --------------
+    // add in endpoints
     addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion");
-    
-    //addEndpoint("dyquery", edu.iris.wss.Wss.class, "query");
-    //addEndpoint("info2", edu.iris.wss.Info2.class, "doIrisStreaming");
-    //addEndpoint("v2/query", edu.iris.wss.Wss.class, "query");
-//    addEndpoint("v3/query", edu.iris.wss.framework.IrisDynamicExecutor.class,
-//          "doIrisStreaming");
 
+    // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
         addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
           "doIrisStreaming");
     }
-
-    // -------------------
-    System.out.println("\n*****constr MyApplicationRC servletContextConstr: " + servletContext);
-    System.out.println("*****constr MyApplicationRCRC ctxPath: " + servletContext.getContextPath());
   }
   
   public MyApplication() {
-    System.out.println("*****regconstr MyApplicationRC regular constructor");
+    System.out.println("*****  MyApplication no-arg constructor");
   }
 
   private void addEndpoint(String epPath, Class epClass, String methodName) {
@@ -103,20 +89,23 @@ public class MyApplication extends ResourceConfig {
               .handledBy(epClass, epClass.getMethod(methodName, null));
 
     } catch (NoSuchMethodException ex) {
-        System.out.println("*****constr MyApplicationRC endpoint: " + epPath
-              + "  class: " + epClass.getName() + "  NoSuchMethodException: " + ex);
+        String msg = "MyApplication attempted endpoint: " + epPath + "  class: "
+              + epClass.getName() + "  NoSuchMethodException: " + ex;
+        System.out.println(msg);
+        logger.error(msg);
     } catch (SecurityException ex) {
-        System.out.println("*****constr MyApplicationRC endpoint: " + epPath
-              + "  class: " + epClass.getName() + "  SecurityException: " + ex);
+        String msg = "MyApplication attempted endpoint: " + epPath + "  class: "
+              + epClass.getName() + "  SecurityException: " + ex;
+        System.out.println(msg);
+        logger.error(msg);
     }
 
     final Resource endpointRes = resourceBuilder.build();
     registerResources(endpointRes);
     
-    
-    System.out.println("*****constr MyApplicationRC Inject, res_dwv: " + endpointRes);
-    System.out.println("*****constr MyApplicationRC Inject, res_dwv name: " + endpointRes.getName());
-    System.out.println("*****constr MyApplicationRC Inject, res_dwv path: " + endpointRes.getPath());
+    String msg = "MyApplication added endpoint: " + endpointRes.getPath();
+    System.out.println(msg);
+    logger.info(msg);
   }
 }
 

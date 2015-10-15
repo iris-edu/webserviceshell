@@ -79,15 +79,8 @@ public  class RequestInfo {
 		ri.paramConfig = sw.paramConfig;
 		ri.statsKeeper = sw.statsKeeper;
         
-        String contextPath = request.getSession().getServletContext().getContextPath();
-        System.out.println("^^^^^^^^^^^^^ path: " +  contextPath);
-        String requestURI = request.getRequestURI();
-        System.out.println("^^^^^^^^^^^^^ getRequestURI: " +  requestURI);
-        System.out.println("^^^^^^^^^^^^^ getRequestURL: " +  request.getRequestURL());
-        System.out.println("^^^^^^^^^^^^^ overlap: " +  requestURI.substring(requestURI.indexOf(contextPath), contextPath.length()));
         String trialEndpoint = getEndpointNameForThisRequest(ri.request);
-        System.out.println("^^^^^^^^^^^^^ trialEndpoint: " +  trialEndpoint);
-        
+
         // need this to avoid checking for endpoint information when global
         // (i.e. non-endpoint) request are being handled
         if (isConfiguredForThisEndpoint(request, sw.appConfig)) {

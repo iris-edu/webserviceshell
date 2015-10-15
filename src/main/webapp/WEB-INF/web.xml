@@ -3,25 +3,11 @@
 	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	id="WebApp_ID" version="3.0">
+
 	<display-name>webserviceshell</display-name>
-  <!-- 20140918 - deactivated activation here in the web.xml file in favor of
-       using WebServlet annotaion in Log4jInit.java, 
-       groupId edu.iris.wss  artifactId IrisWSSLog4jInit must be in the pom
-       and loaded into the war file so that log4j gets initialized correctly -->
-	<!--servlet>
-		<servlet-name>log4j-init</servlet-name>
-		<servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet-->
+
 	<servlet>
 		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
-		<!--servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class-->
-		<!--servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-
-		<init-param>
-			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>edu.iris.wss.framework.MyApplication</param-value>
-		</init-param-->
 
 		<init-param>
 			<param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
@@ -33,14 +19,7 @@
 			<param-value>true</param-value>
 		</init-param>
 
-<!-- loading this class explicitly in MyApplication.java
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>edu.iris.wss</param-value>
-		</init-param>
--->
-
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>1</load-on-startup>
 	</servlet>
 
 	<servlet-mapping>

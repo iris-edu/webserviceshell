@@ -72,7 +72,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	// [region] Constructors and Getters
 
 	public CmdProcessorIrisEP() {
-        System.out.println("**************** CmdProcessorIrisEP no arg constructor");
+        //System.out.println("**************** CmdProcessorIrisEP no arg constructor");
 	}
 
 //	public SrvProcessStreamingOutput(RequestInfo ri) {

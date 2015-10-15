@@ -38,25 +38,23 @@ public class SingletonWrapper {
     public static WebLogService webLogService = null;
 	
 	public SingletonWrapper()  {
-        System.out.println("***** SingletonWrapper no-arg construct");
+        //System.out.println("***** SingletonWrapper no-arg construct");
     }
 	
 	public void configure(ServletContext context) {		
 		// If we've already configured the application, don't do it again.
-    System.out.println("************************ sw config with context, svrinf: " + context.getServerInfo());
+
 		if (appConfig.isValid() ) {
 			return;
 		}
-		
+
 		String configFileBase = null;
 		if (context != null) {
 			configFileBase = WebUtils.getConfigFileBase(context);
 		}
-		
+
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
-        System.out.println("************************ sw config with context repeated?, svrinf: " + context.getServerInfo()
-        + "  configFileBase: " + configFileBase);
     	} catch (Exception e) {
     		logger.fatal("Invalid application config file, message: "
                     + e.getMessage());

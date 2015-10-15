@@ -45,7 +45,6 @@ public class RequestInfo_1_Test {
     
     @Before
     public void setUp() {
-        System.out.println("***************** setup1");
     }
     
     @After

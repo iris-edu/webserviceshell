@@ -34,7 +34,6 @@ public class AppConfigurator_getters_Test {
 
     @Before
     public void setUp() {
-        System.out.println("***************** setup1");
     }
 
     @After

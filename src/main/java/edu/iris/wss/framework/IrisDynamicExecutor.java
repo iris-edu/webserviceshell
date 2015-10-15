@@ -63,15 +63,14 @@ public class IrisDynamicExecutor {
      * 
      * @return 
      */
-    public Response doIrisStreaming() throws IOException {        
+    public Response doIrisStreaming() throws IOException {
         // when run dynamically, this method does all the abstract methods,
-        // so ri needs to be set here
-        System.out.println("** doIrisStreaming ");
+        // so ri needs to be set here, e.e first
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
               requestHeaders);
     
         String requestedEpName = ri.getEndpointNameForThisRequest();
-        System.out.println("** doIrisStreaming requestedEpName: " + requestedEpName);
+
         if (ri.isConfiguredForThisEndpoint()){
             // noop, continue with ;
         } else {
@@ -89,16 +88,16 @@ public class IrisDynamicExecutor {
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
         // pulled in to cmd
-        System.out.println("** Iris SO class name: " + iso.getClass().getName());
-        System.out.println("** Iris so test  name: " + edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName());
-        if (iso.getClass().getName().equals(edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
-            // i.e. if it is a command based class, use CmdProcessing class
-            // TBD get handler name here
+        if (iso.getClass().getName().equals(
+              edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
+            // i.e. if it is a command processing class, there must be
+            // a command handler
             String handlerName = ri.appConfig.getHandlerProgram(requestedEpName);
-            System.out.println("***************** handlerPName: " + handlerName);
-            cmd = new ArrayList<String>(Arrays.asList(handlerName.split(" ")));
+            System.out.println("***************** TBD, handler checking here,"
+                  + " or at service.cfg load time, handlerPName: " + handlerName);
+            cmd = new ArrayList<>(Arrays.asList(handlerName.split(" ")));
         } else {
-            cmd = new ArrayList<String>();
+            cmd = new ArrayList<>();
         }
         
 		try {
@@ -106,14 +105,9 @@ public class IrisDynamicExecutor {
 		} catch (Exception e) {
 			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage(), ri);
 		}
-                
-        
-        System.out.println("************ja*after cmd.len: " + cmd.size());
-        System.out.println("************ja*after cmd: " + cmd);
-        if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
 
-    
-                
+        System.out.println("** doIrisStreaming, cmd len: " + cmd.size()
+              + " cmd: " + cmd);
             
         if (ri.request.getMethod().equals("HEAD")) {
             // return to Jersey before any more processing
@@ -126,13 +120,13 @@ public class IrisDynamicExecutor {
             return builder.build();
         }
 
-                
         iso.setRequestInfo(ri);
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		Status status = iso.getResponse();
-        System.out.println("** IrisDynamicExecutor after iso.getResponse, status: " + status);
+        System.out.println("** doIrisStreaming after iso.getResponse, status: "
+              + status);
     	if (status == null) {
             shellException(Status.INTERNAL_SERVER_ERROR,
                   "Null status from IrisStreamingOutput class", ri);
@@ -166,7 +160,7 @@ public class IrisDynamicExecutor {
                         + " endpoint: " + requestedEpName
                         + ServiceShellException.getErrorString(ex), ri);
         }
-System.out.println("** IrisDynamicExecutor almost end: ");
+
         addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
