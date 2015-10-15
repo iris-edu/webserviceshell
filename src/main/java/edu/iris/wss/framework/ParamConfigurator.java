@@ -85,15 +85,15 @@ public class ParamConfigurator {
         }
 	}
 
-    public boolean containsParamAlias(String epName, String inputName) {
+    public boolean containsParamAlias(String epName, String aliasName) {
         if (epAliases.containsKey(epName)) {
-            return epAliases.get(epName).containsKey(inputName);
+            return epAliases.get(epName).containsKey(aliasName);
         }
         return false;
     }
 
-    public String getParamFromAlias(String epName, String inputName) {
-        return epAliases.get(epName).get(inputName);
+    public String getParamFromAlias(String epName, String aliasName) {
+        return epAliases.get(epName).get(aliasName);
     }
 
 	public void loadConfigFile(String configBase) throws Exception {		
@@ -285,9 +285,16 @@ public class ParamConfigurator {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<TABLE border=2 style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
-		sb.append("<TR><TH colspan=\"2\" >" + "WSS Parameter Configuration" + "</TH></TR>");
+		sb.append("<TR><TH colspan=\"2\" >")
+              .append("WSS Parameter Configuration")
+              .append("</TH></TR>");
 
         for (String epName : epParams.keySet()) {
+            sb.append("<TR><TH colspan=\"2\" >")
+                  .append("endpoint: ")
+                  .append(epName)
+                  .append("</TH></TR>");
+
             Map<String, ConfigParam> params = epParams.get(epName);
             for (String key: params.keySet()) {
                 ConfigParam cp = params.get(key);

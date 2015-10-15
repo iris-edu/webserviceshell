@@ -6,8 +6,13 @@
 package test;
 
 import edu.iris.wss.framework.ParamConfigurator;
+import edu.iris.wss.framework.ParameterTranslator;
+import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.SingletonWrapper;
 import java.util.HashSet;
 import java.util.Set;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.UriInfo;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Test;
@@ -18,47 +23,9 @@ import static org.junit.Assert.fail;
  *
  * @author mike
  */
-public class ParamConfiguratorTest2 {
-    Set<String> setOfEndpointNames = new HashSet();
+public class ParamTranslatorTest1 {
     
-    private final String testEP = "endpt1";
-    
-    public ParamConfiguratorTest2() {
-        setOfEndpointNames.add("epName1");
-        setOfEndpointNames.add("epName2");
-        setOfEndpointNames.add(testEP);
-    }
-
-    @Test
-    public void testCreateAliasesFromFile() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-
-        props.setProperty(testEP + "." + "starttime", "dat3");
-
-        ParamConfigurator paramCfg = new ParamConfigurator(setOfEndpointNames);
-        try {
-            paramCfg.loadConfigurationParameters(props);
-            fail();
-        } catch (Exception ex) {
-            // should fail here with unknow type  dat3
-            assert(true);
-        }
-    }
-
-    @Test
-    public void testGettingDateType() throws Exception {
-        java.util.Properties props = new java.util.Properties();
-        java.net.URL url = ClassLoader.getSystemResource(
-                "ParameterConfiguratorTest/paramConfig2.cfg");
-        assertNotNull(url);
-
-        props.load(url.openStream());
-
-        ParamConfigurator paramCfg = new ParamConfigurator(setOfEndpointNames);
-        paramCfg.loadConfigurationParameters(props);
-
-        assert(paramCfg.getConfigParamValue(testEP, "endtime").type
-              == ParamConfigurator.ConfigParam.ParamType.DATE);
+    public ParamTranslatorTest1() {
     }
 
     @Test
@@ -92,5 +59,17 @@ public class ParamConfiguratorTest2 {
         assert(paramCfg.containsParamAlias("v99/utepgm", "mnlg"));
         assert(paramCfg.containsParamAlias("v99/utepgm", "mxlg"));
         assert(!paramCfg.containsParamAlias("v99/utepgm", "other"));
+
+// TBD
+//        // mock up objects
+//        SingletonWrapper sw = new SingletonWrapper();
+//        UriInfo uriInfo = null;
+//        javax.servlet.http.HttpServletRequest request= null;
+//        HttpHeaders requestHeaders = null;
+//
+//        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
+//              requestHeaders);
+//
+//        ParameterTranslator pt = new ParameterTranslator();
     }
 }

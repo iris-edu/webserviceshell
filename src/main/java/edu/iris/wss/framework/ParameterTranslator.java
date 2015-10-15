@@ -51,7 +51,7 @@ public class ParameterTranslator {
 	public final static String outputControlSignature1 = "output";
 	public final static String outputControlSignature2 = "format";
 
-	public final static String nodataSignature = "nodata";
+	public final static String NODATA_QUERY_PARAMETER = "nodata";
 	public final static String usernameSignature = "username";
 	public final static String postSignature = "STDIN";
 
@@ -77,23 +77,23 @@ public class ParameterTranslator {
 		// Special 'username' cli argument will be added if present
 
 		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
-		if (isOkString(username)) {
+		if (AppConfigurator.isOkString(username)) {
 			cmd.add("--" + usernameSignature);
 			cmd.add(username);
 		}
 
 		// Check for the nodata query parameter and the app config setting
 		// appropriately.
-		String nodataVal = qps.getFirst(nodataSignature);
-		if (isOkString(nodataVal)) {
-			qps.remove(nodataSignature);
+		String nodataVal = qps.getFirst(NODATA_QUERY_PARAMETER);
+		if (AppConfigurator.isOkString(nodataVal)) {
+			qps.remove(NODATA_QUERY_PARAMETER);
 
 			if (nodataVal.equals("204")) {
 				ri.perRequestUse404for204 = false;
 			} else if (nodataVal.equals("404")) {
 				ri.perRequestUse404for204 = true;
 			} else {
-				throw new Exception("Invalid value for " + nodataSignature
+				throw new Exception("Invalid value for " + NODATA_QUERY_PARAMETER
 						+ ": " + nodataVal);
 			}
 		}
@@ -146,27 +146,25 @@ public class ParameterTranslator {
                       + queryKey);
             }
             
-            String typeKey;
+            String nonAliasNameKey;
             if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
-                typeKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
-                if (typeKey != null) {
-                    if (qps.containsKey(typeKey)) {
+                nonAliasNameKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
+                if (nonAliasNameKey != null) {
+                    if (qps.containsKey(nonAliasNameKey)) {
                         throw new Exception(
-                              "Multiple query parameters for same query: "
-                              + queryKey + "  type: " + typeKey + "  on endpoint: "
-                              + epName);
+                              "Multiple parameters found from alias parameter: "
+                              + queryKey + "  an alias for parameter: " + nonAliasNameKey
+                              + "  on endpoint: " + epName);
                     }
                 } else {
-                    throw new Exception(
-                            "Null query parameters for query: "
-                            + queryKey + "  type: " + typeKey + "  on endpoint: "
-                            + epName);
+                    throw new Exception("undefined alias parameter: "
+                            + queryKey + "  on endpoint: "+ epName);
                 }
             } else {
-                typeKey = queryKey;
+                nonAliasNameKey = queryKey;
             }
 
-			ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, typeKey);
+			ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, nonAliasNameKey);
 			if (cp == null) {
 				throw new Exception("No type defined or unknown query parameter: "
                       + queryKey);
@@ -179,7 +177,7 @@ public class ParameterTranslator {
 			// Test if param type is OK. DATE, NUMBER, TEXT, BOOLEAN
 			switch (cp.type) {
 			case NONE:
-				if (isOkString(value)) {
+				if (AppConfigurator.isOkString(value)) {
 					throw new Exception("No value permitted for " + queryKey
 							+ " Found value: " + value);
 				}
@@ -207,7 +205,7 @@ public class ParameterTranslator {
 				break;
 
 			case TEXT:
-				if (!isOkString(value)) {
+				if (!AppConfigurator.isOkString(value)) {
 					throw new Exception("Invalid value for parameter: " + queryKey);
 				}
 				break;
@@ -217,15 +215,15 @@ public class ParameterTranslator {
 			// valid, change the config class's
 			// output mime type so that the overall service's output format will
 			// change.
-			if (queryKey.equalsIgnoreCase(outputControlSignature1)
-					|| queryKey.equalsIgnoreCase(outputControlSignature2)) {
+			if (nonAliasNameKey.equalsIgnoreCase(outputControlSignature1)
+					|| nonAliasNameKey.equalsIgnoreCase(outputControlSignature2)) {
                 
 				ri.setPerRequestOutputType(epName, value);
 			}
 
 			// Add key and also value if valid.
-			cmd.add("--" + queryKey);
-			if (isOkString(value)) {
+			cmd.add("--" + nonAliasNameKey);
+			if (AppConfigurator.isOkString(value)) {
                 // remove any control characters
 				cmd.add(value.replaceAll("\\p{Cntrl}", ""));
 			}
@@ -319,9 +317,5 @@ public class ParameterTranslator {
 			return true;
 
 		return false;
-	}
-
-	private static boolean isOkString(String s) {
-		return ((s != null) && !s.isEmpty());
 	}
 }

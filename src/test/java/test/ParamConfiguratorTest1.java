@@ -12,17 +12,19 @@ import java.util.Set;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  *
  * @author mike
  */
-public class ParamConfigurator2Test {
+public class ParamConfiguratorTest1 {
     Set<String> testEpNames = new HashSet();
     
     ParamConfigurator thisParamCfg = null;
     
-    public ParamConfigurator2Test() {
+    public ParamConfiguratorTest1() {
         testEpNames.add("epName1");
         testEpNames.add("epName2");
     
@@ -34,13 +36,13 @@ public class ParamConfigurator2Test {
         java.util.Properties props = new java.util.Properties();
         // note: expecting serviceFile2.cfg to have one pair which is not binary
         java.net.URL url = ClassLoader.getSystemResource(
-                "ParameterConfiguratorTest/paramConfig1.cfg");
+                "ParameterConfiguratorTest/paramConfig2.cfg");
         assertNotNull(url);
         
         props.load(url.openStream());
 
         Map<String, String> aliases = 
-                thisParamCfg.createAliasesMap((String)props.get("aliases"));
+                thisParamCfg.createAliasesMap((String)props.get("endpt1.aliases"));
         
         System.out.println("********\n aliases" + aliases);
     }
