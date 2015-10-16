@@ -55,34 +55,32 @@ public class SingletonWrapper {
 
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
-    	} catch (Exception e) {
-    		logger.fatal("Invalid application config file, message: "
-                    + e.getMessage());
+        } catch (Exception ex) {
+            String msg = "Error in -service.cfg file, message: "
+                    + ex.getMessage();
+            System.out.println(msg);
+            logger.error(msg);
+
+            // even with error, try to load params so paramConfig is
+            // not null
+            paramConfig = getParamConfig(appConfig, configFileBase);
+
     		return;
     	}
-    	
-        paramConfig = new ParamConfigurator(appConfig.getEndpoints());
-    	try {
-    		paramConfig.loadConfigFile(configFileBase);
-    	} catch (Exception e) {
-    		logger.fatal("Invalid parameter config file: " + e.getMessage());
-    	}
-    	
-    	if (appConfig.getSingletonClassName() != null) {
-    		try {
-        		Class<?> singletonClass;
-    			singletonClass = Class.forName(appConfig.getSingletonClassName());
-    			singleton = (IrisSingleton) singletonClass.newInstance();
-                logger.info("singleton: "+ singleton);
-    		} catch (ClassNotFoundException e) {
-    			String err = "Could not find class with name: " + appConfig.getSingletonClassName();
-    			logger.fatal(err);
-    			throw new RuntimeException(err);
-    		} catch (InstantiationException e) {
-    			logger.fatal("Could not instantiate class: " + appConfig.getSingletonClassName());
-    		} catch (IllegalAccessException e) {
-    			logger.fatal("Illegal access while instantiating class: " + appConfig.getSingletonClassName());
-    		}
-    	}
+
+        paramConfig = getParamConfig(appConfig, configFileBase);
 	}
+
+    private ParamConfigurator getParamConfig(AppConfigurator appCfg,
+          String cfgFileBase) {
+        paramConfig = new ParamConfigurator(appCfg.getEndpoints());
+        
+    	try {
+            paramConfig.loadConfigFile(cfgFileBase);
+        } catch (Exception ex) {
+            logger.fatal("Invalid parameter config file: " + ex.getMessage());
+    	}
+
+        return paramConfig;
+    }
 }

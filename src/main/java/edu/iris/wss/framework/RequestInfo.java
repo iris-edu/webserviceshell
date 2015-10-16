@@ -83,7 +83,7 @@ public  class RequestInfo {
 
         // need this to avoid checking for endpoint information when global
         // (i.e. non-endpoint) request are being handled
-        if (isConfiguredForThisEndpoint(request, sw.appConfig)) {
+        if (isThisEndpointConfigured(request, sw.appConfig)) {
             try {
                 if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
                       | ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
@@ -91,7 +91,7 @@ public  class RequestInfo {
                 }
             } catch (Exception ex) {
                 String msg = "Service configuration problem,"
-                      + " endpointName or InternalTypes problem, endpointName: "
+                      + " possibly missing a type definition for endpointName: "
                       + trialEndpoint;
                 System.out.println("^^^^^ msg: " + msg);
                 System.out.println("^^^^^ msg ex: " + ex);
@@ -135,16 +135,16 @@ public  class RequestInfo {
         return epName;
     }
 
-    public boolean isConfiguredForThisEndpoint() {
-        return isConfiguredForThisEndpoint(request, appConfig);
+    public boolean isThisEndpointConfigured() {
+        return isThisEndpointConfigured(request, appConfig);
     }
 
-    public static boolean isConfiguredForThisEndpoint(HttpServletRequest req,
+    public static boolean isThisEndpointConfigured(HttpServletRequest req,
           AppConfigurator appCfg) {
         String trialEpName = getEndpointNameForThisRequest(req);
         
         return trialEpName.length() > 0
-              && appCfg.isConfiguredForEndpoint(trialEpName);
+              && appCfg.isThisEndpointConfigured(trialEpName);
     }
 
     // For testing only

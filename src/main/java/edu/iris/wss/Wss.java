@@ -77,6 +77,8 @@ public class Wss {
         sb.append(ri.appConfig.toHtmlString());
     	
         sb.append("<br/>");
+        System.out.println("** ---------------------------- ri: " + ri);
+        System.out.println("** ---------------------------- ri.paramConfig: " + ri.paramConfig);
         sb.append(ri.paramConfig.toHtmlString());
 
         sb.append("</BODY></HTML>");

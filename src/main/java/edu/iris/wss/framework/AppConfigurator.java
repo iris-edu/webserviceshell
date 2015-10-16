@@ -19,6 +19,7 @@
 
 package edu.iris.wss.framework;
 
+import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.utils.WebUtils;
 import java.io.File;
@@ -115,7 +116,7 @@ public class AppConfigurator {
     // global configuration parameter names
     public static enum GL_CFGS { appName, appVersion, corsEnabled,
         swaggerV2URL, wadlPath, rootServiceDoc, loggingMethod, sigkillDelay,
-        jndiUrl, singletonClassName, irisEndpointClassName};
+        jndiUrl, singletonClassName};
     
     // endpoint configuration parameter names
     public static enum EP_CFGS { outputTypes, handlerTimeout,
@@ -204,9 +205,8 @@ public class AppConfigurator {
     }
     
     public String getHandlerProgram(String epName) {
-        System.out.println("---- **** epName: " + epName);
-        System.out.println("---- **** get(epName)): " + endpoints.get(epName));
-        System.out.println("---- **** get(epName).get(EP_CFGS.handlerProgram): " + endpoints.get(epName).get(EP_CFGS.handlerProgram));
+        System.out.println("---- **** AppConfigurator getHandlerProgram epName: " + epName);
+        System.out.println("---- **** AppConfigurator getHandlerProgram endpoint: " + endpoints.get(epName));
         return endpoints.get(epName).get(EP_CFGS.handlerProgram).toString();
     }
 	public int getTimeoutSeconds(String epName) {
@@ -217,7 +217,7 @@ public class AppConfigurator {
     }
     
     // Note: this can throw NullPointerException and ClassCastException
-    public boolean isConfiguredForEndpoint(String epName) {
+    public boolean isThisEndpointConfigured(String epName) {
         return endpoints.containsKey(epName);
 	}
     public Set<String> getEndpoints() {
@@ -460,12 +460,46 @@ public class AppConfigurator {
         }
 
 		// ------------------------------------------------------------------;
+        // do additional validation
+
+        for (String epName : endpoints.keySet()) {
+            IrisStreamingOutput iso = getIrisEndpointClass(epName);
+            if (iso.getClass().getName().equals(
+              edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
+                String handlerName = getHandlerProgram(epName);
+                try {
+                    if (isOkString(handlerName)) {
+                        if (isExecutableAndExists(handlerName)) {
+                            continue;
+                        }
+                    }
+                } catch(Exception ex) {
+                    String msg = "Handler error for endpoint: " + epName
+                          + "  ex: " + ex.toString();
+                    logger.error(msg);
+                    throw new Exception(msg, ex);
+                }
+            }
+        }
 
 		// Finished w/o problems.
 		this.isValid = true;
 		logger.info(this.toString());
 	}
-    
+
+    public static boolean isExecutableAndExists(String filename) throws Exception {
+        File f = new File(filename);
+        if (!f.exists()) {
+            throw new Exception("file: " + filename + " does not exist");
+        }
+
+        if (!f.canExecute()) {
+            throw new Exception("file: " + filename + " is not executable");
+        }
+
+       return true;
+    }
+
 	public void loadGlobalParameter(Properties input, Map cfgs, GL_CFGS eKey)
           throws Exception {
         
@@ -502,6 +536,11 @@ public class AppConfigurator {
                     }
                 } else {
                     // should be String type if here
+                    if (eKey.equals(GL_CFGS.singletonClassName)) {
+                        if (isOkString(newVal)) {
+                            getIrisSingletonInstance(newVal);
+                        }
+                    }
                     cfgs.put(key, newVal);
                 }
 //            } else {
@@ -669,6 +708,33 @@ public class AppConfigurator {
         }
         return iso;
     }
+
+
+    private IrisSingleton getIrisSingletonInstance(String className) {
+        Class<?> irisClass = null;
+        IrisSingleton is = null;
+        try {
+            irisClass = Class.forName(className);
+            is = (IrisSingleton) irisClass.newInstance();
+        } catch (ClassNotFoundException ex) {
+            String msg = "Could not find "
+                  + GL_CFGS.singletonClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (InstantiationException ex) {
+            String msg = "Could not instantiate "
+                  + GL_CFGS.singletonClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (IllegalAccessException ex) {
+            String msg = "Illegal access while instantiating "
+                  + GL_CFGS.singletonClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        }
+        return is;
+    }
+
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}

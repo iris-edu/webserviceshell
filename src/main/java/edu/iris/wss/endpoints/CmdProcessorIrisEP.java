@@ -95,26 +95,24 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
         this.ri = ri;
         
         epName = ri.getEndpointNameForThisRequest();
-        System.out.println("-------- --------- ------ setRequestInfo  endpointName: " + epName);
         
-        // this needs to be done again since it is not part of the IrisStreamingOutput
-        // interface, but any errors should have already been reported
-		String handlerName = ri.appConfig.getHandlerProgram(epName);
-        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(handlerName.split(" ")));
+        // this needs to be done again since it is not part of the
+        // IrisStreamingOutput interface, but any errors should have
+        // already been reported, so not checking for existance and
+        // runability of handler program here
+        String handlerName = ri.appConfig.getHandlerProgram(epName);
+
+        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
+              handlerName.split(" ")));
         try {
             // this modifies the cmd list and adds each parameter.
 			ParameterTranslator.parseQueryParams(cmd, ri, epName);
 		} catch (Exception ex) {
-            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST, "CmdProcessStreamingOutput - " + ex.getMessage()); 
+            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
+                  "CmdProcessStreamingOutput - " + ex.getMessage());
 		}
-                System.out.println("***********srv*after cmd.len: " + cmd.size());
-                System.out.println("***********srv*after cmd: " + cmd);
-                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
-
         
         ProcessBuilder pb0 = new ProcessBuilder(cmd);
-        System.out.println("*************srv**** pb0.dir: " + pb0.directory());
-        System.out.println("*************srv**** user.dir: " + System.getProperty("user.dir"));
 
 	    processBuilder = new ProcessBuilder(cmd);
         processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
@@ -130,8 +128,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
             processBuilder.environment().put("AUTHENTICATEDUSERNAME",
                     WebUtils.getAuthenticatedUsername(ri.requestHeaders));
         }
-        System.out.println("*************srv**** processBuilder.dir: " + processBuilder.directory());
-        System.out.println("*************srv**** user.dir: " + System.getProperty("user.dir"));
 	}
 
     // Note: this is broken if ever threaded, exitVal should be
@@ -171,7 +167,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
     @Override
 	public Status getResponse() {
 		startTime = new Date();
-        System.out.println("****** CndProcessorIrisEP getResponse");
 
 		if (processBuilder == null) {
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
@@ -190,7 +185,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
                           + processBuilder.command());
 			// + ioe.getMessage());
 		}
-System.out.println("****** CndProcessorIrisEP getResponse after start");
+
 		ReschedulableTimer rt = new ReschedulableTimer(
 				ri.appConfig.getTimeoutSeconds(epName) * 1000);
 		rt.schedule(new killIt(null));
@@ -242,7 +237,7 @@ System.out.println("****** CndProcessorIrisEP getResponse after start");
 						"Failure writing POST body\n" + ioe.getMessage());
 			}
 		}
-System.out.println("**-- staring cmd while loop");
+System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		// Wait for data, error or timeout.
 		while (true) {
 			Boolean gotExitValue = false;

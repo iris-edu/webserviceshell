@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.io.File;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -24,6 +25,7 @@ public class AppConfig_2x_1Test {
 
     @Test
     public void testAppConfigLoad() throws Exception {
+        //System.out.println("-------------------- user.dir: " + System.getProperty("user.dir"));
         java.util.Properties props = new java.util.Properties();
         java.net.URL url = ClassLoader.getSystemResource(testFileName);
         assertNotNull(url);
@@ -31,7 +33,18 @@ public class AppConfig_2x_1Test {
         props.load(url.openStream());
 
         AppConfigurator appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+        } catch (Exception ex) {
+            if (ex.toString().contains("Handler error for endpoint")) {
+                // noop - accept this error since handler name check is an
+                //        absolute check and not part of this test
+            } else {
+                throw new Exception(
+                      "Test may be in error, rethrow of unexpected exception",
+                      ex);
+            }
+        }
         
         //System.out.println("******* ** ** toString\n" + appCfg.toString());
 
@@ -55,7 +68,18 @@ public class AppConfig_2x_1Test {
         props.load(url.openStream());        
         
         AppConfigurator appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+        } catch (Exception ex) {
+            if (ex.toString().contains("Handler error for endpoint")) {
+                // noop - accept this error since handler name check is an
+                //        absolute check and not part of this test
+            } else {
+                throw new Exception(
+                      "Test may be in error, rethrow of unexpected exception",
+                      ex);
+            }
+        }
         
         // match output to values in cfg file
         assert(appCfg.getDefaultOutputTypeKey(slpr).equals("BINARY"));
@@ -72,7 +96,18 @@ public class AppConfig_2x_1Test {
         props.load(url.openStream());
 
         AppConfigurator appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+        } catch (Exception ex) {
+            if (ex.toString().contains("Handler error for endpoint")) {
+                // noop - accept this error since handler name check is an
+                //        absolute check and not part of this test
+            } else {
+                throw new Exception(
+                      "Test may be in error, rethrow of unexpected exception",
+                      ex);
+            }
+        }
 
         // match output to values in cfg file
         assert(appCfg.getAppName().equals("services-mix1"));
@@ -112,6 +147,74 @@ public class AppConfig_2x_1Test {
             appCfg.loadConfigurationParameters(props, null);
             fail();
         } catch (Exception ex) {
+            //  noop - should throw exception
+        }
+    }
+
+    @Test
+    public void testHandlerFileExistException() throws Exception {
+        // when an endpoint defines the IRIS class for command processing
+        // the loader expects to find a valid handler file
+        java.util.Properties props = new java.util.Properties();
+        props.put("testEP." + AppConfigurator.EP_CFGS.irisEndpointClassName.toString(),
+              "edu.iris.wss.endpoints.CmdProcessorIrisEP");
+        props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
+              "randomname123abc");
+
+        AppConfigurator appCfg = new AppConfigurator();
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail();
+        } catch (Exception ex) {
+            //  noop - should throw exception
+        }
+    }
+
+    @Test
+    public void testHandlerFileExistsAndExecuteException() throws Exception {
+        // setup files
+        String endPath = "target/test-classes/AppConfiguratorTest";
+        File folder = new File(endPath);
+        if(!folder.exists()){
+            folder.mkdirs();
+        }
+        File file1 = File.createTempFile("hand", ".tmp", folder);
+
+       java.util.Properties props = new java.util.Properties();
+        props.put("testEP." + AppConfigurator.EP_CFGS.irisEndpointClassName.toString(),
+              "edu.iris.wss.endpoints.CmdProcessorIrisEP");
+        props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
+              file1.getPath());
+
+        AppConfigurator appCfg = new AppConfigurator();
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail();
+        } catch (Exception ex) {
+            assert(ex.toString().contains("is not executable"));
+            //  noop - should throw exception
+        }
+
+        file1.setExecutable(true);
+        appCfg.loadConfigurationParameters(props, null);
+    }
+
+    @Test
+    public void testSingletonClassName() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        props.put(AppConfigurator.GL_CFGS.singletonClassName.toString(),
+              "edu.iris.wss.IrisStreamingOutput.TestSingleton");
+
+        AppConfigurator appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
+
+        props.put(AppConfigurator.GL_CFGS.singletonClassName.toString(),
+              "some_singleton_notvalid_name");
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail();
+        } catch (Exception ex) {
+            assert(ex.toString().contains("Could not find"));
             //  noop - should throw exception
         }
     }

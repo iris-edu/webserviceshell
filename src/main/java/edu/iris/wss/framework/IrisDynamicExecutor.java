@@ -20,15 +20,11 @@
 package edu.iris.wss.framework;
 
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
-import edu.iris.wss.endpoints.CmdProcessorIrisEP;
 import edu.iris.wss.framework.FdsnStatus.Status;
-import edu.iris.wss.framework.ParameterTranslator;
-import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.ServiceShellException;
-import edu.iris.wss.framework.SingletonWrapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -47,7 +43,7 @@ public class IrisDynamicExecutor {
     @Context 	SingletonWrapper sw;
 	
 	public IrisDynamicExecutor() {
-        System.out.println("***************&&& IrisDynamicExecutor constr");
+        //System.out.println("***************&&& IrisDynamicExecutor constr");
     }
 
     /**
@@ -62,6 +58,7 @@ public class IrisDynamicExecutor {
      * error handling will call getErrorString.
      * 
      * @return 
+     * @throws java.io.IOException
      */
     public Response doIrisStreaming() throws IOException {
         // when run dynamically, this method does all the abstract methods,
@@ -71,9 +68,7 @@ public class IrisDynamicExecutor {
     
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
-        if (ri.isConfiguredForThisEndpoint()){
-            // noop, continue with ;
-        } else {
+        if (!ri.isThisEndpointConfigured()) {
             shellException(Status.INTERNAL_SERVER_ERROR,
                   "Error, there is no configuration information for"
                         + " endpoint: " + requestedEpName, ri);
@@ -87,7 +82,7 @@ public class IrisDynamicExecutor {
     
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
-        // pulled in to cmd
+        // put into cmd array
         if (iso.getClass().getName().equals(
               edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
             // i.e. if it is a command processing class, there must be
@@ -95,7 +90,8 @@ public class IrisDynamicExecutor {
             String handlerName = ri.appConfig.getHandlerProgram(requestedEpName);
             System.out.println("***************** TBD, handler checking here,"
                   + " or at service.cfg load time, handlerPName: " + handlerName);
-            cmd = new ArrayList<>(Arrays.asList(handlerName.split(" ")));
+            cmd = new ArrayList<>(Arrays.asList(handlerName.split(
+                  Pattern.quote(" "))));
         } else {
             cmd = new ArrayList<>();
         }
