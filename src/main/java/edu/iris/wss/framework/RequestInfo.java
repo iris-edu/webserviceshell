@@ -95,8 +95,8 @@ public  class RequestInfo {
                       + trialEndpoint;
                 System.out.println("^^^^^ msg: " + msg);
                 System.out.println("^^^^^ msg ex: " + ex);
-                ServiceShellException.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                      msg,  ex);
+                ServiceShellException.logAndThrowException(ri,
+                      Status.INTERNAL_SERVER_ERROR, msg,  ex);
             }
 
 

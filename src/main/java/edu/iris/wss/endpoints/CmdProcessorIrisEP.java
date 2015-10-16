@@ -532,7 +532,7 @@ System.out.println("**-- staring cmd while loop");
                                 processingTime,
                                 "killit was called, possible timeout waiting"
                                 + " for data after intial data flow started",
-                                Status.INTERNAL_SERVER_ERROR, null);
+                                Status.INTERNAL_SERVER_ERROR, epName);
                     } else {
                         logUsageMessage(ri, "_summary", totalBytesTransmitted,
                                 processingTime, null, Status.OK, null);
@@ -548,7 +548,7 @@ System.out.println("**-- staring cmd while loop");
                             LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
                             LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
                             rmd.getStart().convertToCalendar().getTime(),
-                            rmd.getEnd().convertToCalendar().getTime(), null);
+                            rmd.getEnd().convertToCalendar().getTime(), epName);
                 }
             }
             
@@ -712,10 +712,10 @@ System.out.println("**-- staring cmd while loop");
                     logUsageMessage(ri, "_KillitInWriteNormal", 0L,
                             processingTime,
                             "killit was called, possible timeout waiting for data after intial data flow started",
-                            Status.INTERNAL_SERVER_ERROR, null);
+                            Status.INTERNAL_SERVER_ERROR, epName);
                 } else {
                     logUsageMessage(ri, null, totalBytesTransmitted,
-                            processingTime, null, Status.OK, null);
+                            processingTime, null, Status.OK, epName);
                 }
             }
 
