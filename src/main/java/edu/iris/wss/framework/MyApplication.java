@@ -21,18 +21,15 @@
 package edu.iris.wss.framework;
 
 import edu.iris.wss.utils.WebUtils;
-import java.util.HashSet;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -44,6 +41,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 public class MyApplication extends ResourceConfig {
     
   public static final Logger logger = Logger.getLogger(MyApplication.class);
+  public static final String CLASS_NAME = MyApplication.class.getSimpleName();
 
   // first thing to run, setup logging, load configuration, etc.
   @Inject
@@ -64,37 +62,49 @@ public class MyApplication extends ResourceConfig {
     // add in classes which have static endpoints via annotations
     register(edu.iris.wss.Wss.class);
 
-    // add in endpoints
-    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion");
+    // add in endpoints  TBD remove soon
+    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
 
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
         addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
-          "doIrisStreaming");
+          "doIrisStreaming", "GET");
+        if (sw.appConfig.isPostEnabled(epName)) {
+            System.out.println("************************ epName: " + epName
+                  + "  isPostEnabled: " + sw.appConfig.isPostEnabled(epName));
+        }
     }
   }
   
   public MyApplication() {
-    System.out.println("*****  MyApplication no-arg constructor");
+    System.out.println("*****  " + CLASS_NAME + " no-arg constructor");
   }
 
-  private void addEndpoint(String epPath, Class epClass, String methodName) {
+  /**
+   * 
+   * @param epName - name of last part of URI path
+   * @param epClass - the class containing the method to respond to a request
+   * @param epMethodName - the method that handles this request
+   * @param httpMethod - usually GET or POST
+   */
+  private void addEndpoint(String epName, Class epClass, String epMethodName,
+        String httpMethod) {
     final Resource.Builder resourceBuilder = Resource.builder();
-    resourceBuilder.path(epPath);
+    resourceBuilder.path(epName);
 
-    final ResourceMethod.Builder methodForGet = resourceBuilder.addMethod("GET");
+    final ResourceMethod.Builder rmBuilder = resourceBuilder.addMethod(httpMethod);
     try {
-        methodForGet.produces(MediaType.TEXT_PLAIN_TYPE)
-              .handledBy(epClass, epClass.getMethod(methodName, null));
+        rmBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
+              .handledBy(epClass, epClass.getMethod(epMethodName, null));
 
     } catch (NoSuchMethodException ex) {
-        String msg = "MyApplication attempted endpoint: " + epPath + "  class: "
+        String msg = CLASS_NAME + " attempted endpoint: " + epName + "  class: "
               + epClass.getName() + "  NoSuchMethodException: " + ex;
         System.out.println(msg);
         logger.error(msg);
     } catch (SecurityException ex) {
-        String msg = "MyApplication attempted endpoint: " + epPath + "  class: "
+        String msg = CLASS_NAME + " attempted endpoint: " + epName + "  class: "
               + epClass.getName() + "  SecurityException: " + ex;
         System.out.println(msg);
         logger.error(msg);
@@ -103,7 +113,7 @@ public class MyApplication extends ResourceConfig {
     final Resource endpointRes = resourceBuilder.build();
     registerResources(endpointRes);
     
-    String msg = "MyApplication added endpoint: " + endpointRes.getPath();
+    String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath();
     System.out.println(msg);
     logger.info(msg);
   }
