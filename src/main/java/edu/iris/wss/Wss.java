@@ -29,11 +29,11 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
-import edu.iris.wss.framework.RequestInfo.CallType;
+////import edu.iris.wss.framework.RequestInfo.CallType;
 
 import org.apache.log4j.Logger;
 
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+////import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
 
@@ -46,7 +46,7 @@ public class Wss {
 
     @Context 	SingletonWrapper sw;
 
-    private RequestInfo ri;
+    //private RequestInfo ri;
     
 	public static final Logger logger = Logger.getLogger(Wss.class);
 	
@@ -57,7 +57,7 @@ public class Wss {
 	@Path("wssstatus")
 	@GET
 	public Response getStatus() {
-        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
         StringBuilder sb = new StringBuilder();
 		sb.append("<HTML><BODY>");
@@ -85,14 +85,12 @@ public class Wss {
         ResponseBuilder builder = Response.status(Status.OK)
               .entity(sb.toString())
               .type("text/html");
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
 	}
-	
-	// [region] Root path documentation handler, version handler and WADL
 
 	private String defDoc(String htmlMarkupMsg) {
-        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 		return "<!DOCTYPE html>"
               + "<html><head>"
               + "<style>"
@@ -131,19 +129,15 @@ public class Wss {
               + "</div>"
               + "</body></html>";
 	}
-	
-	private static boolean isOkString(String s) {
-		return ((s != null) && !s.isEmpty());
-	}
-	
+
     @GET
     public Response rootpath() {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
     	String docUrl = ri.appConfig.getRootServiceDoc();
     	
     	// Dump some default text if no good Service Doc Config
-    	if (!isOkString(docUrl)) {
+    	if (!AppConfigurator.isOkString(docUrl)) {
             String htmlMarkup ="<div>The <b>rootServiceDoc</b> parameter is not"
                   + " set in the service configuration file.</div>"
                   + "<div>You can configure documentation for this service by using"
@@ -152,7 +146,7 @@ public class Wss {
             ResponseBuilder builder = Response.status(Status.OK)
                   .entity(defDoc(htmlMarkup))
                   .type("text/html");
-            addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
         }
     	
@@ -171,7 +165,7 @@ public class Wss {
         	ResponseBuilder builder = Response.status(Status.OK)
                   .entity(defDoc(htmlMarkup))
                   .type("text/html");
-            addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
     	}
     	
@@ -197,53 +191,53 @@ public class Wss {
         ResponseBuilder builder = Response.status(Status.OK)
               .entity(so)
               .type("text/html");
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
    }
     
     @Path("wssversion")
 	@GET @Produces("text/plain")
 	public Response getWssVersion() throws IOException {
-        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
               .entity(AppConfigurator.wssVersion);
 
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 
 		return builder.build();
 	}
 
-    private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
-		if (ri.appConfig.isCorsEnabled()) {
-            // Insert CORS header elements.
-		    rb.header("Access-Control-Allow-Origin", "*");
-
-            // dont add this unless cookies are expected
-//            rb.header("Access-Control-Allow-Credentials", "true");
-
-            // Not setting these at this time - 2015-08-12
-//            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
-//            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-
-            // not clear if needed now, 2015-08-12, but this is how to let client
-            // see what headers are available, although "...Allow-Headers" may be
-            // sufficient
-//            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
-		}
-    }
+//    private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
+//		if (ri.appConfig.isCorsEnabled()) {
+//            // Insert CORS header elements.
+//		    rb.header("Access-Control-Allow-Origin", "*");
+//
+//            // dont add this unless cookies are expected
+////            rb.header("Access-Control-Allow-Credentials", "true");
+//
+//            // Not setting these at this time - 2015-08-12
+////            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
+////            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+//
+//            // not clear if needed now, 2015-08-12, but this is how to let client
+//            // see what headers are available, although "...Allow-Headers" may be
+//            // sufficient
+////            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
+//		}
+//    }
 	
 	@Path("version")
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+    	RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
               .entity(ri.appConfig.getAppVersion());
 
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 
 		return builder.build();
 	}
@@ -251,13 +245,13 @@ public class Wss {
 	@Path("whoami")
 	@GET @Produces("text/plain")
 	public Response getwho() {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
               .entity(request.getRemoteAddr());
 
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 
 		return builder.build();
 	}	
@@ -265,7 +259,7 @@ public class Wss {
 	@Path("application.wadl")
 	@GET @Produces ("application/xml")
 	public Response getWadl() {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	
     	// First check if wadlPath configuration is set.  If so, then stream from that URL.
     	
@@ -281,7 +275,7 @@ public class Wss {
         	} catch (Exception ex) {
         		String errMsg = "Wss - Error getting WADL URL: " + wadlPath + "  ex: "
                       + ex;
-                shellException(adjustByCfg(Status.NO_CONTENT, ri), errMsg);
+                Util.shellException(Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg, ri);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -304,7 +298,7 @@ public class Wss {
             ResponseBuilder builder = Response.status(Status.OK)
                   .type("application/xml")
                   .entity(so);
-            addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri);
     		return builder.build();
     	}
 
@@ -317,7 +311,8 @@ public class Wss {
         String errMsg = "Wss - Error getting default WADL file";
 		try {
 			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(configBase)) {
+			if (AppConfigurator.isOkString(wssConfigDir)
+                  && AppConfigurator.isOkString(configBase)) {
 				if (!wssConfigDir.endsWith("/")) 
 					wssConfigDir += "/";
 				
@@ -332,7 +327,7 @@ public class Wss {
                     ResponseBuilder builder = Response.status(Status.OK)
                           .type("application/xml")
                           .entity(wadlStream);
-                    addCORSHeadersIfConfigured(builder, ri);
+                    Util.addCORSHeadersIfConfigured(builder, ri);
                     return builder.build();
 				} else {
                     errMsg = errMsg + "  wadlFileName: " + wadlFileName;
@@ -345,19 +340,19 @@ public class Wss {
             errMsg = errMsg + "  ex: " + ex;
 		}
 
-        Status status = adjustByCfg(Status.NO_CONTENT, ri);
-        shellException(status, errMsg);
+        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
+        Util.shellException(status, errMsg, ri);
 
         ResponseBuilder builder = Response.status(status)
               .type(MediaType.TEXT_PLAIN);
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
         return builder.build();
 	}
 
 	@Path("v2/swagger")
 	@GET @Produces ({"application/json", "text/plain"})
 	public Response getSwaggerV2Specification() {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
     	
     	// First check if swaggerV2Spec configuration paramter is set.
         // If so, then return stream object from that URL.
@@ -378,7 +373,8 @@ public class Wss {
 //                + "  ex: " + ex);
 //            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
 
-                shellException(adjustByCfg(Status.NO_CONTENT, ri), errMsg);
+                Util.shellException(Util.adjustByCfg(Status.NO_CONTENT, ri),
+                      errMsg, ri);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -403,7 +399,7 @@ public class Wss {
             ResponseBuilder builder = Response.status(Status.OK)
                   .type("application/json")
                   .entity(so);
-            addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri);
     		return builder.build();
     	}
 
@@ -418,7 +414,8 @@ public class Wss {
         String errMsg = "Wss - Error getting default resource file";
 		try {
 			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
-			if (isOkString(wssConfigDir) && isOkString(configBase)) {
+			if (AppConfigurator.isOkString(wssConfigDir)
+                  && AppConfigurator.isOkString(configBase)) {
 				if (!wssConfigDir.endsWith("/")) {
 					wssConfigDir += "/";
                 }
@@ -434,7 +431,7 @@ public class Wss {
                     ResponseBuilder builder = Response.status(Status.OK)
                           .type("application/json")
                           .entity(fileInStream);
-                    addCORSHeadersIfConfigured(builder, ri);
+                    Util.addCORSHeadersIfConfigured(builder, ri);
                     return builder.build();
 				} else {
                     errMsg = errMsg + "  resourceFileName: " + resourceFileName;
@@ -447,214 +444,208 @@ public class Wss {
             errMsg = errMsg + "  ex: " + ex;
 		}
 
-        Status status = adjustByCfg(Status.NO_CONTENT, ri);
-        shellException(status, errMsg);
+        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
+        Util.shellException(status, errMsg, ri);
 
         ResponseBuilder builder = Response.status(status)
               .type(MediaType.TEXT_PLAIN);
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
         return builder.build();
 	}
-	
-	// [end region]
 
-	// [region] Main query entry points GET, POST
-	
-	@POST
-	@Path("queryauth") 
-	public Response postQueryAuth(String pb) {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	ri.postBody = pb;
-    	
-		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
-			shellException(Status.BAD_REQUEST, "POST Method not allowed");
-		
-		ri.statsKeeper.logAuthPost();
-		return processQuery();
-	}
-	 
-	@POST
-	@Path("query")
-	public Response postQuery(String pb) {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	ri.postBody = pb;
-    	
-		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
-			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+////	@POST
+////	@Path("queryauth") 
+////	public Response postQueryAuth(String pb) {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////    	ri.postBody = pb;
+////    	
+////		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
+////			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+////		
+////		ri.statsKeeper.logAuthPost();
+////		return processQuery();
+////	}
+////	 
+////	@POST
+////	@Path("query")
+////	public Response postQuery(String pb) {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////    	ri.postBody = pb;
+////    	
+////		if (! ri.appConfig.isPostEnabled(ri.getEndpointNameForThisRequest())) 
+////			shellException(Status.BAD_REQUEST, "POST Method not allowed");
+////
+////		ri.statsKeeper.logPost();
+////		return processQuery();
+////	}
+////
+////	@GET
+////	@Path("queryauth")
+////	public Response queryAuth() throws Exception {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////
+////    	ri.statsKeeper.logAuthGet();
+////		return processQuery();
+////	}
+////	
+////	@GET 
+////	@Path("query")
+////	public Response query() throws Exception {
+////        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////
+////    	ri.statsKeeper.logGet();
+////		return processQuery();
+////	}
+////	
+////	@GET 
+////	@Path("catalogs")
+////	public Response catalogs() throws Exception {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////    	ri.callType = CallType.CATALOGS;
+////
+////    	ri.statsKeeper.logGet();
+////		return processQuery();
+////	}
+////	
+////	@GET 
+////	@Path("contributors")
+////	public Response contributors() throws Exception {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////    	ri.callType = CallType.CONTRIBUTORS;
+////
+////    	ri.statsKeeper.logGet();
+////		return processQuery();
+////	}	
+////	
+////	@GET 
+////	@Path("counts")
+////	public Response counts() throws Exception {
+////    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+////    	ri.callType = CallType.COUNTS;
+////
+////    	ri.statsKeeper.logGet();
+////		return processQuery();
+////	}	
+////
+////	private Response processQuery() {
+////		if (!ri.appConfig.isValid())
+////			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
+////
+////		return runJava();
+////	}
+////
+////	private Response runJava() {
+////		String className = ri.appConfig.getIrisEndpointClass(ri.getEndpointNameForThisRequest()).getClass().getName();
+////		IrisStreamingOutput iso = null;
+////		
+////		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
+////		ArrayList<String> cmd = null;
+////        System.out.println("***************** className: " + className);
+////        if (className.equals("edu.iris.wss.endpoints.CmdProcessIrisEP")) { // i.e. if it is a command based, use CmdProcessing class
+////            cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
+////        } else {
+////            cmd = new ArrayList<String>();
+////        }
+////
+////		try {
+////			ParameterTranslator.parseQueryParams(cmd, ri, "deprecated");
+////		} catch (Exception e) {
+////			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
+////		}
+////                System.out.println("************ja*after cmd.len: " + cmd.size());
+////                System.out.println("************ja*after cmd: " + cmd);
+////                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
+////
+////		
+////		try {
+////    		Class<?> soClass;
+////    		soClass = Class.forName(className);
+////			iso = (IrisStreamingOutput) soClass.newInstance();
+////		} catch (ClassNotFoundException e) {
+////			String err = "Could not find class with name: " + className;
+////			logger.fatal(err);
+////			throw new RuntimeException(err);
+////		} catch (InstantiationException e) {
+////			String err = "Could not instantiate class: " + className;
+////			logger.fatal(err);
+////			throw new RuntimeException(err);
+////		} catch (IllegalAccessException e) {
+////			String err = "Illegal access while instantiating class: " + className;
+////			logger.fatal(err);
+////			throw new RuntimeException(err);
+////		}
+////        
+////        if (ri.request.getMethod().equals("HEAD")) {
+////            // return to Jersey before any more processing
+////            String noData = "";
+////            ResponseBuilder builder = Response.status(Status.OK)
+////                  .type("text/plain")
+////                  .entity(noData);
+////            addCORSHeadersIfConfigured(builder, ri);
+////            return builder.build();
+////        }
+////		
+////		iso.setRequestInfo(ri);
+////		
+////		// Wait for an exit code, expecting the start of data transmission
+////        // or exception or timeout.
+////		Status status = iso.getResponse();
+////        
+////		if (status == null) {
+////            shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
+////        }
+////        
+////        status = adjustByCfg(status, ri);
+////        if (status != Status.OK) {
+////            newerShellException(status, ri, iso);
+////		}
+////
+////        String epName = "tbd_getrealone";
+////        String mediaType = null;
+////        String outputTypeKey = null;
+////        try {
+////            outputTypeKey = ri.getPerRequestOutputTypeKey(epName);
+////            mediaType = ri.getPerRequestMediaType(epName);
+////        } catch (Exception ex) {
+////            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+////                    + " mediaTypeKey: " + outputTypeKey
+////                    + ServiceShellException.getErrorString(ex));
+////        }
+////        
+////        ResponseBuilder builder = Response.status(status)
+////              .type(mediaType)
+////              .entity(iso);
+////        try {
+////            builder.header("Content-Disposition", ri.createContentDisposition(epName));
+////        } catch (Exception ex) {
+////            shellException(Status.INTERNAL_SERVER_ERROR,
+////                  "Error creating Content-Disposition header value"
+////                        + " endpoint: " + epName
+////                        + ServiceShellException.getErrorString(ex));
+////        }
+////		
+////		addCORSHeadersIfConfigured(builder, ri);
+////	    
+////		return builder.build();
+////	}
 
-		ri.statsKeeper.logPost();
-		return processQuery();
-	}
-
-	@GET
-	@Path("queryauth")
-	public Response queryAuth() throws Exception {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-
-    	ri.statsKeeper.logAuthGet();
-		return processQuery();
-	}
-	
-	@GET 
-	@Path("query")
-	public Response query() throws Exception {
-        ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-
-    	ri.statsKeeper.logGet();
-		return processQuery();
-	}
-	
-	@GET 
-	@Path("catalogs")
-	public Response catalogs() throws Exception {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	ri.callType = CallType.CATALOGS;
-
-    	ri.statsKeeper.logGet();
-		return processQuery();
-	}
-	
-	@GET 
-	@Path("contributors")
-	public Response contributors() throws Exception {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	ri.callType = CallType.CONTRIBUTORS;
-
-    	ri.statsKeeper.logGet();
-		return processQuery();
-	}	
-	
-	@GET 
-	@Path("counts")
-	public Response counts() throws Exception {
-    	ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	ri.callType = CallType.COUNTS;
-
-    	ri.statsKeeper.logGet();
-		return processQuery();
-	}	
-
-	private Response processQuery() {
-		if (!ri.appConfig.isValid())
-			shellException(Status.INTERNAL_SERVER_ERROR, "Application Configuration Issue");
-
-		return runJava();
-	}
-	
-	// [end region]
-
-	private Response runJava() {
-		String className = ri.appConfig.getIrisEndpointClass(ri.getEndpointNameForThisRequest()).getClass().getName();
-		IrisStreamingOutput iso = null;
-		
-		// Run the parameter translator to test consistency.  We need an arraylist, but it's not used.
-		ArrayList<String> cmd = null;
-        System.out.println("***************** className: " + className);
-        if (className.equals("edu.iris.wss.endpoints.CmdProcessIrisEP")) { // i.e. if it is a command based, use CmdProcessing class
-            cmd = new ArrayList<String>(Arrays.asList("/earthcube/tomcat-8091-7.0.56/wss_config/dist_intermagnet/intermagnetHandlerGetData.groovy".split(" ")));
-        } else {
-            cmd = new ArrayList<String>();
-        }
-
-		try {
-			ParameterTranslator.parseQueryParams(cmd, ri, "deprecated");
-		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage());
-		}
-                System.out.println("************ja*after cmd.len: " + cmd.size());
-                System.out.println("************ja*after cmd: " + cmd);
-                if (cmd.size() > 0) {System.out.println("************ja*after cmd.get(0): " + cmd.get(0));}
-
-		
-		try {
-    		Class<?> soClass;
-    		soClass = Class.forName(className);
-			iso = (IrisStreamingOutput) soClass.newInstance();
-		} catch (ClassNotFoundException e) {
-			String err = "Could not find class with name: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		} catch (InstantiationException e) {
-			String err = "Could not instantiate class: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		} catch (IllegalAccessException e) {
-			String err = "Illegal access while instantiating class: " + className;
-			logger.fatal(err);
-			throw new RuntimeException(err);
-		}
-        
-        if (ri.request.getMethod().equals("HEAD")) {
-            // return to Jersey before any more processing
-            String noData = "";
-            ResponseBuilder builder = Response.status(Status.OK)
-                  .type("text/plain")
-                  .entity(noData);
-            addCORSHeadersIfConfigured(builder, ri);
-            return builder.build();
-        }
-		
-		iso.setRequestInfo(ri);
-		
-		// Wait for an exit code, expecting the start of data transmission
-        // or exception or timeout.
-		Status status = iso.getResponse();
-        
-		if (status == null) {
-            shellException(Status.INTERNAL_SERVER_ERROR, "Null status from StreamingOutput class");
-        }
-        
-        status = adjustByCfg(status, ri);
-        if (status != Status.OK) {
-            newerShellException(status, ri, iso);
-		}
-
-        String epName = "tbd_getrealone";
-        String mediaType = null;
-        String outputTypeKey = null;
-        try {
-            outputTypeKey = ri.getPerRequestOutputTypeKey(epName);
-            mediaType = ri.getPerRequestMediaType(epName);
-        } catch (Exception ex) {
-            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
-                    + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex));
-        }
-        
-        ResponseBuilder builder = Response.status(status)
-              .type(mediaType)
-              .entity(iso);
-        try {
-            builder.header("Content-Disposition", ri.createContentDisposition(epName));
-        } catch (Exception ex) {
-            shellException(Status.INTERNAL_SERVER_ERROR,
-                  "Error creating Content-Disposition header value"
-                        + " endpoint: " + epName
-                        + ServiceShellException.getErrorString(ex));
-        }
-		
-		addCORSHeadersIfConfigured(builder, ri);
-	    
-		return builder.build();
-	}
-
-	private void shellException(Status status, String message) {
-		ServiceShellException.logAndThrowException(ri, status, message);       
-	}
-	
-	private static void newerShellException(Status status, RequestInfo ri, 
-            IrisStreamingOutput iso) {
-		ServiceShellException.logAndThrowException(ri, status,
-                status.toString() + iso.getErrorString());
-	}
-
-    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
-        if (trialStatus == Status.NO_CONTENT) {
-            // override 204 if configured to do so
-            if (ri.perRequestUse404for204) {
-                return Status.NOT_FOUND;
-            }
-        }
-        return trialStatus;
-    }
+//	private void shellException(Status status, String message) {
+//		ServiceShellException.logAndThrowException(ri, status, message);       
+//	}
+//	
+//////	private static void newerShellException(Status status, RequestInfo ri, 
+//////            IrisStreamingOutput iso) {
+//////		ServiceShellException.logAndThrowException(ri, status,
+//////                status.toString() + iso.getErrorString());
+//////	}
+//
+//    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
+//        if (trialStatus == Status.NO_CONTENT) {
+//            // override 204 if configured to do so
+//            if (ri.perRequestUse404for204) {
+//                return Status.NOT_FOUND;
+//            }
+//        }
+//        return trialStatus;
+//    }
 }

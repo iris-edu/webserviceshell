@@ -69,7 +69,7 @@ public class IrisDynamicExecutor {
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
         if (!ri.isThisEndpointConfigured()) {
-            shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
                   "Error, there is no configuration information for"
                         + " endpoint: " + requestedEpName, ri);
         }
@@ -100,20 +100,22 @@ public class IrisDynamicExecutor {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
-			shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage(), ri);
+			Util.shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage(), ri);
 		}
 
         System.out.println("** doIrisStreaming, cmd len: " + cmd.size()
               + " cmd: " + cmd);
             
         if (ri.request.getMethod().equals("HEAD")) {
+            System.out.println("** doIrisStreaming, returning head request: "
+                  + " cmd: " + cmd);
             // return to Jersey before any more processing
             String noData = "";
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain")
                   .entity(noData);
             
-            addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri);
             return builder.build();
         }
 
@@ -125,13 +127,13 @@ public class IrisDynamicExecutor {
         System.out.println("** doIrisStreaming after iso.getResponse, status: "
               + status);
     	if (status == null) {
-            shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
                   "Null status from IrisStreamingOutput class", ri);
         }
         
-        status = adjustByCfg(status, ri);
+        status = Util.adjustByCfg(status, ri);
         if (status != Status.OK) {
-            newerShellException(status, ri, iso);
+            Util.newerShellException(status, ri, iso);
 		}
 
         String mediaType = null;
@@ -140,7 +142,7 @@ public class IrisDynamicExecutor {
             outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
             mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
-            shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+            Util.shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
                     + " mediaTypeKey: " + outputTypeKey
                     + ServiceShellException.getErrorString(ex), ri);
         }
@@ -152,52 +154,52 @@ public class IrisDynamicExecutor {
         try {
             builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
         } catch (Exception ex) {
-            shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
                         + " endpoint: " + requestedEpName
                         + ServiceShellException.getErrorString(ex), ri);
         }
 
-        addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
-    
-    private void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
-		if (ri.appConfig.isCorsEnabled()) {
-            // Insert CORS header elements.
-		    rb.header("Access-Control-Allow-Origin", "*");
-
-            // dont add this unless cookies are expected
-//            rb.header("Access-Control-Allow-Credentials", "true");
-
-            // Not setting these at this time - 2015-08-12
-//            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
-//            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-
-            // not clear if needed now, 2015-08-12, but this is how to let client
-            // see what headers are available, although "...Allow-Headers" may be
-            // sufficient
-//            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
-		}
-    }
-	
-	private void shellException(Status status, String message, RequestInfo ri) {
-		ServiceShellException.logAndThrowException(ri, status, message);       
-	}
-	
-	private static void newerShellException(Status status, RequestInfo ri, 
-            IrisStreamingOutput iso) {
-		ServiceShellException.logAndThrowException(ri, status,
-                status.toString() + iso.getErrorString());
-	}
-
-    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
-        if (trialStatus == Status.NO_CONTENT) {
-            // override 204 if configured to do so
-            if (ri.perRequestUse404for204) {
-                return Status.NOT_FOUND;
-            }
-        }
-        return trialStatus;
-    }
+////    
+////    private void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
+////		if (ri.appConfig.isCorsEnabled()) {
+////            // Insert CORS header elements.
+////		    rb.header("Access-Control-Allow-Origin", "*");
+////
+////            // dont add this unless cookies are expected
+//////            rb.header("Access-Control-Allow-Credentials", "true");
+////
+////            // Not setting these at this time - 2015-08-12
+//////            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
+//////            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+////
+////            // not clear if needed now, 2015-08-12, but this is how to let client
+////            // see what headers are available, although "...Allow-Headers" may be
+////            // sufficient
+//////            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
+////		}
+////    }
+////	
+////	private void shellException(Status status, String message, RequestInfo ri) {
+////		ServiceShellException.logAndThrowException(ri, status, message);       
+////	}
+////	
+////	private static void newerShellException(Status status, RequestInfo ri, 
+////            IrisStreamingOutput iso) {
+////		ServiceShellException.logAndThrowException(ri, status,
+////                status.toString() + iso.getErrorString());
+////	}
+////
+////    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
+////        if (trialStatus == Status.NO_CONTENT) {
+////            // override 204 if configured to do so
+////            if (ri.perRequestUse404for204) {
+////                return Status.NOT_FOUND;
+////            }
+////        }
+////        return trialStatus;
+////    }
 }
