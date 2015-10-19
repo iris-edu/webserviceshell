@@ -47,6 +47,7 @@ import edu.sc.seis.seisFile.mseed.SeedRecord;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	public static final Logger logger = Logger.getLogger(CmdProcessorIrisEP.class);
@@ -103,7 +104,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
         String handlerName = ri.appConfig.getHandlerProgram(epName);
 
         ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
-              handlerName.split(" ")));
+              handlerName.split(Pattern.quote(" "))));
         try {
             // this modifies the cmd list and adds each parameter.
 			ParameterTranslator.parseQueryParams(cmd, ri, epName);

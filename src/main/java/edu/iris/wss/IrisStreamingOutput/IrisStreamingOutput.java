@@ -20,20 +20,15 @@
 package edu.iris.wss.IrisStreamingOutput;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
-import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.SingletonWrapper;
 import edu.iris.wss.utils.LoggerUtils;
-import edu.iris.wss.utils.WebUtils;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;

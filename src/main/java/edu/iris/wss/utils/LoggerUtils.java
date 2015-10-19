@@ -276,7 +276,7 @@ public class LoggerUtils {
 	}
 	
 	private static void append(StringBuffer sb, String s) {
-		if ((s != null) && !s.isEmpty()) 
+		if (AppConfigurator.isOkString(s)) 
 			sb.append(s);
 		sb.append("|");
 	}

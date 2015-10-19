@@ -90,24 +90,13 @@ public  class RequestInfo {
                     ri.isWriteToMiniseed = true;
                 }
             } catch (Exception ex) {
-                String msg = "Service configuration problem,"
-                      + " possibly missing a type definition for endpointName: "
+                String msg = "Service configuration problem, possibly missing"
+                      + " type definition for MINISEED for endpointName: "
                       + trialEndpoint;
                 System.out.println("^^^^^ msg: " + msg);
                 System.out.println("^^^^^ msg ex: " + ex);
                 ServiceShellException.logAndThrowException(ri,
                       Status.INTERNAL_SERVER_ERROR, msg,  ex);
-            }
-
-
-            // TBD since this is configurartion, look at doing this once at startup.
-            if ((ri.appConfig.getHandlerProgram(trialEndpoint) == null) && 
-                    (ri.appConfig.getIrisEndpointClass(trialEndpoint) == null)) {
-                String msg = "Service configuration problem,"
-                        + " handler program and StreamingOutputClassName not defined";
-                System.out.println("^^^^^ msg: " + msg);
-                ServiceShellException.logAndThrowException(ri,
-                        Status.INTERNAL_SERVER_ERROR, msg);
             }
         }
         

@@ -62,8 +62,8 @@ public class ParameterTranslator {
           String epName)
 			throws Exception {
 
-		List<String> keys = new ArrayList<String>();
-		List<String> keysWithNoValue = new ArrayList<String>();
+		List<String> keys = new ArrayList<>();
+		List<String> keysWithNoValue = new ArrayList<>();
 
         // for Jersey 2.x, the structure returned from getQueryParameters()
         // is now immutable, so make a local copy

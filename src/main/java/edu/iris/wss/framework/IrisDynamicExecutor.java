@@ -87,9 +87,10 @@ public class IrisDynamicExecutor {
               edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
             // i.e. if it is a command processing class, there must be
             // a command handler
+            // Note: not error checking file handler existance or if
+            //       executable, this should be done when the configuration
+            //       is loaded at startup.
             String handlerName = ri.appConfig.getHandlerProgram(requestedEpName);
-            System.out.println("***************** TBD, handler checking here,"
-                  + " or at service.cfg load time, handlerPName: " + handlerName);
             cmd = new ArrayList<>(Arrays.asList(handlerName.split(
                   Pattern.quote(" "))));
         } else {

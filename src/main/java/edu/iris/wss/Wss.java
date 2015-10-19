@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.framework.*;
 import edu.iris.wss.utils.WebUtils;
-import java.util.logging.Level;
 
 @Path ("/")
 public class Wss {
