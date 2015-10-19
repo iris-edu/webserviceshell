@@ -68,11 +68,15 @@ public class MyApplication extends ResourceConfig {
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
+
+        // Note: HEAD seems to be allowed by default
         addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
           "doIrisStreaming", "GET");
         if (sw.appConfig.isPostEnabled(epName)) {
             System.out.println("************************ epName: " + epName
                   + "  isPostEnabled: " + sw.appConfig.isPostEnabled(epName));
+            addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
+                  "doIrisStreaming", "POST");
         }
     }
   }
