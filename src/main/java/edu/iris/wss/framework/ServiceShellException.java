@@ -41,6 +41,8 @@ public class ServiceShellException extends WebApplicationException {
 	}
 
     public ServiceShellException(final Status status, final String message) {
+        // Note: when running in junit with Grizzley server, the content in
+        //       message is not passed threw to the end reponse shown externally
         super(new Throwable("throwable - " + message), Response.status(status).
            entity(message + "\n").type("text/plain").build());
     }

@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
@@ -67,6 +68,9 @@ public class WssTest  {
     @BeforeClass
     public static void setUpClass() throws IOException {;
         Map<String, String> initParams = new HashMap<>();
+        // Note: by default, SingletonWrapper, when created and called
+        //       in MyApplication, will get configuration information
+        //       from META-INF cfg files.
         initParams.put(
             ServletProperties.JAXRS_APPLICATION_CLASS,
             MyApplication.class.getName());
@@ -81,7 +85,7 @@ public class WssTest  {
         System.setProperty(WebUtils.wssConfigDirSignature,
             "target/test-classes");
         server.start();
-        System.out.println("********** started GrizzlyWebContainerFactory"
+        System.out.println("********** started GrizzlyWebContainerFactory in class: "
               + WssTest.class.getName());
 
         // uncomment this code for manual test of server, e.g. mvn clean install
@@ -116,7 +120,6 @@ public class WssTest  {
         String testMsg = response.readEntity(String.class);
         assertEquals(200, response.getStatus());
         assertTrue(testMsg.equals(AppConfigurator.wssVersion));
-        System.out.println("+++ *** wssversion testMsg: " + testMsg);
     }
 
     @Test
@@ -134,7 +137,6 @@ public class WssTest  {
         assertTrue(
             responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
              + "</TD>") > -1);
-        System.out.println("+++ *** status1 testMsg");
     }
 
     @Test
@@ -157,7 +159,6 @@ public class WssTest  {
         assertTrue(
             responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
              + "</TD>") > -1);
-        System.out.println("+++ *** status2 testMsg");
     }
     
     @Test
@@ -166,10 +167,35 @@ public class WssTest  {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
         Response response = webTarget.path("").request().get();
-        String responseMsg = response.readEntity(String.class);
 
         // lightweigh test, just check status, it should return default doc page
-        System.out.println("*** responseMsg3: " + responseMsg);
         assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testPost1() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        final String TEST_STR = "some-post-data-text";
+        Response response = webTarget.path("queryEPpostecho").request()
+              .post(Entity.text(TEST_STR));
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        assertTrue(responseMsg.equals(TEST_STR));
+    }
+
+    @Test
+    public void testPost2() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        final String TEST_STR = "some-post-data2-text";
+        Response response = webTarget.path("queryEP").request()
+              .post(Entity.text(TEST_STR));
+        String responseMsg = response.readEntity(String.class);
+
+        System.out.println("*** ------------- responseMsg: " + responseMsg);
+//        assertEquals(200, response.getStatus());
+//        assertTrue(responseMsg.equals(TEST_STR));
     }
 }

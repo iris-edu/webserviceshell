@@ -73,10 +73,13 @@ public class MyApplication extends ResourceConfig {
         addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
           "doIrisStreaming", "GET");
         if (sw.appConfig.isPostEnabled(epName)) {
-            System.out.println("************************ epName: " + epName
-                  + "  isPostEnabled: " + sw.appConfig.isPostEnabled(epName));
             addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
                   "doIrisStreaming", "POST");
+
+            // temporary test
+            addEndpoint(epName + "postecho",
+                  edu.iris.wss.framework.IrisDynamicExecutor.class,
+                  "echoPostString", "POST");
         }
     }
   }
@@ -117,7 +120,8 @@ public class MyApplication extends ResourceConfig {
     final Resource endpointRes = resourceBuilder.build();
     registerResources(endpointRes);
     
-    String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath();
+    String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath()
+          + "  httpMethod: " + httpMethod;
     System.out.println(msg);
     logger.info(msg);
   }

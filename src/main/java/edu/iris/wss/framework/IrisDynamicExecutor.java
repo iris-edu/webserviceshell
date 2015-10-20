@@ -22,15 +22,18 @@ package edu.iris.wss.framework;
 import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
+import org.glassfish.jersey.server.ContainerRequest;
 
 public class IrisDynamicExecutor {
 	public static final Logger logger = Logger.getLogger(IrisDynamicExecutor.class);
@@ -41,9 +44,60 @@ public class IrisDynamicExecutor {
     @Context 	HttpHeaders requestHeaders;
 
     @Context 	SingletonWrapper sw;
-	
+
+    @Context    ContainerRequestContext containerRequestContext;
+
 	public IrisDynamicExecutor() {
         //System.out.println("***************&&& IrisDynamicExecutor constr");
+    }
+
+    public Response echoPostString() throws IOException {
+        // when run dynamically, this method does all the abstract methods,
+        // so ri needs to be set here, e.e first
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
+              requestHeaders);
+
+        String requestedEpName = ri.getEndpointNameForThisRequest();
+
+        if (!ri.isThisEndpointConfigured()) {
+//            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+//                  "Error, there is no configuration information for"
+//                        + " endpoint: " + requestedEpName, ri);
+            System.out.println("* echoPostString warning, no configuration for endpoint: "
+                  + requestedEpName);
+        }
+
+        System.out.println("* echoPostString method: " + containerRequestContext.getMethod());
+        System.out.println("* echoPostString toString: " + containerRequestContext.toString());
+        System.out.println("* echoPostString getLength: " + containerRequestContext.getLength());
+
+//        String postContent = ((ContainerRequest) containerRequestContext).readEntity(String.class);
+//        System.out.println("* echoPostString readEntity: " + postContent);
+
+        // cannot do both readEntity and read InputStream
+		StringBuilder sb = new StringBuilder(2048);
+
+        InputStream is = containerRequestContext.getEntityStream();
+		byte [] buffer = new byte[1024];
+
+		try {
+			int nRead;
+			while ((nRead = is.read(buffer, 0, buffer.length)) != -1) {
+				sb.append(new String(buffer, 0, nRead));
+			}
+		} catch(IOException ex) {
+			System.out.println("Got IO exception in doIrisStreamin2, ex: " + ex);
+		} finally {
+			try{ is.close(); } catch( Exception ex) {;}
+		}
+
+        System.out.println("* echoPostString entityStream: " + sb.toString());
+
+        Response.ResponseBuilder builder = Response.status(Status.OK)
+                  .type("text/plain")
+                  .entity(sb.toString());
+
+        return builder.build();
     }
 
     /**
@@ -65,7 +119,7 @@ public class IrisDynamicExecutor {
         // so ri needs to be set here, e.e first
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
               requestHeaders);
-    
+
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
         if (!ri.isThisEndpointConfigured()) {
@@ -74,12 +128,25 @@ public class IrisDynamicExecutor {
                         + " endpoint: " + requestedEpName, ri);
         }
 
+        System.out.println("* dynm1 method: " + containerRequestContext.getMethod());
+        System.out.println("* dynm1 toString: " + containerRequestContext.toString());
+        System.out.println("* dynm1 getLength: " + containerRequestContext.getLength());
+
+        if (containerRequestContext.getMethod().equals("POST")) {
+            if (containerRequestContext != null) {
+                ri.postBody = ((ContainerRequest) containerRequestContext)
+                      .readEntity(String.class);
+            } else {
+                ri.postBody = "";
+            }
+        }
+
 		ArrayList<String> cmd = null;
 
         // No object existance check done here as it should have been
         // done when the configuration parameters were loaded
         IrisStreamingOutput iso = ri.appConfig.getIrisEndpointClass(requestedEpName);
-    
+
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
         // put into cmd array
@@ -96,7 +163,7 @@ public class IrisDynamicExecutor {
         } else {
             cmd = new ArrayList<>();
         }
-        
+
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
@@ -120,7 +187,6 @@ public class IrisDynamicExecutor {
         }
 
         iso.setRequestInfo(ri);
-
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		Status status = iso.getResponse();
@@ -130,7 +196,7 @@ public class IrisDynamicExecutor {
             Util.shellException(Status.INTERNAL_SERVER_ERROR,
                   "Null status from IrisStreamingOutput class", ri);
         }
-        
+
         status = Util.adjustByCfg(status, ri);
         if (status != Status.OK) {
             Util.newerShellException(status, ri, iso);

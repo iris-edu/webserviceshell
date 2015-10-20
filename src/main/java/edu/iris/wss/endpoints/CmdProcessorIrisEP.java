@@ -183,8 +183,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 
 			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"IOException when starting handler: "
-                          + processBuilder.command());
-			// + ioe.getMessage());
+                          + processBuilder.command(), ioe);
 		}
 
 		ReschedulableTimer rt = new ReschedulableTimer(
