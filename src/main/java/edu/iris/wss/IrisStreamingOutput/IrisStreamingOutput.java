@@ -46,7 +46,7 @@ public abstract class IrisStreamingOutput implements StreamingOutput {
 	protected RequestInfo ri;
 
 	// These are helper routines as part of the basic interface IrisStreamingOutput
-	   public static void logUsageMessage(RequestInfo ri, String appSuffix,
+    public static void logUsageMessage(RequestInfo ri, String appSuffix,
           Long dataSize, Long processTime,
           String errorType, Status httpStatus, String extraText,
           String network, String station, String location, String channel,

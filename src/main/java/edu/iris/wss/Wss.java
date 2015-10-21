@@ -64,9 +64,15 @@ public class Wss {
 		sb.append("<TABLE BORDER=2 cellpadding='2' style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH COLSPAN=\"2\">Servlet Environment</TH></TR>");
-		sb.append("<TR><TD>" + "URL" + "</TD><TD>" + request.getRequestURI() + "</TD></TR>");
-		sb.append("<TR><TD>" + "Host" + "</TD><TD>" + WebUtils.getHost(request) + "</TD></TR>");
-		sb.append("<TR><TD>" + "Port" + "</TD><TD>" + WebUtils.getPort(request) + "</TD></TR>");
+		sb.append("<TR><TD>" + "URL" + "</TD><TD>")
+              .append(request.getRequestURI())
+              .append("</TD></TR>");
+		sb.append("<TR><TD>" + "Host" + "</TD><TD>")
+              .append(WebUtils.getHost(request))
+              .append("</TD></TR>");
+		sb.append("<TR><TD>" + "Port" + "</TD><TD>")
+              .append(WebUtils.getPort(request))
+              .append("</TD></TR>");
 		sb.append("</TABLE>");
 
 		sb.append("<br/>");
@@ -226,7 +232,7 @@ public class Wss {
 //		}
 //    }
 	
-	@Path("version")
+	@Path("appversion")
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
     	RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);

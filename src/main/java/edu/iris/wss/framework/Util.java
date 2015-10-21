@@ -40,7 +40,7 @@ public class Util {
 	public static void newerShellException(FdsnStatus.Status status, RequestInfo ri, 
             IrisStreamingOutput iso) {
 		ServiceShellException.logAndThrowException(ri, status,
-                status.toString() + iso.getErrorString());
+                status.toString() + ". " + iso.getErrorString());
 	}
 
     public static FdsnStatus.Status adjustByCfg(FdsnStatus.Status trialStatus, RequestInfo ri) {
