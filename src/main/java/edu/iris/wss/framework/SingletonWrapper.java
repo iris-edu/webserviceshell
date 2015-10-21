@@ -69,6 +69,9 @@ public class SingletonWrapper {
     	}
 
         paramConfig = getParamConfig(appConfig, configFileBase);
+
+        // the singleton is validated and created by appConfig
+        singleton = appConfig.getIrisSingleton();
 	}
 
     private ParamConfigurator getParamConfig(AppConfigurator appCfg,

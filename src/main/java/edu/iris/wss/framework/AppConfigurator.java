@@ -63,7 +63,9 @@ public class AppConfigurator {
 
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
-    
+
+    private IrisSingleton singleton = null;
+
     public AppConfigurator() {
         init();
     }
@@ -181,9 +183,13 @@ public class AppConfigurator {
     public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.loggingMethod.toString()); }
     public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())); }
     public String getSingletonClassName() { return (String)globals.get(GL_CFGS.singletonClassName.toString()); }
-    
+
 	public String getWssVersion() { return wssVersion; }
-    
+
+    public IrisSingleton getIrisSingleton() {
+        return singleton;
+    }
+
 //    public String getIrisEndpointClassName(String epName) throws Exception {
 //        if (endpoints.containsKey(epName)) {
 //            return endpoints.get(epName).get(EP_CFGS.irisEndpointClassName).toString();
@@ -538,7 +544,11 @@ public class AppConfigurator {
                     // should be String type if here
                     if (eKey.equals(GL_CFGS.singletonClassName)) {
                         if (isOkString(newVal)) {
-                            getIrisSingletonInstance(newVal);
+                            // Note: in the case of station, and maybe others,
+                            //       this will take a long time because the
+                            //       station.main sinlgeton is loading db
+                            //       content into cache.
+                            singleton = getIrisSingletonInstance(newVal);
                         }
                     }
                     cfgs.put(key, newVal);
