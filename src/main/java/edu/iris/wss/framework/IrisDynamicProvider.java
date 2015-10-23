@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -19,14 +19,20 @@
 
 package edu.iris.wss.framework;
 
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.provider.IrisProcessingResult;
+import edu.iris.wss.provider.IrisProcessor;
+import edu.iris.wss.provider.IrisStreamingOutput;
+import edu.iris.wss.endpoints.SwaggerSpecResource;
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -35,8 +41,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ContainerRequest;
 
-public class IrisDynamicExecutor {
-	public static final Logger logger = Logger.getLogger(IrisDynamicExecutor.class);
+public class IrisDynamicProvider {
+	public static final Logger logger = Logger.getLogger(IrisDynamicProvider.class);
 
     @Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
@@ -47,7 +53,7 @@ public class IrisDynamicExecutor {
 
     @Context    ContainerRequestContext containerRequestContext;
 
-	public IrisDynamicExecutor() {
+	public IrisDynamicProvider() {
         //System.out.println("***************&&& IrisDynamicExecutor constr");
     }
 
@@ -128,9 +134,9 @@ public class IrisDynamicExecutor {
                         + " endpoint: " + requestedEpName, ri);
         }
 
-        System.out.println("* dynm1 method: " + containerRequestContext.getMethod());
-        System.out.println("* dynm1 toString: " + containerRequestContext.toString());
-        System.out.println("* dynm1 getLength: " + containerRequestContext.getLength());
+        System.out.println("* doIrisStreaming method: " + containerRequestContext.getMethod());
+        System.out.println("* doIrisStreaming toString: " + containerRequestContext.toString());
+        System.out.println("* doIrisStreaming getLength: " + containerRequestContext.getLength());
 
         if (containerRequestContext.getMethod().equals("POST")) {
             if (containerRequestContext != null) {
@@ -145,7 +151,7 @@ public class IrisDynamicExecutor {
 
         // No object existance check done here as it should have been
         // done when the configuration parameters were loaded
-        IrisStreamingOutput iso = ri.appConfig.getIrisEndpointClass(requestedEpName);
+        IrisStreamingOutput iso = (IrisStreamingOutput)ri.appConfig.getIrisEndpointClass(requestedEpName);
 
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
@@ -167,7 +173,7 @@ public class IrisDynamicExecutor {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
-			Util.shellException(Status.BAD_REQUEST, "Wss - " + e.getMessage(), ri);
+			Util.shellException(Status.BAD_REQUEST, "doIrisStreaming - " + e.getMessage(), ri);
 		}
 
         System.out.println("** doIrisStreaming, cmd len: " + cmd.size()
@@ -268,4 +274,104 @@ public class IrisDynamicExecutor {
 ////        }
 ////        return trialStatus;
 ////    }
+
+    public Response doIrisProcessing() throws Exception {
+        // when run dynamically, this method does all the abstract methods,
+        // so ri needs to be set here, e.e first
+        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
+              requestHeaders);
+
+        String requestedEpName = ri.getEndpointNameForThisRequest();
+
+        if (!ri.isThisEndpointConfigured()) {
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Error, there is no configuration information for"
+                        + " endpoint: " + requestedEpName, ri);
+        }
+
+        System.out.println("* doIrisProcessing method: " + containerRequestContext.getMethod());
+        System.out.println("* doIrisProcessing toString: " + containerRequestContext.toString());
+        System.out.println("* doIrisProcessing getLength: " + containerRequestContext.getLength());
+
+        if (containerRequestContext.getMethod().equals("POST")) {
+            if (containerRequestContext != null) {
+                ri.postBody = ((ContainerRequest) containerRequestContext)
+                      .readEntity(String.class);
+            } else {
+                ri.postBody = "";
+            }
+        }
+
+		ArrayList<String> cmd = null;
+
+        // No object existance check done here as it should have been
+        // done when the configuration parameters were loaded
+        IrisProcessor isdo = new SwaggerSpecResource(); //ri.appConfig.getIrisEndpointClass(requestedEpName);
+
+            cmd = new ArrayList<>();
+
+		try {
+			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
+		} catch (Exception e) {
+			Util.shellException(Status.BAD_REQUEST, "doIrisProcessing - " + e.getMessage(), ri);
+		}
+
+        System.out.println("** doIrisProcessing, cmd len: " + cmd.size()
+              + " cmd: " + cmd);
+
+        if (ri.request.getMethod().equals("HEAD")) {
+            System.out.println("** doIrisProcessing, returning head request: "
+                  + " cmd: " + cmd);
+            // return to Jersey before any more processing
+            Response.ResponseBuilder builder = Response.status(Status.OK)
+                  .type("text/plain");
+
+            Util.addCORSHeadersIfConfigured(builder, ri);
+            return builder.build();
+        }
+
+		// Wait for an exit code, expecting the start of data transmission
+        // or exception or timeout.
+		IrisProcessingResult irr = isdo.getProcessingResults(ri,
+              WebUtils.getConfigFileBase(context));
+
+        System.out.println("** doIrisStreaming after iso.getResponse, status: "
+              + irr.fdsnSS);
+        if (irr.fdsnSS == null) {
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Null status from IrisStreamingOutput class", ri);
+        }
+
+        Status status = Util.adjustByCfg(irr.fdsnSS, ri);
+        if (status != Status.OK) {
+            Util.newerShellException(status, ri, isdo);
+		}
+
+        String mediaType = irr.mediaType.toString(); //null;
+        String outputTypeKey = null;
+        try {
+            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
+    //        mediaType = ri.getPerRequestMediaType(requestedEpName);
+        } catch (Exception ex) {
+            Util.shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
+                    + " mediaTypeKey: " + outputTypeKey
+                    + ServiceShellException.getErrorString(ex), ri);
+        }
+
+        Response.ResponseBuilder builder = Response.status(status)
+              .type(mediaType)
+              .entity(irr.entity);
+
+        try {
+            builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
+        } catch (Exception ex) {
+            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+                  "Error creating Content-Disposition header value"
+                        + " endpoint: " + requestedEpName
+                        + ServiceShellException.getErrorString(ex), ri);
+        }
+
+        Util.addCORSHeadersIfConfigured(builder, ri);
+		return builder.build();
+    }
 }

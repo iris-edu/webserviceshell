@@ -17,7 +17,7 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.provider;
 
 import java.io.IOException;
 import java.io.OutputStream;

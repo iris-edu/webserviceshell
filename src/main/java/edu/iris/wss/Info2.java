@@ -1,7 +1,7 @@
 package edu.iris.wss;
 
 
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.utils.WebUtils;

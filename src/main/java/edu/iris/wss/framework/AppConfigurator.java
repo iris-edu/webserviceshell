@@ -19,8 +19,10 @@
 
 package edu.iris.wss.framework;
 
-import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.provider.IrisProcessMarker;
+import edu.iris.wss.provider.IrisProcessor;
+import edu.iris.wss.provider.IrisSingleton;
+import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.utils.WebUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -83,8 +85,10 @@ public class AppConfigurator {
         globals.put(GL_CFGS.sigkillDelay.toString(), 100);
         globals.put(GL_CFGS.singletonClassName.toString(), null);
 
+        // a slight dissonance, irisEndpointClassName will appear as a
+        // string externally, but an instatiated object internally
         ep_defaults.put(EP_CFGS.irisEndpointClassName,
-              getIrisSOInstance("edu.iris.wss.endpoints.CmdProcessorIrisEP"));
+              getIrisStreamingOutputInstance("edu.iris.wss.endpoints.CmdProcessorIrisEP"));
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
@@ -205,8 +209,8 @@ public class AppConfigurator {
      * @param epName
      * @return 
      */
-    public IrisStreamingOutput getIrisEndpointClass(String epName) {
-        return (IrisStreamingOutput)endpoints.get(epName)
+    public IrisProcessMarker getIrisEndpointClass(String epName) {
+        return (IrisProcessMarker)endpoints.get(epName)
               .get(EP_CFGS.irisEndpointClassName);
     }
     
@@ -469,9 +473,8 @@ public class AppConfigurator {
         // do additional validation
 
         for (String epName : endpoints.keySet()) {
-            IrisStreamingOutput iso = getIrisEndpointClass(epName);
-            if (iso.getClass().getName().equals(
-              edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
+            IrisProcessMarker iso = getIrisEndpointClass(epName);
+            if (iso instanceof edu.iris.wss.endpoints.CmdProcessorIrisEP) {
                 String handlerName = getHandlerProgram(epName);
                 try {
                     if (isOkString(handlerName)) {
@@ -592,8 +595,14 @@ public class AppConfigurator {
                               + "  value found: " + newVal
                               + "  it should be an integer");
                     }
-                } else if(defaultz instanceof IrisStreamingOutput) {
-                    endPt.put(epParm, getIrisSOInstance(newVal));
+                } else if(defaultz instanceof IrisProcessMarker) {
+                    // Note: for validation of instatiable class, must do
+                    //       nested trys for each class WSS supports.
+                    try {
+                        endPt.put(epParm, getIrisStreamingOutputInstance(newVal));
+                    } catch (Exception ex) {
+                        endPt.put(epParm, getIrisProcessorInstance(newVal));
+                    }
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.outputTypes)) {
                         // note: for references to mutable objects,
@@ -694,24 +703,29 @@ public class AppConfigurator {
         return validVal;
     }
 
-    private IrisStreamingOutput getIrisSOInstance(String className) {
+    private IrisProcessMarker getIrisStreamingOutputInstance(String className) {
         Class<?> irisClass = null;
         IrisStreamingOutput iso = null;
         try {
             irisClass = Class.forName(className);
             iso = (IrisStreamingOutput) irisClass.newInstance();
         } catch (ClassNotFoundException ex) {
-            String msg = "Could not find "
+            String msg = "getIrisStreamingOutputInstance could not find "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
-            String msg = "Could not instantiate "
+            String msg = "getIrisStreamingOutputInstance could not instantiate "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
-            String msg = "Illegal access while instantiating "
+            String msg = "getIrisStreamingOutputInstance illegal access while instantiating "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (ClassCastException ex) {
+            String msg = "getIrisStreamingOutputInstance ClassCastException while instantiating "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
@@ -719,6 +733,35 @@ public class AppConfigurator {
         return iso;
     }
 
+    private IrisProcessMarker getIrisProcessorInstance(String className) {
+        Class<?> irisClass = null;
+        IrisProcessor iso = null;
+        try {
+            irisClass = Class.forName(className);
+            iso = (IrisProcessor) irisClass.newInstance();
+        } catch (ClassNotFoundException ex) {
+            String msg = "getIrisProcessorInstance could not find "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (InstantiationException ex) {
+            String msg = "getIrisProcessorInstance could not instantiate "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (IllegalAccessException ex) {
+            String msg = "getIrisProcessorInstance illegal access while instantiating "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (ClassCastException ex) {
+            String msg = "getIrisProcessorInstance ClassCastException while instantiating "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        }
+        return iso;
+    }
 
     private IrisSingleton getIrisSingletonInstance(String className) {
         Class<?> irisClass = null;
@@ -727,18 +770,23 @@ public class AppConfigurator {
             irisClass = Class.forName(className);
             is = (IrisSingleton) irisClass.newInstance();
         } catch (ClassNotFoundException ex) {
-            String msg = "Could not find "
+            String msg = "getIrisSingletonInstance could not find "
                   + GL_CFGS.singletonClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
-            String msg = "Could not instantiate "
+            String msg = "getIrisSingletonInstance could not instantiate "
                   + GL_CFGS.singletonClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
-            String msg = "Illegal access while instantiating "
+            String msg = "getIrisSingletonInstance illegal access while instantiating "
                   + GL_CFGS.singletonClassName + ": " + className;
+            logger.fatal(msg);
+            throw new RuntimeException(msg, ex);
+        } catch (ClassCastException ex) {
+            String msg = "getIrisSingletonInstance ClassCastException while instantiating "
+                  + EP_CFGS.irisEndpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         }

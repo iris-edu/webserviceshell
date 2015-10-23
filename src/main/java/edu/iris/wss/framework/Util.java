@@ -5,7 +5,8 @@
  */
 package edu.iris.wss.framework;
 
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.provider.IrisProcessor;
+import edu.iris.wss.provider.IrisStreamingOutput;
 import javax.ws.rs.core.Response;
 
 /**
@@ -52,4 +53,10 @@ public class Util {
         }
         return trialStatus;
     }    
+
+	public static void newerShellException(FdsnStatus.Status status,
+          RequestInfo ri, IrisProcessor iso) {
+		ServiceShellException.logAndThrowException(ri, status,
+                status.toString() + ". " + iso.getErrorString());
+	}
 }

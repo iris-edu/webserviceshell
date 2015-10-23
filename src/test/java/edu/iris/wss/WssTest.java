@@ -190,11 +190,24 @@ public class WssTest  {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
         final String TEST_STR = "some-post-data2-text";
-        Response response = webTarget.path("queryEP").request()
+        Response response = webTarget.path("swag").request()
               .post(Entity.text(TEST_STR));
         String responseMsg = response.readEntity(String.class);
 
-        System.out.println("*** ------------- responseMsg: " + responseMsg);
+        System.out.println("*** ------------- testPost2 responseMsg: " + responseMsg);
+//        assertEquals(200, response.getStatus());
+//        assertTrue(responseMsg.equals(TEST_STR));
+    }
+
+    @Test
+    public void testGet_swag() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("swag").request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        // in progress
+    //    System.out.println("*** ------------- swag: " + responseMsg);
 //        assertEquals(200, response.getStatus());
 //        assertTrue(responseMsg.equals(TEST_STR));
     }

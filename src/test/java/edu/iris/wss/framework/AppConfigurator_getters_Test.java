@@ -68,7 +68,7 @@ public class AppConfigurator_getters_Test {
                 // noop
             } else {
                 fail("Unexpected failure in test setup while trying to load file: "
-                      + propFileName + "  ex: " + ex);
+                      + propFileName + "  from app ex: " + ex);
             }
         }
 

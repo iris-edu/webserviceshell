@@ -17,31 +17,27 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.IrisStreamingOutput;
+package edu.iris.wss.provider;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
-import edu.iris.wss.framework.SingletonWrapper;
 import edu.iris.wss.utils.LoggerUtils;
 import java.io.OutputStream;
 import java.util.Date;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
-public abstract class IrisStreamingOutput implements StreamingOutput {
+public abstract class IrisStreamingOutput implements StreamingOutput,
+      IrisProcessMarker {
 	public static final Logger logger = Logger.getLogger(IrisStreamingOutput.class);
 
-    @Context 	ServletContext context;
-	@Context	javax.servlet.http.HttpServletRequest request;
-    @Context 	UriInfo uriInfo;	
-    @Context 	HttpHeaders requestHeaders;
-
-    @Context 	SingletonWrapper sw;
+//    @Context 	ServletContext context;
+//	@Context	javax.servlet.http.HttpServletRequest request;
+//    @Context 	UriInfo uriInfo;
+//    @Context 	HttpHeaders requestHeaders;
+//
+//    @Context 	SingletonWrapper sw;
 	
 	protected RequestInfo ri;
 

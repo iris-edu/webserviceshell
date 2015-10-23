@@ -24,7 +24,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 
-import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
+import edu.iris.wss.provider.IrisSingleton;
 import edu.iris.wss.utils.WebUtils;
 
 public class SingletonWrapper {

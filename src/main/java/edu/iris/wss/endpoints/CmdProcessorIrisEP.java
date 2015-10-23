@@ -32,7 +32,7 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import com.Ostermiller.util.CircularByteBuffer;
-import edu.iris.wss.IrisStreamingOutput.IrisStreamingOutput;
+import edu.iris.wss.provider.IrisStreamingOutput;
 
 import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.AppConfigurator.InternalTypes;

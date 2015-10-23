@@ -21,7 +21,9 @@
 package edu.iris.wss.framework;
 
 import edu.iris.wss.utils.WebUtils;
+import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -64,21 +66,30 @@ public class MyApplication extends ResourceConfig {
 
     // add in endpoints  TBD remove soon
     addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
+    //addEndpoint("swag", edu.iris.wss.framework.IrisDynamicExecuto2.class, "doIrisProcessing", "GET");
 
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
+        
+        String methodName = "doIrisStreaming";
+        if (sw.appConfig.getIrisEndpointClass(epName) instanceof
+              edu.iris.wss.provider.IrisProcessor) {
+            methodName = "doIrisProcessing";
+        }
 
         // Note: HEAD seems to be allowed by default
-        addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
-          "doIrisStreaming", "GET");
+        addEndpoint(epName, edu.iris.wss.framework.IrisDynamicProvider.class,
+          methodName, "GET");
+System.out.println("*------------------------------ myApp postEn: " + sw.appConfig.isPostEnabled(epName)
++ "  epNmae: " + epName + "  mName: " + methodName);
         if (sw.appConfig.isPostEnabled(epName)) {
-            addEndpoint(epName, edu.iris.wss.framework.IrisDynamicExecutor.class,
-                  "doIrisStreaming", "POST");
+            addEndpoint(epName, edu.iris.wss.framework.IrisDynamicProvider.class,
+                  methodName, "POST");
 
             // temporary test
             addEndpoint(epName + "postecho",
-                  edu.iris.wss.framework.IrisDynamicExecutor.class,
+                  edu.iris.wss.framework.IrisDynamicProvider.class,
                   "echoPostString", "POST");
         }
     }

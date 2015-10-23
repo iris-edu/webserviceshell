@@ -19,7 +19,7 @@
 
 package edu.iris.wss.framework;
 
-import edu.iris.wss.IrisStreamingOutput.IrisSingleton;
+import edu.iris.wss.provider.IrisSingleton;
 import org.apache.log4j.Logger;
 
 public class TestSingleton implements IrisSingleton {

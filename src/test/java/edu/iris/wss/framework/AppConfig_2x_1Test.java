@@ -203,7 +203,7 @@ public class AppConfig_2x_1Test {
     public void testSingletonClassName() throws Exception {
         java.util.Properties props = new java.util.Properties();
         props.put(AppConfigurator.GL_CFGS.singletonClassName.toString(),
-              "edu.iris.wss.IrisStreamingOutput.TestSingleton");
+              "edu.iris.wss.provider.TestSingleton");
 
         AppConfigurator appCfg = new AppConfigurator();
         appCfg.loadConfigurationParameters(props, null);
@@ -214,7 +214,7 @@ public class AppConfig_2x_1Test {
             appCfg.loadConfigurationParameters(props, null);
             fail();
         } catch (Exception ex) {
-            assert(ex.toString().contains("Could not find"));
+            assert(ex.toString().contains("could not find"));
             //  noop - should throw exception
         }
     }
