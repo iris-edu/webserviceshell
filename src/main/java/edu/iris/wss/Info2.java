@@ -4,6 +4,7 @@ package edu.iris.wss;
 import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.Util;
 import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,7 +46,7 @@ System.out.println("***************&&& Info2 write wssVersion: " + myWssVersion)
             totalBytesTransmitted += myWssVersion.getBytes().length;
         } catch (IOException ex) {
             this.errorString = ex.toString();
-            logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "error writing wssVersion" + ex.getMessage());
         } finally {
             long processingTime = (new Date()).getTime() - startTime.getTime();
@@ -54,13 +55,13 @@ System.out.println("***************&&& Info2 write wssVersion: " + myWssVersion)
                     + "  totalBytesTransmitted: " + totalBytesTransmitted
                     + "  usageLog: " + ri.appConfig.isUsageLogEnabled(WebUtils.getConfigFileBase(context)));
 
-            logUsageMessage(ri, null, totalBytesTransmitted,
+            Util.logUsageMessage(ri, null, totalBytesTransmitted,
                   processingTime, null, Status.OK, null);
             try {
                 os.flush();
                 os.close();
             } catch (IOException ex) {
-                logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                       "error flushing or closing outputstream" + ex.getMessage());
             }
 		}

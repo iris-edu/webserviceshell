@@ -79,17 +79,17 @@ public class MyApplication extends ResourceConfig {
         }
 
         // Note: HEAD seems to be allowed by default
-        addEndpoint(epName, edu.iris.wss.framework.IrisDynamicProvider.class,
+        addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
           methodName, "GET");
 System.out.println("*------------------------------ myApp postEn: " + sw.appConfig.isPostEnabled(epName)
 + "  epNmae: " + epName + "  mName: " + methodName);
         if (sw.appConfig.isPostEnabled(epName)) {
-            addEndpoint(epName, edu.iris.wss.framework.IrisDynamicProvider.class,
+            addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
                   methodName, "POST");
 
             // temporary test
             addEndpoint(epName + "postecho",
-                  edu.iris.wss.framework.IrisDynamicProvider.class,
+                  edu.iris.wss.provider.IrisDynamicProvider.class,
                   "echoPostString", "POST");
         }
     }

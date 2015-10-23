@@ -37,7 +37,9 @@ public class SwaggerSpecResource extends IrisProcessor {
     String globalErrMsg = "no globalErrMessage";
 
     @Override
-    public IrisProcessingResult getProcessingResults(RequestInfo ri, String configBase) {
+// deprecated    public IrisProcessingResult getProcessingResults(RequestInfo ri, String configBase) {
+    public IrisProcessingResult getProcessingResults(RequestInfo ri) {
+        String configBase = null;
     	// First check if swaggerV2Spec configuration paramter is set.
         // If so, then return stream object from that URL.
     	
@@ -57,8 +59,8 @@ public class SwaggerSpecResource extends IrisProcessor {
 //                + "  ex: " + ex);
 //            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
 
-                Util.shellException(Util.adjustByCfg(FdsnStatus.Status.NO_CONTENT, ri),
-                      errMsg, ri);
+                Util.logAndThrowException(ri, Util.adjustByCfg(FdsnStatus.Status.NO_CONTENT, ri),
+                      errMsg);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -138,7 +140,7 @@ public class SwaggerSpecResource extends IrisProcessor {
                           FdsnStatus.Status.NO_CONTENT);
 
         FdsnStatus.Status status = Util.adjustByCfg(FdsnStatus.Status.NO_CONTENT, ri);
-        Util.shellException(status, errMsg, ri);
+        Util.logAndThrowException(ri, status, errMsg);
 
         Response.ResponseBuilder builder = Response.status(status)
               .type(MediaType.TEXT_PLAIN);

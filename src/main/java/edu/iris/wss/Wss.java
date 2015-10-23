@@ -279,7 +279,7 @@ public class Wss {
         	} catch (Exception ex) {
         		String errMsg = "Wss - Error getting WADL URL: " + wadlPath + "  ex: "
                       + ex;
-                Util.shellException(Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg, ri);
+                Util.logAndThrowException(ri, Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -345,7 +345,7 @@ public class Wss {
 		}
 
         Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
-        Util.shellException(status, errMsg, ri);
+        Util.logAndThrowException(ri, status, errMsg);
 
         ResponseBuilder builder = Response.status(status)
               .type(MediaType.TEXT_PLAIN);
@@ -377,8 +377,8 @@ public class Wss {
 //                + "  ex: " + ex);
 //            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
 
-                Util.shellException(Util.adjustByCfg(Status.NO_CONTENT, ri),
-                      errMsg, ri);
+                Util.logAndThrowException(ri,
+                      Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
         	}
         	
         	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
@@ -449,7 +449,7 @@ public class Wss {
 		}
 
         Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
-        Util.shellException(status, errMsg, ri);
+        Util.logAndThrowException(ri, status, errMsg);
 
         ResponseBuilder builder = Response.status(status)
               .type(MediaType.TEXT_PLAIN);

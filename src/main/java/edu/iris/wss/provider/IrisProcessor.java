@@ -67,8 +67,7 @@ public abstract class IrisProcessor implements IrisProcessMarker {
 
 	public IrisProcessor() { }
 
-	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri,
-          String configBase);
+	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri);
 
     public abstract String getErrorString();
 }

@@ -17,22 +17,21 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.framework;
+package edu.iris.wss.provider;
 
-import edu.iris.wss.provider.IrisProcessingResult;
-import edu.iris.wss.provider.IrisProcessor;
-import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.endpoints.SwaggerSpecResource;
 import edu.iris.wss.framework.FdsnStatus.Status;
-import edu.iris.wss.utils.WebUtils;
+import edu.iris.wss.framework.ParameterTranslator;
+import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.ServiceShellException;
+import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -129,9 +128,9 @@ public class IrisDynamicProvider {
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
         if (!ri.isThisEndpointConfigured()) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error, there is no configuration information for"
-                        + " endpoint: " + requestedEpName, ri);
+                        + " endpoint: " + requestedEpName);
         }
 
         System.out.println("* doIrisStreaming method: " + containerRequestContext.getMethod());
@@ -173,7 +172,8 @@ public class IrisDynamicProvider {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
-			Util.shellException(Status.BAD_REQUEST, "doIrisStreaming - " + e.getMessage(), ri);
+			Util.logAndThrowException(ri, Status.BAD_REQUEST,
+                  "doIrisStreaming - " + e.getMessage());
 		}
 
         System.out.println("** doIrisStreaming, cmd len: " + cmd.size()
@@ -199,8 +199,8 @@ public class IrisDynamicProvider {
         System.out.println("** doIrisStreaming after iso.getResponse, status: "
               + status);
     	if (status == null) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
-                  "Null status from IrisStreamingOutput class", ri);
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "Null status from IrisStreamingOutput class");
         }
 
         status = Util.adjustByCfg(status, ri);
@@ -214,9 +214,9 @@ public class IrisDynamicProvider {
             outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
             mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
-                    + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex), ri);
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "Unknow mediaType for" + " mediaTypeKey: " + outputTypeKey
+                    + ServiceShellException.getErrorString(ex));
         }
 
         Response.ResponseBuilder builder = Response.status(status)
@@ -226,10 +226,10 @@ public class IrisDynamicProvider {
         try {
             builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
         } catch (Exception ex) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
                         + " endpoint: " + requestedEpName
-                        + ServiceShellException.getErrorString(ex), ri);
+                        + ServiceShellException.getErrorString(ex));
         }
 
         Util.addCORSHeadersIfConfigured(builder, ri);
@@ -284,9 +284,9 @@ public class IrisDynamicProvider {
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
         if (!ri.isThisEndpointConfigured()) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error, there is no configuration information for"
-                        + " endpoint: " + requestedEpName, ri);
+                        + " endpoint: " + requestedEpName);
         }
 
         System.out.println("* doIrisProcessing method: " + containerRequestContext.getMethod());
@@ -313,7 +313,8 @@ public class IrisDynamicProvider {
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {
-			Util.shellException(Status.BAD_REQUEST, "doIrisProcessing - " + e.getMessage(), ri);
+			Util.logAndThrowException(ri, Status.BAD_REQUEST,
+                  "doIrisProcessing - " + e.getMessage());
 		}
 
         System.out.println("** doIrisProcessing, cmd len: " + cmd.size()
@@ -332,14 +333,13 @@ public class IrisDynamicProvider {
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
-		IrisProcessingResult irr = isdo.getProcessingResults(ri,
-              WebUtils.getConfigFileBase(context));
+		IrisProcessingResult irr = isdo.getProcessingResults(ri);
 
         System.out.println("** doIrisStreaming after iso.getResponse, status: "
               + irr.fdsnSS);
         if (irr.fdsnSS == null) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
-                  "Null status from IrisStreamingOutput class", ri);
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "Null status from IrisStreamingOutput class");
         }
 
         Status status = Util.adjustByCfg(irr.fdsnSS, ri);
@@ -347,15 +347,18 @@ public class IrisDynamicProvider {
             Util.newerShellException(status, ri, isdo);
 		}
 
+        // Note: TBD this exception may never be excersided because exceptions
+        //       should have been detected when parameters were loaded,
+        //       leaving this code here for now until this is verified.
         String mediaType = irr.mediaType.toString(); //null;
         String outputTypeKey = null;
         try {
             outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
     //        mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR, "Unknow mediaType for"
-                    + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex), ri);
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "Unknow mediaType for" + " mediaTypeKey: " + outputTypeKey
+                    + ServiceShellException.getErrorString(ex));
         }
 
         Response.ResponseBuilder builder = Response.status(status)
@@ -365,10 +368,10 @@ public class IrisDynamicProvider {
         try {
             builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
         } catch (Exception ex) {
-            Util.shellException(Status.INTERNAL_SERVER_ERROR,
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
                         + " endpoint: " + requestedEpName
-                        + ServiceShellException.getErrorString(ex), ri);
+                        + ServiceShellException.getErrorString(ex));
         }
 
         Util.addCORSHeadersIfConfigured(builder, ri);

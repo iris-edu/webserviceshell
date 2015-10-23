@@ -42,35 +42,35 @@ public abstract class IrisStreamingOutput implements StreamingOutput,
 	protected RequestInfo ri;
 
 	// These are helper routines as part of the basic interface IrisStreamingOutput
-    public static void logUsageMessage(RequestInfo ri, String appSuffix,
-          Long dataSize, Long processTime,
-          String errorType, Status httpStatus, String extraText,
-          String network, String station, String location, String channel,
-          String quality, Date startTime, Date endTime, String duration) {
+//    public static void logUsageMessage(RequestInfo ri, String appSuffix,
+//          Long dataSize, Long processTime,
+//          String errorType, Status httpStatus, String extraText,
+//          String network, String station, String location, String channel,
+//          String quality, Date startTime, Date endTime, String duration) {
+//
+//        LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
+//              errorType, httpStatus.getStatusCode(), extraText,
+//              network, station, location, channel, quality,
+//              startTime, endTime);
+//    }
 
-        LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-              errorType, httpStatus.getStatusCode(), extraText,
-              network, station, location, channel, quality,
-              startTime, endTime);
-    }
+//	public static void logUsageMessage(RequestInfo ri, String appSuffix,
+//			Long dataSize, Long processTime,
+//			String errorType, Status httpStatus, String extraText) {
+//
+//		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
+//			errorType, httpStatus.getStatusCode(), extraText);
+//	}
 
-	public static void logUsageMessage(RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Status httpStatus, String extraText) {
-
-		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-			errorType, httpStatus.getStatusCode(), extraText);
-	}
-
-	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
-          String message) {
-		ServiceShellException.logAndThrowException(ri, httpStatus, message);
-    }
-
-	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
-          String message, Exception ex) {
-		ServiceShellException.logAndThrowException(ri, httpStatus, message, ex);
-	}	
+//	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
+//          String message) {
+//		ServiceShellException.logAndThrowException(ri, httpStatus, message);
+//    }
+//
+//	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
+//          String message, Exception ex) {
+//		ServiceShellException.logAndThrowException(ri, httpStatus, message, ex);
+//	}	
 	
 	public IrisStreamingOutput() { }
 

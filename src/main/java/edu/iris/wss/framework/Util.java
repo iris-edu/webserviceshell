@@ -7,6 +7,8 @@ package edu.iris.wss.framework;
 
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisStreamingOutput;
+import edu.iris.wss.utils.LoggerUtils;
+import java.util.Date;
 import javax.ws.rs.core.Response;
 
 /**
@@ -34,7 +36,7 @@ public class Util {
 		}
     }
 	
-	public static void shellException(FdsnStatus.Status status, String message, RequestInfo ri) {
+	public static void logAndThrowException(RequestInfo ri, FdsnStatus.Status status, String message) {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
 	
@@ -58,5 +60,29 @@ public class Util {
           RequestInfo ri, IrisProcessor iso) {
 		ServiceShellException.logAndThrowException(ri, status,
                 status.toString() + ". " + iso.getErrorString());
+	}
+	public static void logAndThrowException(RequestInfo ri,
+          FdsnStatus.Status httpStatus, String message, Exception ex) {
+		ServiceShellException.logAndThrowException(ri, httpStatus, message, ex);
+	}
+
+    public static void logUsageMessage(RequestInfo ri, String appSuffix,
+          Long dataSize, Long processTime,
+          String errorType, FdsnStatus.Status httpStatus, String extraText,
+          String network, String station, String location, String channel,
+          String quality, Date startTime, Date endTime, String duration) {
+
+        LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
+              errorType, httpStatus.getStatusCode(), extraText,
+              network, station, location, channel, quality,
+              startTime, endTime);
+    }
+
+	public static void logUsageMessage(RequestInfo ri, String appSuffix,
+			Long dataSize, Long processTime,
+			String errorType, FdsnStatus.Status httpStatus, String extraText) {
+
+		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
+			errorType, httpStatus.getStatusCode(), extraText);
 	}
 }

@@ -40,6 +40,7 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
+import edu.iris.wss.framework.Util;
 import edu.iris.wss.utils.WebUtils;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
@@ -170,7 +171,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 		startTime = new Date();
 
 		if (processBuilder == null) {
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"No valid process found.");
 		}
 
@@ -181,7 +182,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 		} catch (IOException ioe) {
             logger.error("getResponse processBuilder.start ex: ", ioe);
 
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"IOException when starting handler: "
                           + processBuilder.command(), ioe);
 		}
@@ -194,7 +195,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 			se = new StreamEater(process, process.getErrorStream());
 		} catch (Exception e) {
             logger.error("getResponse StreamEater exception: ", e);
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					("Ex msg: " + e.getMessage()) );
 		}
 		is = process.getInputStream();
@@ -233,7 +234,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 				process.getOutputStream().close();
 			} catch (IOException ioe) {
                 logger.error("getResponse post to output stream ex: ", ioe);
-				logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+				Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 						"Failure writing POST body\n" + ioe.getMessage());
 			}
 		}
@@ -312,16 +313,16 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
 		if (exitVal == 9 + 128) {
 			// SIGKILL
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"Enforced timeout or unexpected termination of handler,"
                             + this.getErrorString(exitVal));
 		} else if (exitVal == 15 + 128) {
 			// SIGTERM
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"Timeout or unexpected termination of handler,"
                             + this.getErrorString(exitVal));
 		} else {
-			logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"Unexpected termination of handler,"
                             + this.getErrorString(exitVal));;
 		}
@@ -523,13 +524,13 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
             if (ri.appConfig.isUsageLogEnabled(epName)) {
                 try {
                     if (isKillingProcess.get()) {
-                        logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
+                        Util.logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
                                 processingTime,
                                 "killit was called, possible timeout waiting"
                                 + " for data after intial data flow started",
                                 Status.INTERNAL_SERVER_ERROR, epName);
                     } else {
-                        logUsageMessage(ri, "_summary", totalBytesTransmitted,
+                        Util.logUsageMessage(ri, "_summary", totalBytesTransmitted,
                                 processingTime, null, Status.OK, null);
                     }
                 } catch (Exception ex) {
@@ -538,7 +539,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
                 for (String key : logHash.keySet()) {
                     RecordMetaData rmd = logHash.get(key);
-                    logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
+                    Util.logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
                             Status.OK, null, LogKey.getNetwork(key).trim(),
                             LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
                             LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
@@ -704,12 +705,12 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
             if (ri.appConfig.isUsageLogEnabled(epName)) {
                 if (isKillingProcess.get()) {
-                    logUsageMessage(ri, "_KillitInWriteNormal", 0L,
+                    Util.logUsageMessage(ri, "_KillitInWriteNormal", 0L,
                             processingTime,
                             "killit was called, possible timeout waiting for data after intial data flow started",
                             Status.INTERNAL_SERVER_ERROR, epName);
                 } else {
-                    logUsageMessage(ri, null, totalBytesTransmitted,
+                    Util.logUsageMessage(ri, null, totalBytesTransmitted,
                             processingTime, null, Status.OK, epName);
                 }
             }

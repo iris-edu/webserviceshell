@@ -27,6 +27,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.FdsnStatus.Status;
+import edu.iris.wss.framework.Util;
 
 public class TestStreamingOutput extends IrisStreamingOutput {
 	
@@ -80,8 +81,9 @@ public class TestStreamingOutput extends IrisStreamingOutput {
 		} finally {
 			logger.info("Done:  Wrote " + totalBytesTransmitted + " bytes\n");
 
-			logUsageMessage(ri, null, totalBytesTransmitted, (new Date()).getTime() - startTime.getTime(),
-					null, Status.OK, null);
+			Util.logUsageMessage(ri, null, totalBytesTransmitted,
+                  (new Date()).getTime() - startTime.getTime(),
+                  null, Status.OK, null);
     		ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
     		try {
     			output.close();
