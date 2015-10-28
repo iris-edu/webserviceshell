@@ -19,7 +19,6 @@
 
 package edu.iris.wss.provider;
 
-import edu.iris.wss.endpoints.SwaggerSpecResource;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
@@ -306,9 +305,23 @@ public class IrisDynamicProvider {
 
         // No object existance check done here as it should have been
         // done when the configuration parameters were loaded
-        IrisProcessor isdo = new SwaggerSpecResource(); //ri.appConfig.getIrisEndpointClass(requestedEpName);
+        IrisProcessor isdo = null;
+        if (sw.appConfig.getIrisEndpointClass(requestedEpName) instanceof
+              edu.iris.wss.provider.IrisProcessor) {
+            isdo = (IrisProcessor)sw.appConfig.getIrisEndpointClass(requestedEpName);
+        } else {
+            // this might happen if the service config has been set with
+            // some other valid IRIS class, since the one parameter is now
+            // used with more than one class type.
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "An IrisProcessor object could not be found, "
+                        + " class found: "
+                        + sw.appConfig.getIrisEndpointClass(requestedEpName).getClass()
+                        + "  MyApplication or the service.cfg did not setup"
+                        + " the correct class for method doIrisProcessing");
+        }
 
-            cmd = new ArrayList<>();
+        cmd = new ArrayList<>();
 
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
@@ -316,6 +329,21 @@ public class IrisDynamicProvider {
 			Util.logAndThrowException(ri, Status.BAD_REQUEST,
                   "doIrisProcessing - " + e.getMessage());
 		}
+
+        // The value for media type, i.e. the value for parameters "format"
+        // or "output" must have been specified in the configuration file
+        // in the parameter outputs.
+        // the string here should be of the form "type/subtype"
+        String wssMediaType = null;
+        String outputTypeKey = null;
+        try {
+            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
+            wssMediaType = ri.getPerRequestMediaType(requestedEpName);
+        } catch (Exception ex) {
+            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                  "Unknown mediaType for" + " type parameter: " + outputTypeKey
+                    + ServiceShellException.getErrorString(ex));
+        }
 
         System.out.println("** doIrisProcessing, cmd len: " + cmd.size()
               + " cmd: " + cmd);
@@ -333,10 +361,10 @@ public class IrisDynamicProvider {
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
-		IrisProcessingResult irr = isdo.getProcessingResults(ri);
+		IrisProcessingResult irr = isdo.getProcessingResults(ri, wssMediaType);
 
-        System.out.println("** doIrisStreaming after iso.getResponse, status: "
-              + irr.fdsnSS);
+        System.out.println("** -------------- doIrisStreaming after iso.getResponse, status: "
+              + irr.fdsnSS + "  wmt: " + wssMediaType);
         if (irr.fdsnSS == null) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Null status from IrisStreamingOutput class");
@@ -347,26 +375,13 @@ public class IrisDynamicProvider {
             Util.newerShellException(status, ri, isdo);
 		}
 
-        // Note: TBD this exception may never be excersided because exceptions
-        //       should have been detected when parameters were loaded,
-        //       leaving this code here for now until this is verified.
-        String mediaType = irr.mediaType.toString(); //null;
-        String outputTypeKey = null;
-        try {
-            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
-    //        mediaType = ri.getPerRequestMediaType(requestedEpName);
-        } catch (Exception ex) {
-            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Unknow mediaType for" + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex));
-        }
-
         Response.ResponseBuilder builder = Response.status(status)
-              .type(mediaType)
+              .type(irr.wssMediaType)
               .entity(irr.entity);
 
         try {
-            builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
+            builder.header("Content-Disposition",
+                  ri.createContentDisposition(requestedEpName));
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"

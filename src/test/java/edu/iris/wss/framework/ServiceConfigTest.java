@@ -25,6 +25,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.container.servlet.ServletContainer;*/
 import edu.iris.wss.utils.WebUtils;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -59,7 +60,7 @@ public class ServiceConfigTest  {
     
     // set notional webapp name
 //    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
-    private static final String SOME_CONTEXT = "/";
+    private static final String SOME_CONTEXT = "/tstsegment";
     
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
@@ -73,7 +74,10 @@ public class ServiceConfigTest  {
     public static void setUpClass() throws IOException {
         // setup config dir for test environment
         System.setProperty(WebUtils.wssConfigDirSignature,
-            "target/test-classes/ServiceConfigTest");
+            "src"
+              + File.separator + "test"
+              + File.separator + "resources"
+              + File.separator + "ServiceConfigTest");
 
         logger.info("*********** starting grizzlyWebServer, BASE_URI: "
             + BASE_URI);
@@ -139,9 +143,20 @@ public class ServiceConfigTest  {
         assertEquals(200, response.getStatus());
 
         // test for some basic known content
-        assertTrue(
-            testMsg.indexOf("<TD>URL</TD><TD>" + SOME_CONTEXT + "wssstatus</TD>") > -1);
-        assertTrue(
-            testMsg.indexOf("<TD>Port</TD><TD>" + BASE_PORT + "</TD>") > -1);
+//        System.out.println("* -------------------------------------------- testMsg: " + testMsg);
+        assertTrue(testMsg.contains("<TD>URL</TD><TD>" + SOME_CONTEXT + "/wssstatus</TD>"));
+        assertTrue(testMsg.contains("<TD>Port</TD><TD>" + BASE_PORT + "</TD>"));
+    }
+
+    @Test
+    public void test_getJsondata() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/jsonproxy").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals(response.getMediaType().toString(), "application/json");
+
+        String testMsg = response.readEntity(String.class);
+        assertTrue(testMsg.contains("data from specified test file"));
     }
 }

@@ -5,24 +5,13 @@
  */
 package edu.iris.wss.framework;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+//import edu.iris.wss.framework.AppConfigurator_getters_Test;
 import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -53,11 +42,11 @@ public class RequestInfo_1_Test {
 
     @Test
     public void test_getPerRequestOutputTypeKey() throws Exception {
-        Object[] items = AppConfigurator_getters_Test.createTestObjs();
-        AppConfigurator appCfg = (AppConfigurator)items[0];
-        Properties props = (Properties)items[1];
-
         String endpointName = "endpnt1";
+        Properties props = AppConfigurator_getters_Test
+              .createInitialTestProperties(endpointName);
+        AppConfigurator appCfg =  new AppConfigurator();
+
         String property = AppConfigurator.createEPPropertiesName(
               endpointName, AppConfigurator.EP_CFGS.outputTypes);
 

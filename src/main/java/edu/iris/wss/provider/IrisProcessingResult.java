@@ -15,13 +15,13 @@ import javax.ws.rs.core.MediaType;
 public class IrisProcessingResult {
 //    public static StreamingOutput writer = null;
     public Object entity = null;
-    public MediaType mediaType = null;
+    public String wssMediaType = null;
     public FdsnStatus.Status fdsnSS = null;
     
-    public IrisProcessingResult(Object entity, MediaType mediaType,
+    public IrisProcessingResult(Object entity, String wssMediaType,
           FdsnStatus.Status fdsnSS) {
         this.entity = entity;
-        this.mediaType = mediaType;
+        this.wssMediaType = wssMediaType;
         this.fdsnSS = fdsnSS;
     }
 }

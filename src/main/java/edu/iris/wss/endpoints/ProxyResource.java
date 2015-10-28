@@ -32,12 +32,15 @@ public class ProxyResource extends IrisProcessor {
     String globalErrMsg = "no globalErrMessage";
 
     @Override
-    public IrisProcessingResult getProcessingResults(RequestInfo ri) {
+    public IrisProcessingResult getProcessingResults(RequestInfo ri,
+          String wssMediaType) {
     	// First check for the resource
         // If found, then return an entity to read and write the content
         // of the URL.
 
-    	String proxyURLSource = ri.appConfig.getSwaggerV2URL();
+        String epName = ri.getEndpointNameForThisRequest();
+        String proxyURLSource = ri.appConfig.getProxyUrl(epName);
+
         if ((proxyURLSource != null) && (!proxyURLSource.isEmpty())) {
             logger.info("Attempting to load resource from: " + proxyURLSource);
 
@@ -47,7 +50,7 @@ public class ProxyResource extends IrisProcessor {
                 url = new URL(proxyURLSource);
         		is = url.openStream();
         	} catch (Exception ex) {
-                globalErrMsg = "SwaggerSpecResource - Error resolving proxy URL: "
+                globalErrMsg = "ProxyResource.getProcessingResults - Error resolving proxy URL: "
                       + proxyURLSource + "  ex: " + ex;
 //                logger.error("Failure loading SwaggerV2 file from: " + url
 //                + "  ex: " + ex);
@@ -78,7 +81,7 @@ public class ProxyResource extends IrisProcessor {
         	};
             
             IrisProcessingResult ipr = new IrisProcessingResult(so,
-                  MediaType.APPLICATION_JSON_TYPE, FdsnStatus.Status.OK);
+                  wssMediaType, FdsnStatus.Status.OK);
 
             Response.ResponseBuilder builder = Response.status(FdsnStatus.Status.OK)
                   .type("application/json")
@@ -101,7 +104,7 @@ public class ProxyResource extends IrisProcessor {
         }
 
         IrisProcessingResult ipr = new IrisProcessingResult(entity,
-              MediaType.TEXT_PLAIN_TYPE, status);
+              MediaType.TEXT_PLAIN, status);
 
         // goahead and call exception handling directly, ipr is never used.
         Util.logAndThrowException(ri, status, globalErrMsg);

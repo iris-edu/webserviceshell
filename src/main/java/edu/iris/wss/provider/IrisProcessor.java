@@ -25,49 +25,10 @@ import org.apache.log4j.Logger;
 public abstract class IrisProcessor implements IrisProcessMarker {
 	public static final Logger logger = Logger.getLogger(IrisProcessor.class);
 
-//    @Context 	ServletContext context;
-//	@Context	javax.servlet.http.HttpServletRequest request;
-//    @Context 	UriInfo uriInfo;
-//    @Context 	HttpHeaders requestHeaders;
-//
-//    @Context 	SingletonWrapper sw;
-
-////	protected RequestInfo ri;
-
-////	// These are helper routines as part of the basic interface IrisStreamingOutput
-////    public static void logUsageMessage(RequestInfo ri, String appSuffix,
-////          Long dataSize, Long processTime,
-////          String errorType, Status httpStatus, String extraText,
-////          String network, String station, String location, String channel,
-////          String quality, Date startTime, Date endTime, String duration) {
-////
-////        LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-////              errorType, httpStatus.getStatusCode(), extraText,
-////              network, station, location, channel, quality,
-////              startTime, endTime);
-////    }
-////
-////	public static void logUsageMessage(RequestInfo ri, String appSuffix,
-////			Long dataSize, Long processTime,
-////			String errorType, Status httpStatus, String extraText) {
-////
-////		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-////			errorType, httpStatus.getStatusCode(), extraText);
-////	}
-////
-////	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
-////          String message) {
-////		ServiceShellException.logAndThrowException(ri, httpStatus, message);
-////    }
-////
-////	public static void logAndThrowException(RequestInfo ri, Status httpStatus,
-////          String message, Exception ex) {
-////		ServiceShellException.logAndThrowException(ri, httpStatus, message, ex);
-////	}
-
 	public IrisProcessor() { }
 
-	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri);
+	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri,
+          String wssMediaType);
 
     public abstract String getErrorString();
 }

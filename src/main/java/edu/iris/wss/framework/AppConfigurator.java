@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -78,8 +79,6 @@ public class AppConfigurator {
         globals.put(GL_CFGS.appName.toString(), "notnamed");
         globals.put(GL_CFGS.appVersion.toString(), "notversioned");
         globals.put(GL_CFGS.corsEnabled.toString(), true);
-        globals.put(GL_CFGS.swaggerV2URL.toString(), null);
-        globals.put(GL_CFGS.wadlPath.toString(), null);
         globals.put(GL_CFGS.rootServiceDoc.toString(), null);
         globals.put(GL_CFGS.loggingMethod.toString(), LoggingMethod.LOG4J);
         globals.put(GL_CFGS.sigkillDelay.toString(), 100);
@@ -102,6 +101,7 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.usageLog, true);
         ep_defaults.put(EP_CFGS.postEnabled, false);
         ep_defaults.put(EP_CFGS.use404For204, false);
+        ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
     }
 
     // An enum of the types supported internally. This is used in the code to
@@ -121,24 +121,24 @@ public class AppConfigurator {
     // Make enum names the same as the names the user sees in the cfg file
     // global configuration parameter names
     public static enum GL_CFGS { appName, appVersion, corsEnabled,
-        swaggerV2URL, wadlPath, rootServiceDoc, loggingMethod, sigkillDelay,
+        rootServiceDoc, loggingMethod, sigkillDelay,
         jndiUrl, singletonClassName};
     
     // endpoint configuration parameter names
     public static enum EP_CFGS { outputTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
-        irisEndpointClassName
+        irisEndpointClassName, proxyURL
     }
 
     // parameters that apply to all endpoints
-    private Map<String, Object> globals = new HashMap();
+    private final Map<String, Object> globals = new HashMap();
 
     // container for endpoints where the key is defined in the cfg file
     // as being the string in front of ENDPOINT_TO_PROPERTIES_DELIMITER
-    private Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
+    private final Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
     
     // an endpoint, i.e. contains the parameters per endpoint
-    private Map<EP_CFGS, Object> ep_defaults = new HashMap();
+    private final Map<EP_CFGS, Object> ep_defaults = new HashMap();
     //private Map<EP_CFGS, Object> endpoint = new HashMap();
     //private Map<String, String> default_outputTypes = createOutputTypes();
     
@@ -181,8 +181,8 @@ public class AppConfigurator {
 	public String getAppName() { return (String)globals.get(GL_CFGS.appName.toString()); }
 	public String getAppVersion() { return (String)globals.get(GL_CFGS.appVersion.toString()); }
 	public boolean isCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())); }
-    public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
-    public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
+//    public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
+//    public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
     public String getRootServiceDoc() { return (String)globals.get(GL_CFGS.rootServiceDoc.toString()); }
     public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.loggingMethod.toString()); }
     public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())); }
@@ -203,6 +203,10 @@ public class AppConfigurator {
 //              + epName);
 //    }
 
+    public String getProxyUrl(String epName) {
+         return endpoints.get(epName).get(EP_CFGS.proxyURL).toString();
+    }
+    
     /**
      * Note: no parameter checking or configuration for endpoint checking
      *       done here, it should be done when parameters are loaded.
@@ -251,7 +255,7 @@ public class AppConfigurator {
             if (mediaType == null) {
                 throw new Exception("WebServiceShell getMediaType, no mediaType"
                       + " found for outputType: " + outputTypeKey
-                      + "  on endpoint:" + epName);
+                      + "  on endpoint: " + epName);
             }
             return mediaType;
         }
@@ -419,8 +423,6 @@ public class AppConfigurator {
         loadGlobalParameter(inputProps, globals, GL_CFGS.appName);
         loadGlobalParameter(inputProps, globals, GL_CFGS.appVersion);
         loadGlobalParameter(inputProps, globals, GL_CFGS.corsEnabled);
-        loadGlobalParameter(inputProps, globals, GL_CFGS.swaggerV2URL);
-        loadGlobalParameter(inputProps, globals, GL_CFGS.wadlPath);
         loadGlobalParameter(inputProps, globals, GL_CFGS.rootServiceDoc);
         loadGlobalParameter(inputProps, globals, GL_CFGS.loggingMethod);
         loadGlobalParameter(inputProps, globals, GL_CFGS.sigkillDelay);
@@ -483,7 +485,21 @@ public class AppConfigurator {
                         }
                     }
                 } catch(Exception ex) {
-                    String msg = "Handler error for endpoint: " + epName
+                    String msg = "Error getting handlerProgram for endpoint: "
+                          + epName + "  ex: " + ex.toString();
+                    logger.error(msg);
+                    throw new Exception(msg, ex);
+                }
+            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
+                String resoureToProxyURL = getProxyUrl(epName);
+                try {
+                    if (isOkString(resoureToProxyURL)) {
+                        URL url = new URL(resoureToProxyURL);
+                        InputStream is = url.openStream();
+                    }
+                } catch(Exception ex) {
+                    String msg = EP_CFGS.proxyURL.toString()
+                          + " error for endpoint: " + epName
                           + "  ex: " + ex.toString();
                     logger.error(msg);
                     throw new Exception(msg, ex);
@@ -491,7 +507,7 @@ public class AppConfigurator {
             }
         }
 
-		// Finished w/o problems.
+		// Finished without problems.
 		this.isValid = true;
 		logger.info(this.toString());
 	}
@@ -509,7 +525,7 @@ public class AppConfigurator {
        return true;
     }
 
-	public void loadGlobalParameter(Properties input, Map cfgs, GL_CFGS eKey)
+    public void loadGlobalParameter(Properties input, Map cfgs, GL_CFGS eKey)
           throws Exception {
         
         String key = eKey.toString();
@@ -632,18 +648,26 @@ public class AppConfigurator {
                 }
             } else {
                 // TBD add logging
-                System.out.println("*** default value not defined for key: " + epParm + "  input property: " + propName);
-                if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                    System.out.println("Missing required default for endpoint parameter: " + epParm + "  input property: " + propName);
-                    //throw new Exception("Missing required default for endpoint parameter: " + epParm + "  input property: " + propName);
+                System.out.println("*** default value not defined for key: "
+                      + epParm + "  input property: " + propName);
+                if (epParm.equals(EP_CFGS.irisEndpointClassName)
+                      | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                    System.out.println("Missing required default for endpoint parameter: "
+                          + epParm + "  input property: " + propName);
+                    //throw new Exception("Missing required default for endpoint parameter: "
+                    //+ epParm + "  input property: " + propName);
                 }
             }
         } else {
             // TBD add logging
-            System.out.println("*** property is null or empty for key: " + epParm + "  input property: " + propName);
-            if (epParm.equals(EP_CFGS.irisEndpointClassName) | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                System.out.println("*** *** *** Missing required endpoint parameter: " + epParm + "  input property: " + propName);
-                //throw new Exception("Missing required endpoint parameter: " + epParm + "  input property: " + propName);
+            System.out.println("*** property is null or empty for key: "
+                  + epParm + "  input property: " + propName);
+            if (epParm.equals(EP_CFGS.irisEndpointClassName)
+                  | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                System.out.println("*** *** *** Missing required endpoint parameter: "
+                      + epParm + "  input property: " + propName);
+                //throw new Exception("Missing required endpoint parameter: " + epParm
+                //+ "  input property: " + propName);
             }
         }
 	}
@@ -816,8 +840,6 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.appName.toString());
         keyList.add(GL_CFGS.appVersion.toString());
         keyList.add(GL_CFGS.corsEnabled.toString());
-        keyList.add(GL_CFGS.swaggerV2URL.toString());
-        keyList.add(GL_CFGS.wadlPath.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());
@@ -893,8 +915,6 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.appName.toString());
         keyList.add(GL_CFGS.appVersion.toString());
         keyList.add(GL_CFGS.corsEnabled.toString());
-        keyList.add(GL_CFGS.swaggerV2URL.toString());
-        keyList.add(GL_CFGS.wadlPath.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());

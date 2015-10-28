@@ -260,202 +260,202 @@ public class Wss {
 		return builder.build();
 	}	
 	
-	@Path("application.wadl")
-	@GET @Produces ("application/xml")
-	public Response getWadl() {
-        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	
-    	// First check if wadlPath configuration is set.  If so, then stream from that URL.
-    	
-    	String wadlPath = ri.appConfig.getWadlPath();
-    	if ((wadlPath != null) && (!wadlPath.isEmpty())) {
-            logger.info("Attempting to load WADL from: " + wadlPath);
-
-        	InputStream is = null;
-          	URL url = null;
-        	try {    		
-        		url = new URL(wadlPath);    		
-        		is = url.openStream();
-        	} catch (Exception ex) {
-        		String errMsg = "Wss - Error getting WADL URL: " + wadlPath + "  ex: "
-                      + ex;
-                Util.logAndThrowException(ri, Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
-        	}
-        	
-        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
-
-        	StreamingOutput so = new StreamingOutput() {
-        		@Override
-    			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
-        			BufferedWriter writer = new BufferedWriter (new OutputStreamWriter(outputStream));
-        			String inputLine = null ;
-        			while ((inputLine = br.readLine()) != null) {
-        				writer.write(inputLine);
-        				writer.newLine();
-        			}
-        			writer.flush();
-        			br.close();
-        			writer.close();
-    			}
-        	};
-
-            ResponseBuilder builder = Response.status(Status.OK)
-                  .type("application/xml")
-                  .entity(so);
-            Util.addCORSHeadersIfConfigured(builder, ri);
-    		return builder.build();
-    	}
-
-		// Try to read a user WADL file from the location specified by the
-		// wssConfigDir property concatenated with the web application name (last part
-		// of context path), e.g. 'station' or 'webserviceshell'
-		String wadlFileName = null;
-		String configBase = WebUtils.getConfigFileBase(context);
-		FileInputStream wadlStream = null;
-        String errMsg = "Wss - Error getting default WADL file";
-		try {
-			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
-			if (AppConfigurator.isOkString(wssConfigDir)
-                  && AppConfigurator.isOkString(configBase)) {
-				if (!wssConfigDir.endsWith("/")) 
-					wssConfigDir += "/";
-				
-				wadlFileName = wssConfigDir + configBase + "-application.wadl";		
-			
-				File wadl = new File(wadlFileName);
-				if (wadl.exists()) {
-					logger.info("Attempting to load wadl file from: " + wadlFileName);
-
-					wadlStream = new FileInputStream(wadlFileName);
-
-                    ResponseBuilder builder = Response.status(Status.OK)
-                          .type("application/xml")
-                          .entity(wadlStream);
-                    Util.addCORSHeadersIfConfigured(builder, ri);
-                    return builder.build();
-				} else {
-                    errMsg = errMsg + "  wadlFileName: " + wadlFileName;
-                }
-			} else {
-                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
-                      + "  configBase: " + configBase;
-            }
-		} catch (Exception ex) {
-            errMsg = errMsg + "  ex: " + ex;
-		}
-
-        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
-        Util.logAndThrowException(ri, status, errMsg);
-
-        ResponseBuilder builder = Response.status(status)
-              .type(MediaType.TEXT_PLAIN);
-        Util.addCORSHeadersIfConfigured(builder, ri);
-        return builder.build();
-	}
-
-	@Path("v2/swagger")
-	@GET @Produces ({"application/json", "text/plain"})
-	public Response getSwaggerV2Specification() {
-        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
-    	
-    	// First check if swaggerV2Spec configuration paramter is set.
-        // If so, then return stream object from that URL.
-    	
-    	String resourceURLStr = ri.appConfig.getSwaggerV2URL();
-    	if ((resourceURLStr != null) && (!resourceURLStr.isEmpty())) {
-            logger.info("Attempting to load resource from: " + resourceURLStr);
-            
-        	InputStream is = null;
-          	URL url = null;
-        	try {    		
-        		url = new URL(resourceURLStr);    		
-        		is = url.openStream();
-        	} catch (Exception ex) {
-        		String errMsg = "Wss - Error on Swagger V2 URL: "
-                      + resourceURLStr + "  ex: " + ex;
-//                logger.error("Failure loading SwaggerV2 file from: " + url
-//                + "  ex: " + ex);
-//            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
-
-                Util.logAndThrowException(ri,
-                      Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
-        	}
-        	
-        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
-
-        	StreamingOutput so = new StreamingOutput() {
-        		@Override
-    			public void write(OutputStream outputStream) throws IOException,
-                      WebApplicationException {
-        			BufferedWriter writer =
-                          new BufferedWriter (new OutputStreamWriter(outputStream));
-        			String inputLine = null ;
-        			while ((inputLine = br.readLine()) != null) {
-        				writer.write(inputLine);
-        				writer.newLine();
-        			}
-        			writer.flush();
-        			br.close();
-        			writer.close();
-    			}
-        	};
-
-            ResponseBuilder builder = Response.status(Status.OK)
-                  .type("application/json")
-                  .entity(so);
-            Util.addCORSHeadersIfConfigured(builder, ri);
-    		return builder.build();
-    	}
-
-        // else - for resource URL not found, try with a default name
-        //
-		// Try to read the resource file from the webserviceshell configuration
-        // file folder using the same naming conventions as regular
-        // webserviceshell cfg files.
-		String resourceFileName = null;
-		String configBase = WebUtils.getConfigFileBase(context);
-		FileInputStream fileInStream = null;
-        String errMsg = "Wss - Error getting default resource file";
-		try {
-			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
-			if (AppConfigurator.isOkString(wssConfigDir)
-                  && AppConfigurator.isOkString(configBase)) {
-				if (!wssConfigDir.endsWith("/")) {
-					wssConfigDir += "/";
-                }
-				
-				resourceFileName = wssConfigDir + configBase + "-swagger.json";		
-			
-				File resourceFile = new File(resourceFileName);
-				if (resourceFile.exists()) {
-					logger.info("Attempting to load resource file from: "
-                          + resourceFileName);
-
-					fileInStream = new FileInputStream(resourceFileName);
-                    ResponseBuilder builder = Response.status(Status.OK)
-                          .type("application/json")
-                          .entity(fileInStream);
-                    Util.addCORSHeadersIfConfigured(builder, ri);
-                    return builder.build();
-				} else {
-                    errMsg = errMsg + "  resourceFileName: " + resourceFileName;
-                }
-			} else {
-                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
-                      + "  configBase: " + configBase;
-            }
-		} catch (Exception ex) {
-            errMsg = errMsg + "  ex: " + ex;
-		}
-
-        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
-        Util.logAndThrowException(ri, status, errMsg);
-
-        ResponseBuilder builder = Response.status(status)
-              .type(MediaType.TEXT_PLAIN);
-        Util.addCORSHeadersIfConfigured(builder, ri);
-        return builder.build();
-	}
+//	@Path("application.wadl")
+//	@GET @Produces ("application/xml")
+//	public Response getWadl() {
+//        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+//    	
+//    	// First check if wadlPath configuration is set.  If so, then stream from that URL.
+//    	
+//    	String wadlPath = ri.appConfig.getWadlPath();
+//    	if ((wadlPath != null) && (!wadlPath.isEmpty())) {
+//            logger.info("Attempting to load WADL from: " + wadlPath);
+//
+//        	InputStream is = null;
+//          	URL url = null;
+//        	try {    		
+//        		url = new URL(wadlPath);    		
+//        		is = url.openStream();
+//        	} catch (Exception ex) {
+//        		String errMsg = "Wss - Error getting WADL URL: " + wadlPath + "  ex: "
+//                      + ex;
+//                Util.logAndThrowException(ri, Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
+//        	}
+//        	
+//        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
+//
+//        	StreamingOutput so = new StreamingOutput() {
+//        		@Override
+//    			public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+//        			BufferedWriter writer = new BufferedWriter (new OutputStreamWriter(outputStream));
+//        			String inputLine = null ;
+//        			while ((inputLine = br.readLine()) != null) {
+//        				writer.write(inputLine);
+//        				writer.newLine();
+//        			}
+//        			writer.flush();
+//        			br.close();
+//        			writer.close();
+//    			}
+//        	};
+//
+//            ResponseBuilder builder = Response.status(Status.OK)
+//                  .type("application/xml")
+//                  .entity(so);
+//            Util.addCORSHeadersIfConfigured(builder, ri);
+//    		return builder.build();
+//    	}
+//
+//		// Try to read a user WADL file from the location specified by the
+//		// wssConfigDir property concatenated with the web application name (last part
+//		// of context path), e.g. 'station' or 'webserviceshell'
+//		String wadlFileName = null;
+//		String configBase = WebUtils.getConfigFileBase(context);
+//		FileInputStream wadlStream = null;
+//        String errMsg = "Wss - Error getting default WADL file";
+//		try {
+//			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
+//			if (AppConfigurator.isOkString(wssConfigDir)
+//                  && AppConfigurator.isOkString(configBase)) {
+//				if (!wssConfigDir.endsWith("/")) 
+//					wssConfigDir += "/";
+//				
+//				wadlFileName = wssConfigDir + configBase + "-application.wadl";		
+//			
+//				File wadl = new File(wadlFileName);
+//				if (wadl.exists()) {
+//					logger.info("Attempting to load wadl file from: " + wadlFileName);
+//
+//					wadlStream = new FileInputStream(wadlFileName);
+//
+//                    ResponseBuilder builder = Response.status(Status.OK)
+//                          .type("application/xml")
+//                          .entity(wadlStream);
+//                    Util.addCORSHeadersIfConfigured(builder, ri);
+//                    return builder.build();
+//				} else {
+//                    errMsg = errMsg + "  wadlFileName: " + wadlFileName;
+//                }
+//			} else {
+//                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
+//                      + "  configBase: " + configBase;
+//            }
+//		} catch (Exception ex) {
+//            errMsg = errMsg + "  ex: " + ex;
+//		}
+//
+//        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
+//        Util.logAndThrowException(ri, status, errMsg);
+//
+//        ResponseBuilder builder = Response.status(status)
+//              .type(MediaType.TEXT_PLAIN);
+//        Util.addCORSHeadersIfConfigured(builder, ri);
+//        return builder.build();
+//	}
+//
+//	@Path("v2/swagger")
+//	@GET @Produces ({"application/json", "text/plain"})
+//	public Response getSwaggerV2Specification() {
+//        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+//    	
+//    	// First check if swaggerV2Spec configuration paramter is set.
+//        // If so, then return stream object from that URL.
+//    	
+//    	String resourceURLStr = ri.appConfig.getSwaggerV2URL();
+//    	if ((resourceURLStr != null) && (!resourceURLStr.isEmpty())) {
+//            logger.info("Attempting to load resource from: " + resourceURLStr);
+//            
+//        	InputStream is = null;
+//          	URL url = null;
+//        	try {    		
+//        		url = new URL(resourceURLStr);    		
+//        		is = url.openStream();
+//        	} catch (Exception ex) {
+//        		String errMsg = "Wss - Error on Swagger V2 URL: "
+//                      + resourceURLStr + "  ex: " + ex;
+////                logger.error("Failure loading SwaggerV2 file from: " + url
+////                + "  ex: " + ex);
+////            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
+//
+//                Util.logAndThrowException(ri,
+//                      Util.adjustByCfg(Status.NO_CONTENT, ri), errMsg);
+//        	}
+//        	
+//        	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
+//
+//        	StreamingOutput so = new StreamingOutput() {
+//        		@Override
+//    			public void write(OutputStream outputStream) throws IOException,
+//                      WebApplicationException {
+//        			BufferedWriter writer =
+//                          new BufferedWriter (new OutputStreamWriter(outputStream));
+//        			String inputLine = null ;
+//        			while ((inputLine = br.readLine()) != null) {
+//        				writer.write(inputLine);
+//        				writer.newLine();
+//        			}
+//        			writer.flush();
+//        			br.close();
+//        			writer.close();
+//    			}
+//        	};
+//
+//            ResponseBuilder builder = Response.status(Status.OK)
+//                  .type("application/json")
+//                  .entity(so);
+//            Util.addCORSHeadersIfConfigured(builder, ri);
+//    		return builder.build();
+//    	}
+//
+//        // else - for resource URL not found, try with a default name
+//        //
+//		// Try to read the resource file from the webserviceshell configuration
+//        // file folder using the same naming conventions as regular
+//        // webserviceshell cfg files.
+//		String resourceFileName = null;
+//		String configBase = WebUtils.getConfigFileBase(context);
+//		FileInputStream fileInStream = null;
+//        String errMsg = "Wss - Error getting default resource file";
+//		try {
+//			String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
+//			if (AppConfigurator.isOkString(wssConfigDir)
+//                  && AppConfigurator.isOkString(configBase)) {
+//				if (!wssConfigDir.endsWith("/")) {
+//					wssConfigDir += "/";
+//                }
+//				
+//				resourceFileName = wssConfigDir + configBase + "-swagger.json";		
+//			
+//				File resourceFile = new File(resourceFileName);
+//				if (resourceFile.exists()) {
+//					logger.info("Attempting to load resource file from: "
+//                          + resourceFileName);
+//
+//					fileInStream = new FileInputStream(resourceFileName);
+//                    ResponseBuilder builder = Response.status(Status.OK)
+//                          .type("application/json")
+//                          .entity(fileInStream);
+//                    Util.addCORSHeadersIfConfigured(builder, ri);
+//                    return builder.build();
+//				} else {
+//                    errMsg = errMsg + "  resourceFileName: " + resourceFileName;
+//                }
+//			} else {
+//                errMsg = errMsg + "  wssConfigDir: " + wssConfigDir
+//                      + "  configBase: " + configBase;
+//            }
+//		} catch (Exception ex) {
+//            errMsg = errMsg + "  ex: " + ex;
+//		}
+//
+//        Status status = Util.adjustByCfg(Status.NO_CONTENT, ri);
+//        Util.logAndThrowException(ri, status, errMsg);
+//
+//        ResponseBuilder builder = Response.status(status)
+//              .type(MediaType.TEXT_PLAIN);
+//        Util.addCORSHeadersIfConfigured(builder, ri);
+//        return builder.build();
+//	}
 
 ////	@POST
 ////	@Path("queryauth") 

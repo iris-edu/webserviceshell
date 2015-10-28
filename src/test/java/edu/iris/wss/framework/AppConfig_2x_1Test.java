@@ -113,9 +113,6 @@ public class AppConfig_2x_1Test {
         assert(appCfg.getAppName().equals("services-mix1"));
         assert(appCfg.getAppVersion().equals("0.5.0"));
         assert(appCfg.isCorsEnabled() == true);
-        assert(appCfg.getSwaggerV2URL().equals(
-              "http://geows.ds.iris.edu/geows-uf/v2/intermagnet-2-swagger.json"));
-        assert(appCfg.getWadlPath() == null);
         assert(appCfg.getRootServiceDoc().equals(
               "file:///earthcube/tomcat-8091-7.0.56/wss_config/intermagnet-2-swaggerindex.html"));
         assert(appCfg.getLoggingType().equals(AppConfigurator.LoggingMethod.LOG4J));

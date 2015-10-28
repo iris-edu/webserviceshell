@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 import org.junit.After;
@@ -14,12 +15,16 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  *
  * @author mike
  */
 public class AppConfigurator_getters_Test {
+    public static final String EXECUTABLE_FILE_FOR_TEST = 
+          "src/test/resources/ServiceConfigTest/sleep_handle2.sh";
 
     public AppConfigurator_getters_Test() {
     }
@@ -68,16 +73,14 @@ public class AppConfigurator_getters_Test {
                 // noop
             } else {
                 fail("Unexpected failure in test setup while trying to load file: "
-                      + propFileName + "  from app ex: " + ex);
+                      + propFileName + "  from app, ex: " + ex);
             }
         }
 
         return appCfg;
     }
 
-    public static Object[] createTestObjs() {
-        AppConfigurator appCfg = new AppConfigurator();
-
+    public static Properties createInitialTestProperties(String epName) {
         // setup a simple configuration for testing
         java.util.Properties props = new java.util.Properties();
 
@@ -87,17 +90,20 @@ public class AppConfigurator_getters_Test {
         props.setProperty(
               AppConfigurator.GL_CFGS.appVersion.toString(), "mock_version");
 
-        Object[] returnObjs = {appCfg, props};
-        return returnObjs;
+        // handlerProgram is required, but not part of this test
+        String property = AppConfigurator.createEPPropertiesName(
+              epName, AppConfigurator.EP_CFGS.handlerProgram);
+        props.setProperty(property, EXECUTABLE_FILE_FOR_TEST);
+
+        return props;
     }
 
     @Test
     public void test_getMediaType() throws Exception {
-        Object[] items = createTestObjs();
-        AppConfigurator appCfg = (AppConfigurator)items[0];
-        Properties props = (Properties)items[1];
-
         String endpointName = "endpnt1";
+        Properties props = createInitialTestProperties(endpointName);
+        AppConfigurator appCfg = new AppConfigurator();
+
         String property = AppConfigurator.createEPPropertiesName(
               endpointName, AppConfigurator.EP_CFGS.outputTypes);
 
@@ -142,12 +148,10 @@ public class AppConfigurator_getters_Test {
     
     @Test
     public void test_getDefaultOutputTypeKey() throws Exception {
-        Object[] items = createTestObjs();
-        AppConfigurator appCfg = (AppConfigurator)items[0];
-        Properties props = (Properties)items[1];
-        
         String endpointName = "endpnt2";
-        
+        Properties props = createInitialTestProperties(endpointName);
+        AppConfigurator appCfg = new AppConfigurator();
+    
         // set a property that is not being tested to cause a build of an endpoint
         String property = AppConfigurator.createEPPropertiesName(
               endpointName, AppConfigurator.EP_CFGS.usageLog);
@@ -170,9 +174,7 @@ public class AppConfigurator_getters_Test {
 
         // *********************
         // change outputTypes and test again
-        items = createTestObjs();
-        appCfg = (AppConfigurator)items[0];
-        props = (Properties)items[1];
+        props = createInitialTestProperties(endpointName);
 
         String textMediaType = "text/plain";
         String jsonMediaType = "application/json";
@@ -205,5 +207,71 @@ public class AppConfigurator_getters_Test {
         } catch(Exception ex) {
             // is successful
         }
+    }
+
+    @Test
+    public void test_ProxyResourceConfiguration() throws Exception {
+        String endpointName = "endpntProxy";
+        Properties props = createInitialTestProperties(endpointName);
+        AppConfigurator appCfg = new AppConfigurator();
+
+        // setup up proxy resourse for JSON and text
+        
+        // first the respective class name
+        String property = AppConfigurator.createEPPropertiesName(
+              endpointName, AppConfigurator.EP_CFGS.irisEndpointClassName);
+        props.setProperty(property, edu.iris.wss.endpoints.ProxyResource.class.getName());
+
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail("Unexpected success, proxyURL should be a required property here.");
+        } catch(Exception ex) {
+            // successful test,
+            // should throw exception if propxyURL property is not defined
+        }
+        
+        // add the proxyURL property
+        property = AppConfigurator.createEPPropertiesName(
+              endpointName, AppConfigurator.EP_CFGS.proxyURL);
+        props.setProperty(property, "file:///someURL");
+        
+        // load this version of properties
+        appCfg = new AppConfigurator();
+        try {
+            appCfg.loadConfigurationParameters(props, null);
+            fail("Unexpected success, this load should fail with file not found.");
+        } catch(Exception ex) {
+            assert(ex.toString().contains("java.io.FileNotFoundException"));
+        }
+
+        // use any file to test with
+        String endPath = "src"
+              + File.separator + "test"
+              + File.separator + "resources"
+              + File.separator + "AppConfiguratorTest"
+              + File.separator + "service_mix1.cfg";
+        String currentDir = System.getProperty("user.dir");
+        String testURL = "file://" + currentDir + File.separator + endPath;
+        
+        // create URL with this name and reset property
+        props.setProperty(property, testURL);
+        
+        // this version should load ok
+        appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
+
+        // the default media type should be explicitly set
+        // update output types property
+        String jsonMediaType = "application/json";
+        property = AppConfigurator.createEPPropertiesName(
+              endpointName, AppConfigurator.EP_CFGS.outputTypes);
+        props.setProperty(property, "json: " + jsonMediaType
+              + ", "+ "text: text/plain");
+        
+        // this version should load ok
+        appCfg = new AppConfigurator();
+        appCfg.loadConfigurationParameters(props, null);
+
+        assert(appCfg.getMediaType(endpointName, "json").equals(jsonMediaType));
     }
 }

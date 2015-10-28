@@ -41,7 +41,7 @@ public class SingletonWrapper {
         //System.out.println("***** SingletonWrapper no-arg construct");
     }
 	
-	public void configure(ServletContext context) {		
+	public void configure(ServletContext context) throws Exception {		
 		// If we've already configured the application, don't do it again.
 
 		if (appConfig.isValid() ) {
@@ -52,11 +52,11 @@ public class SingletonWrapper {
 		if (context != null) {
 			configFileBase = WebUtils.getConfigFileBase(context);
 		}
-
+System.out.println("* ----------------------------------------- configFileBase: " + configFileBase);
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
         } catch (Exception ex) {
-            String msg = "Error in -service.cfg file, message: "
+            String msg = "------------------------- Error loading service.cfg file, message: "
                     + ex.getMessage();
             System.out.println(msg);
             logger.error(msg);
@@ -64,8 +64,10 @@ public class SingletonWrapper {
             // even with error, try to load params so paramConfig is
             // not null
             paramConfig = getParamConfig(appConfig, configFileBase);
+            
+            throw new Exception(msg, ex);
 
-    		return;
+//    		return;
     	}
 
         paramConfig = getParamConfig(appConfig, configFileBase);
@@ -75,13 +77,17 @@ public class SingletonWrapper {
 	}
 
     private ParamConfigurator getParamConfig(AppConfigurator appCfg,
-          String cfgFileBase) {
+          String cfgFileBase) throws Exception {
         paramConfig = new ParamConfigurator(appCfg.getEndpoints());
         
     	try {
             paramConfig.loadConfigFile(cfgFileBase);
         } catch (Exception ex) {
-            logger.fatal("Invalid parameter config file: " + ex.getMessage());
+            String msg = "------------------------- Error loading param.cfg file, message: "
+                    + ex.getMessage();
+            System.out.println(msg);
+            logger.error(msg);
+            throw new Exception(msg, ex);
     	}
 
         return paramConfig;

@@ -47,7 +47,8 @@ public class MyApplication extends ResourceConfig {
 
   // first thing to run, setup logging, load configuration, etc.
   @Inject
-  public MyApplication(ServiceLocator serviceLocator, @Context ServletContext servletContext) {
+  public MyApplication(ServiceLocator serviceLocator,
+        @Context ServletContext servletContext) throws Exception {
     // always setup log4j first
     WebUtils.myInitLog4j(servletContext);
 
@@ -66,7 +67,6 @@ public class MyApplication extends ResourceConfig {
 
     // add in endpoints  TBD remove soon
     addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
-    //addEndpoint("swag", edu.iris.wss.framework.IrisDynamicExecuto2.class, "doIrisProcessing", "GET");
 
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
@@ -81,8 +81,7 @@ public class MyApplication extends ResourceConfig {
         // Note: HEAD seems to be allowed by default
         addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
           methodName, "GET");
-System.out.println("*------------------------------ myApp postEn: " + sw.appConfig.isPostEnabled(epName)
-+ "  epNmae: " + epName + "  mName: " + methodName);
+        
         if (sw.appConfig.isPostEnabled(epName)) {
             addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
                   methodName, "POST");
