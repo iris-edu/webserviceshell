@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -25,7 +25,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
-import edu.iris.wss.utils.WebUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
@@ -35,10 +34,7 @@ public  class RequestInfo {
 	public UriInfo uriInfo;
 	public javax.servlet.http.HttpServletRequest request;
 	public HttpHeaders requestHeaders;
-	
-	public static enum CallType { NORMAL, CATALOGS, CONTRIBUTORS, COUNTS };
-	public CallType callType = CallType.NORMAL;
-	
+
 	public boolean perRequestUse404for204 = false;
     
     // Note: The setter should be validating this string, trim it
@@ -53,10 +49,7 @@ public  class RequestInfo {
 	public StatsKeeper statsKeeper;
 	
 	public SingletonWrapper sw;
-	
-	// Used (set) by ProcessStreamingOutput class on ZIP output
-	public String workingSubdirectory = null;
-    
+
     public boolean isWriteToMiniseed = false;
     
     // as per StackOverflow, make sure the object is fully created before

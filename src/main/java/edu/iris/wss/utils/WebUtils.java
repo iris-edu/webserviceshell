@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -195,7 +195,7 @@ public class WebUtils {
 			return null;
 		}
 		
-	   	if ((entries == null) || (entries.size() == 0))
+        if ((entries == null) || (entries.isEmpty()))
 	   		return null;
 
 	   	String entry = entries.get(0);
@@ -221,7 +221,7 @@ public class WebUtils {
 		   		String ps[] =  props.split(",");
 		   		
 	   			StringBuilder sb = new StringBuilder();
-		   		for (String s: ps) sb.append(s + "\n");
+                for (String s: ps) sb.append(s).append("\n");
 		   		
 		   		Properties p = new Properties();
 		   		p.load(new StringReader(sb.toString()));

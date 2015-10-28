@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -104,7 +104,6 @@ public class ServiceShellException extends WebApplicationException {
               .append(": v ")
               .append(ri.appConfig.getAppVersion())
               .append("\n");
-System.out.println("* ------------------------------shell ex status: " + status + "  sb: " + sb);
 
 //    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());

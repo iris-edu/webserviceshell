@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -88,14 +88,17 @@ public class FdsnStatus {
             }
         }
 
+        @Override
         public Family getFamily() {
             return family;
         }
 
+        @Override
         public int getStatusCode() {
             return code;
         }
 
+        @Override
         public String getReasonPhrase() {
             return toString();
         }

@@ -1,6 +1,6 @@
 /**
  * *****************************************************************************
- * Copyright (c) 2014 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *
  * This file is part of the Web Service Shell (WSS).
  *
@@ -21,9 +21,7 @@
 package edu.iris.wss.framework;
 
 import edu.iris.wss.utils.WebUtils;
-import java.lang.reflect.Method;
 import java.util.Set;
-import java.util.logging.Level;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;

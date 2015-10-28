@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -52,11 +52,10 @@ public class SingletonWrapper {
 		if (context != null) {
 			configFileBase = WebUtils.getConfigFileBase(context);
 		}
-System.out.println("* ----------------------------------------- configFileBase: " + configFileBase);
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
         } catch (Exception ex) {
-            String msg = "------------------------- Error loading service.cfg file, message: "
+            String msg = "----------- Error loading service.cfg file, message: "
                     + ex.getMessage();
             System.out.println(msg);
             logger.error(msg);
@@ -83,7 +82,7 @@ System.out.println("* ----------------------------------------- configFileBase: 
     	try {
             paramConfig.loadConfigFile(cfgFileBase);
         } catch (Exception ex) {
-            String msg = "------------------------- Error loading param.cfg file, message: "
+            String msg = "----------- Error loading param.cfg file, message: "
                     + ex.getMessage();
             System.out.println(msg);
             logger.error(msg);

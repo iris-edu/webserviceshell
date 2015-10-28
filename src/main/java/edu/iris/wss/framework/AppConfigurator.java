@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -29,8 +29,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
@@ -104,13 +107,14 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
     }
 
-    // An enum of the types supported internally. This is used in the code to
+    // InternalTypes is an enum of the types supported internally.
+    // This is used in the code to
     // identify places in which the external typeKeys specified in the
     // service.cfg file must aggree with the respective items in this enum.
-    // An operator must have typeKeys "miniseed" to enable access
-    // to respective code.
+    // An operator must have typeKeys "miniseed" or "mseed" to enable access
+    // to miniseed write code, otherwise data is written as binary.
     //
-    // BINARY is defined as the default
+    // BINARY is defined as the default in the init method
     //
     // miniseed is an alias for mseed - to be consistent with FDSN standards
     //
@@ -130,83 +134,86 @@ public class AppConfigurator {
         irisEndpointClassName, proxyURL
     }
 
-    // parameters that apply to all endpoints
+    // container for parameters that apply to all endpoints
     private final Map<String, Object> globals = new HashMap();
 
-    // container for endpoints where the key is defined in the cfg file
+    // container for endpoints, an "endpoint" is defined in the cfg file
     // as being the string in front of ENDPOINT_TO_PROPERTIES_DELIMITER
     private final Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
     
     // an endpoint, i.e. contains the parameters per endpoint
     private final Map<EP_CFGS, Object> ep_defaults = new HashMap();
-    //private Map<EP_CFGS, Object> endpoint = new HashMap();
-    //private Map<String, String> default_outputTypes = createOutputTypes();
-    
-//	private final InternalTypes outputType = InternalTypes.BINARY;
-//    private String defaultOutputTypeKey = "BINARY";
 
 	public static enum LoggingMethod {
 		LOG4J, JMS
 	};
 
-    // newTypes may be null or empty, which means return the default list
-    
-    // must use LinkedHashMap or equivalent to preserve order of types
-    // to enable using the first element as "the default type"
-    
-    // must always have at least one element, binary is the designated default
-    // at this time.
+    /**
+     *
+     * @param newTypes - may be null or empty, if so, then return the default
+     *                   list. There must always have at least one element,
+     *                   binary is the designated default
+     * @return
+     * @throws Exception
+     */
     public Map<String, String> createOutputTypes(String newTypes)
           throws Exception
     {
+        // must use LinkedHashMap or equivalent to preserve order of types
+        // to enable using the first element as "the default type"
         Map<String, String> types = new LinkedHashMap<>();
-        
+
         // set newTypes first so as to preserve order from configuration file
         if (isOkString(newTypes)) {
             setOutputTypes(types, newTypes);
         }
-        
+
         // set default last
         setOutputTypes(types, "BINARY: application/octet-stream");
-        
+
         return types;
     }
-//	private String catalogsHandlerProgram;
-//	private String contributorsHandlerProgram;
-//	private String countsHandlerProgram;
 
-	// Required configuration entries. Failure to find these will result in an
-	// exception.
+	public String getAppName() {
+        return (String) globals.get(GL_CFGS.appName.toString());
+    }
 
-	public String getAppName() { return (String)globals.get(GL_CFGS.appName.toString()); }
-	public String getAppVersion() { return (String)globals.get(GL_CFGS.appVersion.toString()); }
-	public boolean isCorsEnabled() { return ((Boolean)globals.get(GL_CFGS.corsEnabled.toString())); }
-//    public String getSwaggerV2URL() { return (String)globals.get(GL_CFGS.swaggerV2URL.toString()); }
-//    public String getWadlPath() { return (String)globals.get(GL_CFGS.wadlPath.toString()); }
-    public String getRootServiceDoc() { return (String)globals.get(GL_CFGS.rootServiceDoc.toString()); }
-    public LoggingMethod getLoggingType() { return (LoggingMethod)globals.get(GL_CFGS.loggingMethod.toString()); }
-    public int getSigkillDelay() { return ((Integer)globals.get(GL_CFGS.sigkillDelay.toString())); }
-    public String getSingletonClassName() { return (String)globals.get(GL_CFGS.singletonClassName.toString()); }
+    public String getAppVersion() {
+        return (String) globals.get(GL_CFGS.appVersion.toString());
+    }
 
-	public String getWssVersion() { return wssVersion; }
+    public boolean isCorsEnabled() {
+        return ((Boolean) globals.get(GL_CFGS.corsEnabled.toString()));
+    }
+
+    public String getRootServiceDoc() {
+        return (String) globals.get(GL_CFGS.rootServiceDoc.toString());
+    }
+
+    public LoggingMethod getLoggingType() {
+        return (LoggingMethod) globals.get(GL_CFGS.loggingMethod.toString());
+    }
+
+    public int getSigkillDelay() {
+        return ((Integer) globals.get(GL_CFGS.sigkillDelay.toString()));
+    }
+
+    public String getSingletonClassName() {
+        return (String) globals.get(GL_CFGS.singletonClassName.toString());
+    }
+
+    public String getWssVersion() {
+        return wssVersion;
+    }
 
     public IrisSingleton getIrisSingleton() {
         return singleton;
     }
 
-//    public String getIrisEndpointClassName(String epName) throws Exception {
-//        if (endpoints.containsKey(epName)) {
-//            return endpoints.get(epName).get(EP_CFGS.irisEndpointClassName).toString();
-//        }
-//        throw new Exception("WebServiceShell getIrisEndpointClassName,"
-//              + " there is no endpoint configured for endpoint name: "
-//              + epName);
-//    }
-
     public String getProxyUrl(String epName) {
          return endpoints.get(epName).get(EP_CFGS.proxyURL).toString();
     }
-    
+
     /**
      * Note: no parameter checking or configuration for endpoint checking
      *       done here, it should be done when parameters are loaded.
@@ -219,32 +226,35 @@ public class AppConfigurator {
     }
     
     public String getHandlerProgram(String epName) {
-        System.out.println("---- **** AppConfigurator getHandlerProgram epName: " + epName);
-        System.out.println("---- **** AppConfigurator getHandlerProgram endpoint: " + endpoints.get(epName));
         return endpoints.get(epName).get(EP_CFGS.handlerProgram).toString();
     }
+
 	public int getTimeoutSeconds(String epName) {
 		return (int)endpoints.get(epName).get(EP_CFGS.handlerTimeout);
 	}
+
     public String getWorkingDirectory(String epName) {
         return endpoints.get(epName).get(EP_CFGS.handlerWorkingDirectory).toString();
     }
-    
+
     // Note: this can throw NullPointerException and ClassCastException
     public boolean isThisEndpointConfigured(String epName) {
         return endpoints.containsKey(epName);
 	}
+
     public Set<String> getEndpoints() {
         return endpoints.keySet();
 	}
-    
+
     // Note: this can throw NullPointerException and ClassCastException
     public boolean isConfiguredForTypeKey(String epName, String outputTypeKey) {
         Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName)
               .get(EP_CFGS.outputTypes);
         return outTypes.containsKey(outputTypeKey);
 	}
-    public String getMediaType(String epName, String outputTypeKey) throws Exception {
+
+    public String getMediaType(String epName, String outputTypeKey)
+          throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> outputTypes = (Map<String, String>)endpoints
                   .get(epName).get(EP_CFGS.outputTypes);
@@ -265,13 +275,15 @@ public class AppConfigurator {
 	public boolean isUsageLogEnabled(String epName) {
         return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
 	}
+
 	public Boolean isPostEnabled(String epName) {
 		return (boolean)endpoints.get(epName).get(EP_CFGS.postEnabled);
 	}
+
 	public Boolean isUse404For204Enabled(String epName) {
 		return (boolean)endpoints.get(epName).get(EP_CFGS.use404For204);
 	}
-    
+
     // Note: this implements the rule that the first item in outputTypes
     //       is the default output type
     //       
@@ -279,13 +291,14 @@ public class AppConfigurator {
         if (endpoints.containsKey(epName)) {
             Map<String, String> types = (Map<String, String>)endpoints
                   .get(epName).get(EP_CFGS.outputTypes);
-            
+
             String defaultOutputTypeKey = (String)types.keySet().toArray()[0];
-            
+
             return defaultOutputTypeKey;
         }
-        throw new Exception("WebServiceShell getDefaultOutputTypeKey, there is no endpoint"
-                      + " configured for endpoint name: " + epName);
+        throw new Exception(
+              "WebServiceShell getDefaultOutputTypeKey, there is no endpoint"
+                    + " configured for endpoint name: " + epName);
 	}
 
     // ---------------------------------
@@ -295,7 +308,7 @@ public class AppConfigurator {
 			throw new Exception("WebServiceShell setOutputTypes, outputTypes"
                   + " pair values are null or empty string.");
         }
-        
+
         String[] pairs = s.split(java.util.regex.Pattern.quote(","));
 
         for (String pair : pairs) {
@@ -315,13 +328,6 @@ public class AppConfigurator {
         }
     }
 
-
-	// Not required. Might be defaulted elsewhere.
-
-
-	// Other Getters. Not defaulted
-
-	
 	public Boolean isValid() {
 		return isValid;
 	}
@@ -332,8 +338,7 @@ public class AppConfigurator {
 			throws Exception {
 
 		// Depending on the way the servlet context starts, this can be called
-		// multiple
-		// times via SingletonWrapper class.
+		// multiple times via SingletonWrapper class.
 		if (isLoaded) {
 			return;
         }
@@ -589,7 +594,6 @@ public class AppConfigurator {
         }
 	}
 
-    
 	public void loadEndpointParameter(Properties input, Map epDefaults,
           Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName, ServletContext context)
           throws Exception {
@@ -687,7 +691,7 @@ public class AppConfigurator {
         
         return s.toString();
     }
-    
+
     protected String getValidatedWorkingDir(String newVal) throws Exception {
         
         String validVal = newVal;
@@ -878,10 +882,7 @@ public class AppConfigurator {
         }
         sb.append(line).append(" endpoints end\n");
 
-
-		
-
-		return sb.toString();
+    return sb.toString();
 	}
 
 	private final int colSize = 40;

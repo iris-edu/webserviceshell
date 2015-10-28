@@ -55,9 +55,15 @@ public class IrisDynamicProvider {
         //System.out.println("***************&&& IrisDynamicExecutor constr");
     }
 
+    /**
+     * A test function, which when called, should echo back the contents
+     * of a post request.
+     * @return
+     * @throws IOException
+     */
     public Response echoPostString() throws IOException {
         // when run dynamically, this method does all the abstract methods,
-        // so ri needs to be set here, e.e first
+        // so ri needs to be set here and past in.
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
               requestHeaders);
 
@@ -108,12 +114,19 @@ public class IrisDynamicProvider {
      * This does execution for dynamic endpoints, it wraps what was
      * the in Wss.java as query.
      * 
-     * The steps for running 
-     * wss does setRequestInfo
-     * wss does getResponse
-     * framework does write
-     * 
-     * error handling will call getErrorString.
+     * Concept is the following steps are done
+     * - this methid is loaded as an endpoint in MyApplication based on
+     *   configuration information in service.cfg
+     * - when a resepective endpoint is called, the framework calls
+     *   this method
+     * - this method captures useful information in RequestInfo
+     * - this method checks parameters and parameter type
+     * - this method calls respective methods in IrisStreamingOutput
+     * - this method may customize the response, then returns a
+     *   response to the framework
+     *
+     * for error handling, error messages should be available in the
+     * user code via a call to getErrorString.
      * 
      * @return 
      * @throws java.io.IOException
@@ -132,10 +145,6 @@ public class IrisDynamicProvider {
                         + " endpoint: " + requestedEpName);
         }
 
-        System.out.println("* doIrisStreaming method: " + containerRequestContext.getMethod());
-        System.out.println("* doIrisStreaming toString: " + containerRequestContext.toString());
-        System.out.println("* doIrisStreaming getLength: " + containerRequestContext.getLength());
-
         if (containerRequestContext.getMethod().equals("POST")) {
             if (containerRequestContext != null) {
                 ri.postBody = ((ContainerRequest) containerRequestContext)
@@ -149,7 +158,8 @@ public class IrisDynamicProvider {
 
         // No object existance check done here as it should have been
         // done when the configuration parameters were loaded
-        IrisStreamingOutput iso = (IrisStreamingOutput)ri.appConfig.getIrisEndpointClass(requestedEpName);
+        IrisStreamingOutput iso =
+              (IrisStreamingOutput)ri.appConfig.getIrisEndpointClass(requestedEpName);
 
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
@@ -174,9 +184,6 @@ public class IrisDynamicProvider {
 			Util.logAndThrowException(ri, Status.BAD_REQUEST,
                   "doIrisStreaming - " + e.getMessage());
 		}
-
-        System.out.println("** doIrisStreaming, cmd len: " + cmd.size()
-              + " cmd: " + cmd);
             
         if (ri.request.getMethod().equals("HEAD")) {
             System.out.println("** doIrisStreaming, returning head request: "
@@ -207,6 +214,8 @@ public class IrisDynamicProvider {
             Util.newerShellException(status, ri, iso);
 		}
 
+        // TBD - check to see if this test is done up front and
+        //       this code can be removed?
         String mediaType = null;
         String outputTypeKey = null;
         try {
@@ -234,46 +243,15 @@ public class IrisDynamicProvider {
         Util.addCORSHeadersIfConfigured(builder, ri);
 		return builder.build();
     }
-////    
-////    private void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
-////		if (ri.appConfig.isCorsEnabled()) {
-////            // Insert CORS header elements.
-////		    rb.header("Access-Control-Allow-Origin", "*");
-////
-////            // dont add this unless cookies are expected
-//////            rb.header("Access-Control-Allow-Credentials", "true");
-////
-////            // Not setting these at this time - 2015-08-12
-//////            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
-//////            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-////
-////            // not clear if needed now, 2015-08-12, but this is how to let client
-////            // see what headers are available, although "...Allow-Headers" may be
-////            // sufficient
-//////            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
-////		}
-////    }
-////	
-////	private void shellException(Status status, String message, RequestInfo ri) {
-////		ServiceShellException.logAndThrowException(ri, status, message);       
-////	}
-////	
-////	private static void newerShellException(Status status, RequestInfo ri, 
-////            IrisStreamingOutput iso) {
-////		ServiceShellException.logAndThrowException(ri, status,
-////                status.toString() + iso.getErrorString());
-////	}
-////
-////    private static Status adjustByCfg(Status trialStatus, RequestInfo ri) {
-////        if (trialStatus == Status.NO_CONTENT) {
-////            // override 204 if configured to do so
-////            if (ri.perRequestUse404for204) {
-////                return Status.NOT_FOUND;
-////            }
-////        }
-////        return trialStatus;
-////    }
 
+    /**
+     * An updated version of doIrisStreaming which only needs two user
+     * methods and returns more information in the user response for
+     * better control of application output.
+     *
+     * @return
+     * @throws Exception
+     */
     public Response doIrisProcessing() throws Exception {
         // when run dynamically, this method does all the abstract methods,
         // so ri needs to be set here, e.e first
@@ -287,10 +265,6 @@ public class IrisDynamicProvider {
                   "Error, there is no configuration information for"
                         + " endpoint: " + requestedEpName);
         }
-
-        System.out.println("* doIrisProcessing method: " + containerRequestContext.getMethod());
-        System.out.println("* doIrisProcessing toString: " + containerRequestContext.toString());
-        System.out.println("* doIrisProcessing getLength: " + containerRequestContext.getLength());
 
         if (containerRequestContext.getMethod().equals("POST")) {
             if (containerRequestContext != null) {
@@ -345,9 +319,6 @@ public class IrisDynamicProvider {
                     + ServiceShellException.getErrorString(ex));
         }
 
-        System.out.println("** doIrisProcessing, cmd len: " + cmd.size()
-              + " cmd: " + cmd);
-
         if (ri.request.getMethod().equals("HEAD")) {
             System.out.println("** doIrisProcessing, returning head request: "
                   + " cmd: " + cmd);
@@ -362,9 +333,6 @@ public class IrisDynamicProvider {
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		IrisProcessingResult irr = isdo.getProcessingResults(ri, wssMediaType);
-
-        System.out.println("** -------------- doIrisStreaming after iso.getResponse, status: "
-              + irr.fdsnSS + "  wmt: " + wssMediaType);
         if (irr.fdsnSS == null) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Null status from IrisStreamingOutput class");

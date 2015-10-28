@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -35,7 +35,6 @@ import com.Ostermiller.util.CircularByteBuffer;
 import edu.iris.wss.provider.IrisStreamingOutput;
 
 import edu.iris.wss.framework.AppConfigurator;
-import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
@@ -67,30 +66,13 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	private InputStream is = null;
 	private StreamEater se = null;
     
-    private AtomicBoolean isKillingProcess = new AtomicBoolean(false);
+    private final AtomicBoolean isKillingProcess = new AtomicBoolean(false);
     
     private String epName = null;
-
-	// [region] Constructors and Getters
 
 	public CmdProcessorIrisEP() {
         //System.out.println("**************** CmdProcessorIrisEP no arg constructor");
 	}
-
-//	public SrvProcessStreamingOutput(RequestInfo ri) {
-//		this();
-//		this.ri = ri;
-//	}
-//
-//	public SrvProcessStreamingOutput(ProcessBuilder pb, RequestInfo ri) {
-//		this();
-//		this.initialize(pb, ri);
-//	}
-//
-//	public void initialize(ProcessBuilder pb, RequestInfo ri) {
-//		this.processBuilder = pb;
-//		this.ri = ri;
-//	}
 
 	@Override
 	public void setRequestInfo(RequestInfo ri) {
@@ -161,10 +143,6 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
         
         return sb.toString();
 	}
-
-	// [end region]
-
-	// [region] Response Method
 
     @Override
 	public Status getResponse() {
@@ -330,8 +308,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		return Status.OK; // Won't get here.
 	}
 
-	// [end region]
-
 	   @Override
     public void write(OutputStream output) {
         if (ri.isWriteToMiniseed) {
@@ -340,8 +316,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
             writeNormal(output);
         }
     }
-
-	// [region] Seed writer
 
     /**
      * Reads stdin and writes to stdout, To capture processing statistics, the
@@ -627,10 +601,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		}
 	}
 
-	// [end region]
-
-	// [region] Normal writer
-
 	public void writeNormal(OutputStream output) {
 
 		long totalBytesTransmitted = 0L;
@@ -697,7 +667,8 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                 localExitVal = -77777;
             }
             
-            logger.info("writeNormal done:  Wrote " + totalBytesTransmitted + " bytes"
+            logger.info(
+                  "writeNormal done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  timeNotBlocking: " + timeNonBlockingTotal
                     + "  handler or writeNormal exitValue: " + localExitVal);
@@ -706,9 +677,10 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
             if (ri.appConfig.isUsageLogEnabled(epName)) {
                 if (isKillingProcess.get()) {
                     Util.logUsageMessage(ri, "_KillitInWriteNormal", 0L,
-                            processingTime,
-                            "killit was called, possible timeout waiting for data after intial data flow started",
-                            Status.INTERNAL_SERVER_ERROR, epName);
+                          processingTime,
+                          "killit was called, possible timeout waiting for"
+                          + " data after intial data flow started",
+                          Status.INTERNAL_SERVER_ERROR, epName);
                 } else {
                     Util.logUsageMessage(ri, null, totalBytesTransmitted,
                             processingTime, null, Status.OK, epName);
@@ -727,17 +699,11 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		}
 	}
 
-	// [end region]
-
 	public static String getBaseFilename(String filename) {
 		int slashIndex = filename.lastIndexOf('/');
 		String baseFilename = filename.substring(slashIndex + 1);
 		return baseFilename;
 	}
-
-	// [end region]
-
-	// [region] Process killing utilities
 
     private class killIt implements Runnable {
         OutputStream outputStream;
@@ -828,7 +794,4 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 					+ e.getMessage());
 		}
 	}
-
-	// [end region]
-
 }
