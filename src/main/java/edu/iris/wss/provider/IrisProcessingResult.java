@@ -28,6 +28,8 @@ import edu.iris.wss.framework.FdsnStatus;
  */
 public class IrisProcessingResult {
 //    public static StreamingOutput writer = null;
+    // Entities are objects that the Jersey framework can use to
+    // write output, like String, StreamingOutput, FileInputStream, etc
     public Object entity = null;
     public String wssMediaType = null;
     public FdsnStatus.Status fdsnSS = null;
