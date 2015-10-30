@@ -29,10 +29,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -40,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.logging.Level;
 
 import javax.servlet.ServletContext;
@@ -71,6 +68,9 @@ public class AppConfigurator {
 	private Boolean isValid = false;
 
     private IrisSingleton singleton = null;
+
+    // store name for possible error message later in process
+    private static String configFileName = null;
 
     public AppConfigurator() {
         init();
@@ -172,6 +172,10 @@ public class AppConfigurator {
         setOutputTypes(types, "BINARY: application/octet-stream");
 
         return types;
+    }
+
+    public static String getConfigFileNamed() {
+        return configFileName;
     }
 
 	public String getAppName() {
@@ -365,7 +369,6 @@ public class AppConfigurator {
 		// Now try to read a user config file from the location specified by the
 		// wssConfigDir property concatenated with the web application name
 		// (last part of context path), e.g. 'station' or 'dataselect'
-		String configFileName = null;
 
         String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
         
@@ -495,7 +498,7 @@ public class AppConfigurator {
                     logger.error(msg);
                     throw new Exception(msg, ex);
                 }
-            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
+            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResourceIrisEP) {
                 String resoureToProxyURL = getProxyUrl(epName);
                 try {
                     if (isOkString(resoureToProxyURL)) {

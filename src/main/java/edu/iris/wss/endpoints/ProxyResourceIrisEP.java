@@ -41,7 +41,7 @@ import javax.ws.rs.core.StreamingOutput;
  *
  * @author mike
  */
-public class ProxyResource extends IrisProcessor {
+public class ProxyResourceIrisEP extends IrisProcessor {
 
     String globalErrMsg = "no globalErrMessage";
 
@@ -64,7 +64,8 @@ public class ProxyResource extends IrisProcessor {
                 url = new URL(proxyURLSource);
         		is = url.openStream();
         	} catch (Exception ex) {
-                globalErrMsg = "ProxyResource.getProcessingResults - Error resolving proxy URL: "
+                globalErrMsg = this.getClass().getName()
+                      + ".getProcessingResults - Error resolving proxy URL: "
                       + proxyURLSource + "  ex: " + ex;
 //                logger.error("Failure loading SwaggerV2 file from: " + url
 //                + "  ex: " + ex);

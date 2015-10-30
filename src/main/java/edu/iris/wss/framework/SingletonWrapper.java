@@ -40,7 +40,7 @@ public class SingletonWrapper {
 	public SingletonWrapper()  {
         //System.out.println("***** SingletonWrapper no-arg construct");
     }
-	
+
 	public void configure(ServletContext context) throws Exception {		
 		// If we've already configured the application, don't do it again.
 
@@ -55,8 +55,9 @@ public class SingletonWrapper {
     	try {
     		appConfig.loadConfigFile(configFileBase, context);
         } catch (Exception ex) {
-            String msg = "----------- Error loading service.cfg file, message: "
-                    + ex.getMessage();
+            String msg = "----------- Error loading "
+                  + AppConfigurator.getConfigFileNamed() + " file, message: "
+                  + ex.getMessage();
             System.out.println(msg);
             logger.error(msg);
 

@@ -220,7 +220,7 @@ public class AppConfigurator_getters_Test {
         // first the respective class name
         String property = AppConfigurator.createEPPropertiesName(
               endpointName, AppConfigurator.EP_CFGS.irisEndpointClassName);
-        props.setProperty(property, edu.iris.wss.endpoints.ProxyResource.class.getName());
+        props.setProperty(property, edu.iris.wss.endpoints.ProxyResourceIrisEP.class.getName());
 
         try {
             appCfg.loadConfigurationParameters(props, null);
