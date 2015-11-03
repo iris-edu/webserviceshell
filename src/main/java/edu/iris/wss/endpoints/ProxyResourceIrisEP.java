@@ -98,10 +98,6 @@ public class ProxyResourceIrisEP extends IrisProcessor {
             IrisProcessingResult ipr = new IrisProcessingResult(so,
                   wssMediaType, FdsnStatus.Status.OK);
 
-            Response.ResponseBuilder builder = Response.status(FdsnStatus.Status.OK)
-                  .type("application/json")
-                  .entity(so);
-            Util.addCORSHeadersIfConfigured(builder, ri);
     		return ipr;
     	}
 
