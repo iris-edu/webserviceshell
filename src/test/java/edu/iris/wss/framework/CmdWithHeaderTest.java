@@ -24,9 +24,12 @@ import com.sun.grizzly.http.servlet.ServletAdapter;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.container.servlet.ServletContainer;*/
+import edu.iris.wss.endpoints.CmdWithHeaderIrisEP;
 import edu.iris.wss.utils.WebUtils;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,15 +43,12 @@ import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -123,6 +123,28 @@ public class CmdWithHeaderTest  {
     public void tearDown() {
     }
 
+    private static String readInputStream(InputStream is, int maxBufSize)
+          throws IOException {
+        byte[] oneByte = new byte[1];
+        byte[] bytes = new byte[maxBufSize];
+        int keepBytesCnt = 0;
+        int i1 = 0;
+        for (; i1 < bytes.length; i1++) {
+            int bytesRead = is.read(oneByte, 0, 1);
+            if (bytesRead < 0) {
+                // finished
+                break;
+            }
+
+            bytes[keepBytesCnt] = oneByte[0];
+            keepBytesCnt++;
+        }
+
+        System.out.println("* --------------- keepBytesCnt2: " + keepBytesCnt);
+
+        return new String(bytes, 0, keepBytesCnt, "UTF-8");
+    }
+
     @Test
     public void test_getJsondata() throws Exception {
         Client c = ClientBuilder.newClient();
@@ -134,7 +156,7 @@ public class CmdWithHeaderTest  {
         String testMsg = response.readEntity(String.class);
         assertTrue(testMsg.contains("data from specified test file"));
     }
-    
+
     @Test
     public void test_getCmd1() throws Exception {
         Client c = ClientBuilder.newClient();
@@ -143,11 +165,171 @@ public class CmdWithHeaderTest  {
         System.out.println("* ---------------------------- response: " + response);
         System.out.println("* ---------------------------- user.dir: "
               + System.getProperty("user.dir"));
-//        assertEquals(200, response.getStatus());
-//        assertEquals(response.getMediaType().toString(), "application/json");
+        assertEquals(200, response.getStatus());
 
         String testMsg = response.readEntity(String.class);
         System.out.println("* ---------------------------- testMsg: " + testMsg);
-  //      assertTrue(testMsg.contains("data from specified test file"));
+
+        // response should be from sleep_handle2.sh
+        // handler name set in the service cfg file, which is depends on the value
+        // of SOME_CONTEXT
+        assertTrue(testMsg.indexOf("sleep handle2 stdout args") == 0);
+
+        // mediatype should be default value from outputs on queryEP 
+        assertEquals(response.getMediaType().toString(), "text/plain");
+    }
+
+    @Test
+    public void test_getCmd2() throws Exception {
+        // simple test with no header identifiers, input should pass through
+        // unaffected
+
+        String testInput = "HTTello goodbye";
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              testInput.getBytes("UTF-8"));
+        SingletonWrapper sw = new SingletonWrapper();
+
+        Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+              sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+              100, "\n", ":");
+        System.out.println("* ---------------------------- test_getCmd2 map: " + map);
+
+        String remaining = readInputStream(sbis, 100);
+
+        assertTrue(map.isEmpty());
+        assertTrue(remaining.equals(testInput));
+    }
+
+    @Test
+    public void test_getCmd3() throws Exception {
+        // canonical form with new lines as delimiter
+
+        String hdr1Name = "Headr1";
+        String hdr2Name = "Headr2";
+        String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
+        String followingData = "some other data";
+        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+              + headers + SingletonWrapper.HEADER_END_IDENTIFIER
+              + followingData;
+
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              data.getBytes("UTF-8"));
+
+        SingletonWrapper sw = new SingletonWrapper();
+        Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+              sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+              100, "\n", ":");
+
+        String remaining = readInputStream(sbis, 100);
+        System.out.println("* ---------------------------- test_getCmd3 map: " + map
+              + "  remaining: " + remaining
+              + "  map.get h1: " + map.get("headr1"));
+
+        assertTrue(map.get(hdr1Name.toLowerCase()).equals("value1"));
+        assertTrue(map.get(hdr2Name.toLowerCase()).equals("value2"));
+        assertTrue(map.size() == 2);
+        assertTrue(remaining.equals(followingData));
+    }
+
+    @Test
+    public void test_getCmd4() throws Exception {
+        // canonical form with too small of buffer, throwing an exception
+        // is the expected result
+
+        String hdr1Name = "Headr1";
+        String hdr2Name = "Headr2";
+        String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
+        String followingData = "some other data";
+        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+              + headers + SingletonWrapper.HEADER_END_IDENTIFIER
+              + followingData;
+
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              data.getBytes("UTF-8"));
+
+        int bufferSizeToSmall = headers.length()
+              + SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1;
+
+        SingletonWrapper sw = new SingletonWrapper();
+        try {
+            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+                sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+                bufferSizeToSmall, "\n", ":");
+            fail("buffer size to small unexpectedly succeeded,"
+                  + " should have thrown exception");
+        } catch(Exception ex) {
+            System.out.println("* --------------------------- ex cmd4: " + ex);
+            assertTrue(ex.toString().contains("Headers check buffer size too"
+                  + " small or malformed ending identifier"));
+        }
+    }
+
+    @Test
+    public void test_getCmd5() throws Exception {
+        // data ends with incomplete ending identifier with no following
+        // data
+
+        String hdr1Name = "Headr1";
+        String hdr2Name = "Headr2";
+        String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
+        String followingData = "some other data";
+        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+              + headers
+              + SingletonWrapper.HEADER_END_IDENTIFIER.substring(0,
+                    SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1 );
+        System.out.println("* --------------------------- data cmd5: " + data
+        + "  dL: " + data.length());
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              data.getBytes("UTF-8"));
+
+        int bufferSize = 100;
+
+        SingletonWrapper sw = new SingletonWrapper();
+        try {
+            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+                sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+                bufferSize, "\n", ":");
+            fail("incomplete ending identifier, no following data unexpectedly"
+                  + " succeeded, should have thrown exception");
+        } catch(Exception ex) {
+            System.out.println("* --------------------------- ex cmd5: " + ex);
+            assertTrue(ex.toString().contains(
+                  "Headers were not completely read"));
+        }
+    }
+
+    @Test
+    public void test_getCmd6() throws Exception {
+        // data ends with incomplete ending identifier after reading following
+        // data
+
+        String hdr1Name = "Headr1";
+        String hdr2Name = "Headr2";
+        String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
+        String followingData = "some other data";
+        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+              + headers
+              + SingletonWrapper.HEADER_END_IDENTIFIER.substring(0,
+                    SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1 )
+              + followingData;
+        System.out.println("* --------------------------- data cmd6: " + data
+        + "  dL: " + data.length());
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              data.getBytes("UTF-8"));
+
+        int bufferSize = 100;
+
+        SingletonWrapper sw = new SingletonWrapper();
+        try {
+            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+                sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+                bufferSize, "\n", ":");
+            fail("incomplete ending identifier, and following data unexpectedly succeeded,"
+                  + " should have thrown exception");
+        } catch(Exception ex) {
+            System.out.println("* --------------------------- ex cmd6: " + ex);
+            assertTrue(ex.toString().contains(
+                  "Headers were not completely read"));
+        }
     }
 }

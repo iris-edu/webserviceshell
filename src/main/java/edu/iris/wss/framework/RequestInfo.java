@@ -51,7 +51,10 @@ public  class RequestInfo {
 	public SingletonWrapper sw;
 
     public boolean isWriteToMiniseed = false;
-    
+
+    public byte[] HEADER_START_IDENTIFIER_BYTES;
+    public byte[] HEADER_END_IDENTIFIER_BYTES;
+
     // as per StackOverflow, make sure the object is fully created before
     // passing it to another constructor, use createInstance factory to create.
     private RequestInfo() {
@@ -65,6 +68,8 @@ public  class RequestInfo {
         RequestInfo ri = new RequestInfo();
         
         ri.sw = sw;
+        ri.HEADER_START_IDENTIFIER_BYTES = sw.HEADER_START_IDENTIFIER_BYTES;
+        ri.HEADER_END_IDENTIFIER_BYTES = sw.HEADER_END_IDENTIFIER_BYTES;
         ri.uriInfo = uriInfo;
         ri.request = request;
 		ri.requestHeaders = requestHeaders;

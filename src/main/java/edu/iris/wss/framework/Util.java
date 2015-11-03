@@ -30,7 +30,6 @@ import javax.ws.rs.core.Response;
  * @author mike
  */
 public class Util {
-    
     public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
 		if (ri.appConfig.isCorsEnabled()) {
             // Insert CORS header elements.

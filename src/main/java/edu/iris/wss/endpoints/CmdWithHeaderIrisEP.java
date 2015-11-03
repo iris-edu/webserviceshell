@@ -39,6 +39,7 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
+import edu.iris.wss.framework.SingletonWrapper;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
@@ -46,9 +47,12 @@ import edu.iris.wss.utils.WebUtils;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -286,28 +290,18 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                     System.out.println("* ---------------------- ** 2 env CM: " + System.getenv("CLO_MAIN"));
                     System.out.println("* ---------------------- ** 2 env MYENV1: " + System.getenv("MYENV1"));
                     
-                    
-                    
-                    int bytesRead;
-                    byte[] buffer = new byte[100];
                     try {
-                //w		while (true) {
-                            bytesRead = is.read(buffer, 0, buffer.length);
-                            System.out.println("* ---------------------- ** 3 bytesRead: " + bytesRead);
-                            if (bytesRead < 0) {
-                                continue;
-                            } else {
-                                System.out.println("* ---------------------- ** 3 buffer: " + new String(buffer));
-                            }
-
-                //w		}
+                        Map hdrMap = checkForHeaders(is,
+                              ri.HEADER_START_IDENTIFIER_BYTES,
+                              ri.HEADER_END_IDENTIFIER_BYTES,
+                              SingletonWrapper.HEADER_MAX_ACCEPTED_BYTE_COUNT,
+                              "\n", ":");
+                        System.out.println("* ---------------------- ** 5 hdrMap: " + hdrMap);
                     } catch (Exception ex) {
-                            System.out.println("* ---------------------- ** 4 ex: " + ex);
-                            //logger.error("Got IOE (probable client disconnect): ", ioe);
-                //			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
+                        System.out.println("* ---------------------- ** 6 ex: " + ex);
+                        ex.printStackTrace();
                     }
-                    
-                    
+
                     rt.cancel();
 
                     StreamingOutput so = new StreamingOutput() {
@@ -323,6 +317,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
                     IrisProcessingResult ipr = new IrisProcessingResult(so,
                           wssMediaType, FdsnStatus.Status.OK);
+
                     return ipr;
 				} else {
 					// No data available yet. Just continue looping, waiting for
@@ -398,6 +393,173 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
 		return Status.OK; // Won't get here.
 	}
+
+    /**
+     * This method does not time out, it will block on read if there is
+     * nothing to read, it expects the caller to be responsible for any
+     * time outs control
+     * .
+     * @param is
+     */
+    /**
+     * This method does not time out, it will block on read if there is
+     * nothing to read, it expects the caller to be responsible for any
+     * time outs control
+     *
+     * When making the returned map, the key part (i.e. the header name)
+     * is trimmed and set to lowercase.
+     *
+     * @param is
+     * @param startId - should be from global definition
+     * @param endId - should be from global definition
+     * @param maxBufferSize - should be from global definition, some
+     *                        references say Apache has 8 KB limit
+     * @return
+     * @throws Exception
+     */
+    public static Map checkForHeaders(InputStream is, byte[] startId,
+          byte[] endId, int maxBufferSize, String headerLineDelimiter,
+          String headerNameValueDelimiter)
+          throws Exception {
+
+    if (!is.markSupported()) {
+        throw new Exception("Http Headers cannot be detected on this stream"
+        + " because stream marking is not supported.");
+    }
+
+    is.mark(startId.length);
+
+    byte[] oneByte = new byte[1];
+    for (int i1 = 0; i1 < startId.length; i1++) {
+        int bytesRead = is.read(oneByte, 0, 1);
+        System.out.println("* --------------------------------- oneByte1: " + oneByte[0] + "  bR: " + bytesRead);
+        if (bytesRead < 0) {
+            // did not read enough bytes to determine if there is a header,
+            // so just let the caller continue
+            is.reset();
+            return new HashMap();
+        }
+        if (oneByte[0] == startId[i1]) {
+            // keep reading and matching characters
+            continue;
+        } else {
+            // data from stream does not include header information
+            is.reset();
+            return new HashMap();
+        }
+    }
+
+    byte[] maxBytes = new byte[maxBufferSize];
+    int endMatchCnt = 0;
+    int keepBytesCnt = 0;
+    int i1 = 0;
+    for (; i1 < maxBytes.length; i1++) {
+        int bytesRead = is.read(oneByte, 0, 1);
+//        System.out.println("* --------------------------------- oneByte2: " + oneByte[0]
+//              + "  bR: " + bytesRead + "  keep: " + keepBytesCnt);
+        if (bytesRead < 0) {
+            // did not read enough bytes to finish
+            throw new Exception("Http Headers were not completely read, the"
+                  + " stream was closed before the ending identifier: "
+                  + SingletonWrapper.HEADER_END_IDENTIFIER
+                  + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
+                  + "  endMatchCnt: " + endMatchCnt);
+        }
+        if (oneByte[0] == endId[endMatchCnt]) {
+            // keep matching characters until all are matched
+            endMatchCnt++;
+            if (endMatchCnt == endId.length) {
+                // stop reading, the next byte should be data
+                keepBytesCnt = (i1 + 1) - endMatchCnt;
+                break;
+            } else if (endMatchCnt < endId.length) {
+                // drop down and store byte
+            } else if (endMatchCnt > endId.length) {
+                throw new Exception("Http Headers read error, programmer error"
+                    + "  bytes index: " + i1);
+            }
+        } else {
+            endMatchCnt = 0;
+        }
+        maxBytes[i1] = oneByte[0];
+    }
+
+    System.out.println("* ------------------------------- i1: " + i1 + "  maxBufferSize: : " + maxBufferSize);
+
+    if (endMatchCnt != endId.length) {
+        throw new Exception("Http Headers check buffer size too small or"
+              + " malformed ending identifier, expected identifier: "
+              + SingletonWrapper.HEADER_END_IDENTIFIER
+              + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
+              + "  endMatchCnt: " + endMatchCnt);
+    }
+        System.out.println("* --------------------------------- keep: " + keepBytesCnt);
+
+    String headers = new String(maxBytes, 0, keepBytesCnt, "UTF-8");
+    System.out.print("* --------------------- headers: \n" + headers);
+    String[] headersArr = headers.split(Pattern.quote(headerLineDelimiter));
+    System.out.println("* --------------------- headersArr l: " + headersArr.length);
+
+    Map<String, String> headersMap = new HashMap<>();
+    for (int k1 = 0; k1 < headersArr.length; k1++) {
+        String header = headersArr[k1];
+        int idx = header.indexOf(headerNameValueDelimiter);
+        System.out.println("* --------------------- idx: " + idx + " l: " + header.length() + "  hdr: " + header);
+        if (idx < 0) { continue; }
+        headersMap.put(header.substring(0, idx).trim().toLowerCase(),
+              header.substring(idx + 1).trim().toLowerCase());
+    }
+
+    System.out.println("* --------------------- headersMap: " + headersMap);
+
+    return headersMap;
+
+//    private void parseHeaders() throws IOException {
+//    String line;
+//    int idx;
+//
+//    // that fscking rfc822 allows multiple lines, we don't care now
+//    line = reader.readLine();
+//    while (!line.equals("")) {
+//      idx = line.indexOf(':');
+//      if (idx < 0) {
+//        headers = null;
+//        break;
+//      }
+//      else {
+//        headers.put(line.substring(0, idx).toLowerCase(), line.substring(idx+1).trim());
+//      }
+//      line = reader.readLine();
+//    }
+//  }
+
+
+////        Probably better deal with the bigger picture first,
+////
+////Assume we have our own LEAD_IN_ID and END_OF_ID strings,
+////- then we don't need to worry about the whole stream as defined by RFC, just the field-name and value parts need to comply
+////- can use LF or some other convenient delimiter 
+////
+////LEAD_IN_ID(could have but don't need LF here)
+////field-name1 ":" field-value LF
+////field-name2 ":" field-value LF
+////last-field-name3 ":" field-value LF
+////END_OF_ID(could have but don't need LF here)
+////
+////the algorithm
+////- mark input stream
+////- read input stream for LEAD_IN_ID
+////- if LEAD_IN_ID not found, reset stream and continue
+////- else
+////- read input stream
+////- - up to character sequence END_OF_ID
+////- - or up to 16 KB (apache may only support 8 KB) and throw exception
+////- - or timeout and throw exception
+////- split out and store field-name and values
+////- continue
+
+
+    }
 
 ////    @Override
 ////    public void write(OutputStream output) {

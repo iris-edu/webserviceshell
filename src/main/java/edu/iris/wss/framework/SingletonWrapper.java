@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import edu.iris.wss.provider.IrisSingleton;
 import edu.iris.wss.utils.WebUtils;
+import java.io.UnsupportedEncodingException;
 
 public class SingletonWrapper {
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
@@ -36,9 +37,22 @@ public class SingletonWrapper {
 	public IrisSingleton singleton = null;
         
     public static WebLogService webLogService = null;
+
+    public static final String HEADER_START_IDENTIFIER = "HTTP_HEADERS_START";
+    public byte[] HEADER_START_IDENTIFIER_BYTES;
+    public static final String HEADER_END_IDENTIFIER = "HTTP_HEADERS_END";
+    public byte[] HEADER_END_IDENTIFIER_BYTES;
+    public static final int HEADER_MAX_ACCEPTED_BYTE_COUNT = 1024  * 16;
 	
-	public SingletonWrapper()  {
+	public SingletonWrapper() throws UnsupportedEncodingException  {
         //System.out.println("***** SingletonWrapper no-arg construct");
+
+        // only want to create this once, but use it on every request
+        // expecting an encoding with one byte per character for now,
+        // so let it throw and exception if some representive byte encoding
+        // (i.e. like UTF-8) is not accepted.
+        HEADER_START_IDENTIFIER_BYTES = HEADER_START_IDENTIFIER.getBytes("UTF-8");
+        HEADER_END_IDENTIFIER_BYTES = HEADER_END_IDENTIFIER.getBytes("UTF-8");
     }
 
 	public void configure(ServletContext context) throws Exception {		

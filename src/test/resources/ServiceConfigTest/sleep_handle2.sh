@@ -6,6 +6,13 @@
 logfile=/tmp/sleep_handle2_log.txt
  
 args="$@"
+export MYENV1="test of my env 1"
+
+/bin/echo -n "HTTP_HEADERS_START"
+echo "header1 : some-value1"
+echo "Header2 : some-value2"
+/bin/echo -n "HTTP_HEADERS_END"
+
 echo "sleep handle2 stdout args: ${args}"
 echo "sleep handle2 stdout env: " `env`
 echo "sleep handle2 args: ${args}" >> ${logfile}
