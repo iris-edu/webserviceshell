@@ -35,8 +35,7 @@ import javax.ws.rs.core.Response;
 public class Util {
     public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb,
           RequestInfo ri, Map<String, String> headers) {
-        System.out.println("* ------------------------------ Cors?: " + ri.appConfig.isCorsEnabled());
-		if (ri.appConfig.isCorsEnabled()) {
+        if (ri.appConfig.isCorsEnabled()) {
             String value = "*";
             if (headers != null) {
                 if (headers.containsKey(
@@ -64,12 +63,8 @@ public class Util {
     
     public static void addOtherHeadersIfAvailable(Response.ResponseBuilder rb,
           Map<String, String> headers) {
-            System.out.println("* ------------------------------**--- set hdrs: "
-                + headers);
         if (headers != null) {
             for (String headerKey : headers.keySet()) {
-                System.out.println("* ------------------------------**--- set hdr1: "
-                + headerKey + "  val: " + headers.get(headerKey));
                  if (headerKey.equals(CONTENT_DISPOSITION.toLowerCase())) {
                     // this key is processed elsewhere
                     continue;
@@ -78,8 +73,7 @@ public class Util {
                     // this key is processed elsewhere
                     continue;
                 }
-                System.out.println("* ------------------------------**--- set hdr2: "
-                + headerKey + "  val: " + headers.get(headerKey));
+
                 rb.header(headerKey, headers.get(headerKey));
             }
         }

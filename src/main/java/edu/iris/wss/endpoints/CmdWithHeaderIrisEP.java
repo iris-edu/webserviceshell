@@ -223,11 +223,7 @@ public class CmdWithHeaderIrisEP extends IrisProcessor {
 					("Ex msg: " + e.getMessage()) );
 		}
 		is = process.getInputStream();
-                    System.out.println("* ---------------------- ** 1 is: " + is);
-                    System.out.println("* ---------------------- ** 1 ismarkSupported: " + is.markSupported());
-                    System.out.println("* ---------------------- ** 1 env CM: " + System.getenv("CLO_MAIN"));
-                    System.out.println("* ---------------------- ** 1 env MYENV1: " + System.getenv("MYENV1"));
- 
+
         if (ri.postBody != null) {
             try {
 
@@ -267,6 +263,8 @@ public class CmdWithHeaderIrisEP extends IrisProcessor {
 			}
 		}
 System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
+        boolean isHeadersChecked = false;
+        Map<String, String> hdrMap = null;
 		// Wait for data, error or timeout.
 		while (true) {
 			Boolean gotExitValue = false;
@@ -284,40 +282,67 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
 			try {
 				if (is.available() > 0) {
-                    System.out.println("* ---------------------- ** 2 is.available: " + is.available());
-                    System.out.println("* ---------------------- ** 2 env CM: " + System.getenv("CLO_MAIN"));
-                    System.out.println("* ---------------------- ** 2 env MYENV1: " + System.getenv("MYENV1"));
-                    
-                    Map<String, String> hdrMap = null;
-                    try {
-                        hdrMap = checkForHeaders(is,
-                              ri.HEADER_START_IDENTIFIER_BYTES,
-                              ri.HEADER_END_IDENTIFIER_BYTES,
-                              SingletonWrapper.HEADER_MAX_ACCEPTED_BYTE_COUNT,
-                              "\n", ":");
-                        System.out.println("* ---------------------- ** 5 hdrMap: " + hdrMap);
-                    } catch (Exception ex) {
-                        System.out.println("* ---------------------- ** 6 ex: " + ex);
-                        ex.printStackTrace();
-                    }
-
-                    rt.cancel();
-
-                    StreamingOutput so = new StreamingOutput() {
-                        @Override
-                        public void write(OutputStream output) {
-                            if (isWriteToMiniseed) {
-                                writeMiniSeed(output);
-                            } else {
-                                writeNormal(output);
-                            }
+                    if (! isHeadersChecked) {
+                        try {
+                            hdrMap = checkForHeaders(is,
+                                  ri.HEADER_START_IDENTIFIER_BYTES,
+                                  ri.HEADER_END_IDENTIFIER_BYTES,
+                                  SingletonWrapper.HEADER_MAX_ACCEPTED_BYTE_COUNT,
+                                  "\n", ":");
+                        } catch (Exception ex) {
+                            System.out.println("* ---------------------- ** "
+                                  + "Exception while checking for headers, ex: "
+                                  + ex);
+                            logger.error("Exception while checking for headers, ex: "
+                                  + ex);
+                            ex.printStackTrace();
                         }
-                    };
+                        isHeadersChecked = true;
+                    }
+                    
+                    // Assumed state at this point
+                    // 1) headers were read, and there is more data on the
+                    //    input stream - so create StreamingOutput object
+                    //    and return
+                    // 2) headers were read, stream bytes are not available
+                    //    for the moment - so loop
+                    // 3) exceptions were thrown, they were then caught
+                    //    and logged
+                    // 3a) if end of input stream - bytes are not available
+                    //    and exit value will be determined at the top of
+                    //    this loop
+                    // 3b) bytes were read upto the maxbuffer size when
+                    //    checking for headers, and some non-header data
+                    //    was consumed before the max buffer size was reached
 
-                    IrisProcessingResult ipr = new IrisProcessingResult(so,
-                          wssMediaType, FdsnStatus.Status.OK, hdrMap);
+                    // so at this time, log any headers read exceptions and
+                    // keep going
+                    
+                    if (is.available() > 0) {
+                        // Check availability again as checkForHeaders may
+                        // have consumed exactly a number of bytes necessary
+                        // to get headers
 
-                    return ipr;
+                        rt.cancel();
+
+                        StreamingOutput so = new StreamingOutput() {
+                            @Override
+                            public void write(OutputStream output) {
+                                if (isWriteToMiniseed) {
+                                    writeMiniSeed(output);
+                                } else {
+                                    writeNormal(output);
+                                }
+                            }
+                        };
+
+                        IrisProcessingResult ipr = new IrisProcessingResult(so,
+                              wssMediaType, FdsnStatus.Status.OK, hdrMap);
+
+                        return ipr;
+                    } else {
+                        // noop, continue to check for data
+                    }
 				} else {
 					// No data available yet. Just continue looping, waiting for
 					// data.
@@ -431,7 +456,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
     byte[] oneByte = new byte[1];
     for (int i1 = 0; i1 < startId.length; i1++) {
         int bytesRead = is.read(oneByte, 0, 1);
-        System.out.println("* --------------------------------- oneByte1: " + oneByte[0] + "  bR: " + bytesRead);
         if (bytesRead < 0) {
             // did not read enough bytes to determine if there is a header,
             // so just let the caller continue
@@ -454,8 +478,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
     int i1 = 0;
     for (; i1 < maxBytes.length; i1++) {
         int bytesRead = is.read(oneByte, 0, 1);
-//        System.out.println("* --------------------------------- oneByte2: " + oneByte[0]
-//              + "  bR: " + bytesRead + "  keep: " + keepBytesCnt);
         if (bytesRead < 0) {
             // did not read enough bytes to finish
             throw new Exception("Http Headers were not completely read, the"
@@ -483,8 +505,6 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
         maxBytes[i1] = oneByte[0];
     }
 
-    System.out.println("* ------------------------------- i1: " + i1 + "  maxBufferSize: : " + maxBufferSize);
-
     if (endMatchCnt != endId.length) {
         throw new Exception("Http Headers check buffer size too small or"
               + " malformed ending identifier, expected identifier: "
@@ -492,73 +512,21 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
               + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
               + "  endMatchCnt: " + endMatchCnt);
     }
-        System.out.println("* --------------------------------- keep: " + keepBytesCnt);
 
     String headers = new String(maxBytes, 0, keepBytesCnt, "UTF-8");
-    System.out.print("* --------------------- headers: \n" + headers);
     String[] headersArr = headers.split(Pattern.quote(headerLineDelimiter));
-    System.out.println("* --------------------- headersArr l: " + headersArr.length);
 
     Map<String, String> headersMap = new HashMap<>();
     for (int k1 = 0; k1 < headersArr.length; k1++) {
         String header = headersArr[k1];
         int idx = header.indexOf(headerNameValueDelimiter);
-        System.out.println("* --------------------- idx: " + idx + " l: " + header.length() + "  hdr: " + header);
         if (idx < 0) { continue; }
         headersMap.put(header.substring(0, idx).trim().toLowerCase(),
               header.substring(idx + 1).trim().toLowerCase());
     }
 
-    System.out.println("* --------------------- headersMap: " + headersMap);
-
     return headersMap;
-
-//    private void parseHeaders() throws IOException {
-//    String line;
-//    int idx;
-//
-//    // that fscking rfc822 allows multiple lines, we don't care now
-//    line = reader.readLine();
-//    while (!line.equals("")) {
-//      idx = line.indexOf(':');
-//      if (idx < 0) {
-//        headers = null;
-//        break;
-//      }
-//      else {
-//        headers.put(line.substring(0, idx).toLowerCase(), line.substring(idx+1).trim());
-//      }
-//      line = reader.readLine();
-//    }
-//  }
-
-
-////        Probably better deal with the bigger picture first,
-////
-////Assume we have our own LEAD_IN_ID and END_OF_ID strings,
-////- then we don't need to worry about the whole stream as defined by RFC, just the field-name and value parts need to comply
-////- can use LF or some other convenient delimiter 
-////
-////LEAD_IN_ID(could have but don't need LF here)
-////field-name1 ":" field-value LF
-////field-name2 ":" field-value LF
-////last-field-name3 ":" field-value LF
-////END_OF_ID(could have but don't need LF here)
-////
-////the algorithm
-////- mark input stream
-////- read input stream for LEAD_IN_ID
-////- if LEAD_IN_ID not found, reset stream and continue
-////- else
-////- read input stream
-////- - up to character sequence END_OF_ID
-////- - or up to 16 KB (apache may only support 8 KB) and throw exception
-////- - or timeout and throw exception
-////- split out and store field-name and values
-////- continue
-
-
-    }
+}
 
 ////    @Override
 ////    public void write(OutputStream output) {
