@@ -47,12 +47,10 @@ import edu.iris.wss.utils.WebUtils;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -290,8 +288,9 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                     System.out.println("* ---------------------- ** 2 env CM: " + System.getenv("CLO_MAIN"));
                     System.out.println("* ---------------------- ** 2 env MYENV1: " + System.getenv("MYENV1"));
                     
+                    Map<String, String> hdrMap = null;
                     try {
-                        Map hdrMap = checkForHeaders(is,
+                        hdrMap = checkForHeaders(is,
                               ri.HEADER_START_IDENTIFIER_BYTES,
                               ri.HEADER_END_IDENTIFIER_BYTES,
                               SingletonWrapper.HEADER_MAX_ACCEPTED_BYTE_COUNT,
@@ -316,7 +315,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                     };
 
                     IrisProcessingResult ipr = new IrisProcessingResult(so,
-                          wssMediaType, FdsnStatus.Status.OK);
+                          wssMediaType, FdsnStatus.Status.OK, hdrMap);
 
                     return ipr;
 				} else {
@@ -344,7 +343,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 			if (gotExitValue) {
                 IrisProcessingResult ipr = new IrisProcessingResult(
                       this.getClass().getName() + " exitVal: " + exitVal,
-                      wssMediaType, processExitVal(exitVal, ri));
+                      wssMediaType, processExitVal(exitVal, ri), null);
 				return ipr;
             }
 

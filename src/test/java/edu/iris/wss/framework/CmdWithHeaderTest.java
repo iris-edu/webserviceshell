@@ -332,4 +332,52 @@ public class CmdWithHeaderTest  {
                   "Headers were not completely read"));
         }
     }
+
+    @Test
+    public void test_set_header_CD1() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/test_CD1").request().get();
+        System.out.println("* ---------------------------- response: " + response);
+        System.out.println("* ---------------------------- response headers CD1: " + response.getHeaders());
+        System.out.println("* ---------------------------- response header CD: " + response.getHeaderString("Content-Disposition"));
+
+        System.out.println("* ---------------------------- user.dir: "
+              + System.getProperty("user.dir"));
+        assertEquals(200, response.getStatus());
+
+        String testMsg = response.readEntity(String.class);
+        System.out.println("* ---------------------------- testMsg: " + testMsg);
+
+        assertEquals("inline", response.getHeaderString("Content-Disposition"));
+        assertEquals("http://host.example", response.getHeaderString("Access-Control-Allow-Origin"));
+
+        // mediatype should be default value from outputs on test_CD1 
+        assertEquals("application/octet-stream", response.getMediaType().toString());
+        
+        // should also have the extra header
+        assertEquals("value-for-test-hdr", response.getHeaderString("Test-Header"));
+    }
+
+    @Test
+    public void test_set_header_CD2() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/test_CD2").request().get();
+        System.out.println("* ---------------------------- response cd2: " + response);
+        System.out.println("* ---------------------------- response headers cd2: " + response.getHeaders());
+        System.out.println("* ---------------------------- response header CD2: " + response.getHeaderString("Content-Disposition"));
+
+        assertEquals(200, response.getStatus());
+
+        String testMsg = response.readEntity(String.class);
+        System.out.println("* ---------------------------- testMsg cd2: " + testMsg);
+
+        // mediatype should be default value from outputs on test_CD1 
+        assertEquals("application/octet-stream", response.getMediaType().toString());
+
+        // must be binary media type in order to have WSS add "Content-Disposition"
+        assertTrue(response.getHeaderString("Content-Disposition").contains("attachment"));
+        assertEquals("*", response.getHeaderString("Access-Control-Allow-Origin"));
+    }
 }

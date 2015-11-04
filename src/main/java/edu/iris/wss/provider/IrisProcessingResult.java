@@ -21,23 +21,36 @@
 package edu.iris.wss.provider;
 
 import edu.iris.wss.framework.FdsnStatus;
+import java.util.Map;
 
 /**
  *
  * @author mike
  */
 public class IrisProcessingResult {
-//    public static StreamingOutput writer = null;
     // Entities are objects that the Jersey framework can use to
     // write output, like String, StreamingOutput, FileInputStream, etc
     public Object entity = null;
+    
     public String wssMediaType = null;
     public FdsnStatus.Status fdsnSS = null;
     
+    // A store for incoming header, value pairs which may be provided
+    // by handler, the header key should be trimmed and set to lowercase
+    public Map<String, String> headers = null;
+    
+    /**
+     * 
+     * @param entity
+     * @param wssMediaType
+     * @param fdsnSS
+     * @param headers - may be null
+     */
     public IrisProcessingResult(Object entity, String wssMediaType,
-          FdsnStatus.Status fdsnSS) {
+          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
         this.entity = entity;
         this.wssMediaType = wssMediaType;
         this.fdsnSS = fdsnSS;
+        this.headers = headers;
     }
 }

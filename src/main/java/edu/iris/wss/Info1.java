@@ -36,7 +36,7 @@ public class Info1 {
               .type(MediaType.TEXT_PLAIN)
               .entity("Dynamiclly added, wssVersion: " + AppConfigurator.wssVersion);
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 
 		return builder.build();
 	}

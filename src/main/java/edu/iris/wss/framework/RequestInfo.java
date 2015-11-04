@@ -216,7 +216,7 @@ public  class RequestInfo {
         sb.append(sdf.format(new Date()));
                 
         if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
-            // no suffix for binary
+            // put suffix when not binary
             sb.append(".").append(getPerRequestOutputTypeKey(epName).toLowerCase());
         }
                 

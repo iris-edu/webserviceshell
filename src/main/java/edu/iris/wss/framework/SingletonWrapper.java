@@ -27,6 +27,8 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.provider.IrisSingleton;
 import edu.iris.wss.utils.WebUtils;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
 
 public class SingletonWrapper {
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
@@ -43,7 +45,13 @@ public class SingletonWrapper {
     public static final String HEADER_END_IDENTIFIER = "HTTP_HEADERS_END";
     public byte[] HEADER_END_IDENTIFIER_BYTES;
     public static final int HEADER_MAX_ACCEPTED_BYTE_COUNT = 1024  * 16;
-	
+    
+    // These are headers used internally which may be set by configuration,
+    // they may be overridden by incoming settings
+    public final static String CONTENT_DISPOSITION = "Content-Disposition";
+    public final static String ACCESS_CONTROL_ALLOW_ORIGIN =
+          "Access-Control-Allow-Origin";
+
 	public SingletonWrapper() throws UnsupportedEncodingException  {
         //System.out.println("***** SingletonWrapper no-arg construct");
 

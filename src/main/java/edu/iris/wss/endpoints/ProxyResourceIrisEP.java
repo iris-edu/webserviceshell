@@ -96,7 +96,7 @@ public class ProxyResourceIrisEP extends IrisProcessor {
         	};
             
             IrisProcessingResult ipr = new IrisProcessingResult(so,
-                  wssMediaType, FdsnStatus.Status.OK);
+                  wssMediaType, FdsnStatus.Status.OK, null);
 
     		return ipr;
     	}
@@ -115,7 +115,7 @@ public class ProxyResourceIrisEP extends IrisProcessor {
         }
 
         IrisProcessingResult ipr = new IrisProcessingResult(entity,
-              MediaType.TEXT_PLAIN, status);
+              MediaType.TEXT_PLAIN, status, null);
 
         // goahead and call exception handling directly, ipr is never used.
         Util.logAndThrowException(ri, status, globalErrMsg);

@@ -24,6 +24,8 @@ import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.SingletonWrapper;
+import static edu.iris.wss.framework.SingletonWrapper.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static edu.iris.wss.framework.SingletonWrapper.CONTENT_DISPOSITION;
 import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import java.io.InputStream;
@@ -194,7 +196,7 @@ public class IrisDynamicProvider {
                   .type("text/plain")
                   .entity(noData);
             
-            Util.addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri, null);
             return builder.build();
         }
 
@@ -232,7 +234,8 @@ public class IrisDynamicProvider {
               .entity(iso);
 
         try {
-            builder.header("Content-Disposition", ri.createContentDisposition(requestedEpName));
+            builder.header(CONTENT_DISPOSITION,
+                  ri.createContentDisposition(requestedEpName));
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
@@ -240,7 +243,7 @@ public class IrisDynamicProvider {
                         + ServiceShellException.getErrorString(ex));
         }
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 		return builder.build();
     }
 
@@ -326,7 +329,7 @@ public class IrisDynamicProvider {
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain");
 
-            Util.addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri, null);
             return builder.build();
         }
 
@@ -348,8 +351,17 @@ public class IrisDynamicProvider {
               .entity(irr.entity);
 
         try {
-            builder.header("Content-Disposition",
-                  ri.createContentDisposition(requestedEpName));
+            // from previous way code worked
+            String value = ri.createContentDisposition(requestedEpName);
+            if (irr.headers != null) {
+                if (irr.headers.containsKey(
+                      CONTENT_DISPOSITION.toLowerCase())) {
+                    // this is for new capability where handler can override
+                    // response headers
+                    value = irr.headers.get(CONTENT_DISPOSITION.toLowerCase());
+                }
+            }
+            builder.header(CONTENT_DISPOSITION, value);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
@@ -357,7 +369,9 @@ public class IrisDynamicProvider {
                         + ServiceShellException.getErrorString(ex));
         }
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, irr.headers);
+        Util.addOtherHeadersIfAvailable(builder, irr.headers);
+
 		return builder.build();
     }
 }

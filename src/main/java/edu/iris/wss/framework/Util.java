@@ -19,10 +19,13 @@
 
 package edu.iris.wss.framework;
 
+import static edu.iris.wss.framework.SingletonWrapper.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static edu.iris.wss.framework.SingletonWrapper.CONTENT_DISPOSITION;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.utils.LoggerUtils;
 import java.util.Date;
+import java.util.Map;
 import javax.ws.rs.core.Response;
 
 /**
@@ -30,26 +33,60 @@ import javax.ws.rs.core.Response;
  * @author mike
  */
 public class Util {
-    public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb, RequestInfo ri) {
+    public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb,
+          RequestInfo ri, Map<String, String> headers) {
+        System.out.println("* ------------------------------ Cors?: " + ri.appConfig.isCorsEnabled());
 		if (ri.appConfig.isCorsEnabled()) {
+            String value = "*";
+            if (headers != null) {
+                if (headers.containsKey(
+                      ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase())) {
+                    value = headers.get(ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase());
+                }
+            }
             // Insert CORS header elements.
-		    rb.header("Access-Control-Allow-Origin", "*");
+            rb.header(ACCESS_CONTROL_ALLOW_ORIGIN, value);
 
-            // dont add this unless cookies are expected
+//            // dont add this unless cookies are expected
 //            rb.header("Access-Control-Allow-Credentials", "true");
 
-            // Not setting these at this time - 2015-08-12
+//            // Not setting these at this time - 2015-08-12
 //            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
 //            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
 
-            // not clear if needed now, 2015-08-12, but this is how to let client
-            // see what headers are available, although "...Allow-Headers" may be
-            // sufficient
-//            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
+//            // not clear if needed now, 2015-08-12, but this is how to let client
+//            // see what headers are available, although "...Allow-Headers" may be
+//            // sufficient
+//            rb.header("Access-Control-Expose-Headers",
+//                  "X-mycustomheader1, X-mycustomheader2");
 		}
     }
-	
-	public static void logAndThrowException(RequestInfo ri, FdsnStatus.Status status, String message) {
+    
+    public static void addOtherHeadersIfAvailable(Response.ResponseBuilder rb,
+          Map<String, String> headers) {
+            System.out.println("* ------------------------------**--- set hdrs: "
+                + headers);
+        if (headers != null) {
+            for (String headerKey : headers.keySet()) {
+                System.out.println("* ------------------------------**--- set hdr1: "
+                + headerKey + "  val: " + headers.get(headerKey));
+                 if (headerKey.equals(CONTENT_DISPOSITION.toLowerCase())) {
+                    // this key is processed elsewhere
+                    continue;
+                }
+                if (headerKey.equals(ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase())) {
+                    // this key is processed elsewhere
+                    continue;
+                }
+                System.out.println("* ------------------------------**--- set hdr2: "
+                + headerKey + "  val: " + headers.get(headerKey));
+                rb.header(headerKey, headers.get(headerKey));
+            }
+        }
+    }
+    
+	public static void logAndThrowException(RequestInfo ri,
+          FdsnStatus.Status status, String message) {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
 	
@@ -59,7 +96,8 @@ public class Util {
                 status.toString() + ". " + iso.getErrorString());
 	}
 
-    public static FdsnStatus.Status adjustByCfg(FdsnStatus.Status trialStatus, RequestInfo ri) {
+    public static FdsnStatus.Status adjustByCfg(FdsnStatus.Status trialStatus,
+          RequestInfo ri) {
         if (trialStatus == FdsnStatus.Status.NO_CONTENT) {
             // override 204 if configured to do so
             if (ri.perRequestUse404for204) {

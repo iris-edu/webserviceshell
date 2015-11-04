@@ -88,7 +88,7 @@ public class Wss {
         ResponseBuilder builder = Response.status(Status.OK)
               .entity(sb.toString())
               .type("text/html");
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 		return builder.build();
 	}
 
@@ -149,7 +149,7 @@ public class Wss {
             ResponseBuilder builder = Response.status(Status.OK)
                   .entity(defDoc(htmlMarkup))
                   .type("text/html");
-            Util.addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri, null);
             return builder.build();
         }
     	
@@ -168,7 +168,7 @@ public class Wss {
         	ResponseBuilder builder = Response.status(Status.OK)
                   .entity(defDoc(htmlMarkup))
                   .type("text/html");
-            Util.addCORSHeadersIfConfigured(builder, ri);
+            Util.addCORSHeadersIfConfigured(builder, ri, null);
             return builder.build();
     	}
     	
@@ -194,7 +194,7 @@ public class Wss {
         ResponseBuilder builder = Response.status(Status.OK)
               .entity(so)
               .type("text/html");
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 		return builder.build();
    }
     
@@ -207,7 +207,7 @@ public class Wss {
               .type(MediaType.TEXT_PLAIN)
               .entity(AppConfigurator.wssVersion);
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 
 		return builder.build();
 	}
@@ -221,7 +221,7 @@ public class Wss {
               .type(MediaType.TEXT_PLAIN)
               .entity(ri.appConfig.getAppVersion());
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 
 		return builder.build();
 	}
@@ -235,7 +235,7 @@ public class Wss {
               .type(MediaType.TEXT_PLAIN)
               .entity(request.getRemoteAddr());
 
-        Util.addCORSHeadersIfConfigured(builder, ri);
+        Util.addCORSHeadersIfConfigured(builder, ri, null);
 
 		return builder.build();
 	}
