@@ -25,11 +25,13 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.container.servlet.ServletContainer;*/
 import edu.iris.wss.endpoints.CmdWithHeaderIrisEP;
-import edu.iris.wss.utils.WebUtils;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,15 +78,17 @@ public class CmdWithHeaderTest  {
     @BeforeClass
     public static void setUpClass() throws IOException {
         // setup config dir for test environment
-        System.setProperty(WebUtils.wssConfigDirSignature,
-            "src"
-              + File.separator + "test"
-              + File.separator + "resources"
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
+            "target"
+              + File.separator + "test-classes"
               + File.separator + "ServiceConfigTest");
+
+        createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
+              SOME_CONTEXT + "-service.cfg");
 
         logger.info("*********** starting grizzlyWebServer, BASE_URI: "
             + BASE_URI);
-        
+
         Map<String, String> initParams = new HashMap<>();
         initParams.put(
             ServletProperties.JAXRS_APPLICATION_CLASS,
@@ -351,5 +355,138 @@ public class CmdWithHeaderTest  {
         // must be binary media type in order to have WSS add "Content-Disposition"
         assertTrue(response.getHeaderString("Content-Disposition").contains("attachment"));
         assertEquals("*", response.getHeaderString("Access-Control-Allow-Origin"));
+    }
+
+    // create a config file to test against on a target test path
+    private static void createTestCfgFile(String filePath, String fileName)
+          throws FileNotFoundException, IOException {
+
+        File testFile = new File(filePath + File.separator + fileName);
+        OutputStream os = new FileOutputStream(testFile);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ---------------- globals").append("\n");
+        sb.append("\n");
+        sb.append("appName=cmd-with-headers-test").append("\n");
+        sb.append("appVersion=default-0.1").append("\n");
+        sb.append("\n");
+        sb.append("# CORS is enabled by default, set to false to disable CORS processing").append("\n");
+        sb.append("#corsEnabled=false").append("\n");
+        sb.append("\n");
+        sb.append("##rootServiceDoc=http://service/fdsnwsbeta/dataselect/docs/1/root/").append("\n");
+        sb.append("rootServiceDoc=file:///Users/tomcat/tomcat-8092-7.0.54/dataselect_config1/dataselect-root.html").append("\n");
+        sb.append("\n");
+        sb.append("# Override the default 100msec SIGKILL delay (from SIGTERM signal)").append("\n");
+        sb.append("sigkillDelay=200").append("\n");
+        sb.append("\n");
+        sb.append("# If present, an instance of the singleton class will be created at application start").append("\n");
+        sb.append("singletonClassName=edu.iris.wss.provider.TestSingleton").append("\n");
+        sb.append("\n");
+        sb.append("# LOG4J or JMS").append("\n");
+        sb.append("loggingMethod=LOG4J").append("\n");
+        sb.append("\n");
+        sb.append("# ----------------  endpoints").append("\n");
+        sb.append("\n");
+        sb.append("queryEP.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+
+        // determine full file path within this test environment
+        File file = new File(filePath + File.separator + "sleep_handle2.sh");
+        file.setExecutable(true);
+        sb.append("queryEP.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+
+        sb.append("queryEP.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("queryEP.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("queryEP.outputTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
+        sb.append("##queryEP.usageLog=false").append("\n");
+        sb.append("\n");
+        sb.append("# Disable or remove this to disable POST processing").append("\n");
+        sb.append("queryEP.postEnabled=true").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("queryEP.use404For204=true").append("\n");
+        sb.append("\n");
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("jsonproxy.irisEndpointClassName=edu.iris.wss.endpoints.ProxyResourceIrisEP").append("\n");
+        sb.append("\n");
+
+        file = new File(filePath + File.separator + "testdata1.json");
+        System.out.println("* ------------------------------------- pfilenamea : " + file.getAbsolutePath());
+
+        sb.append("jsonproxy.proxyURL=file://").append(file.getAbsolutePath()).append("\n");
+        sb.append("\n");
+        sb.append("jsonproxy.outputTypes = \\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("test_CD1.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+
+        file = new File(filePath + File.separator + "set_header_CD1.sh");
+        file.setExecutable(true);
+        sb.append("test_CD1.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+
+        sb.append("test_CD1.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("test_CD1.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("test_CD1.outputTypes = \\").append("\n");
+        sb.append("    binary: application/octet-stream,\\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
+        sb.append("##test_CD1.usageLog=false").append("\n");
+        sb.append("\n");
+        sb.append("# Disable or remove this to disable POST processing").append("\n");
+        sb.append("test_CD1.postEnabled=true").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("test_CD1.use404For204=true").append("\n");
+        sb.append("\n");
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("test_CD2.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+
+        file = new File(filePath + File.separator + "set_header_CD2.sh");
+        file.setExecutable(true);
+        sb.append("test_CD2.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+
+        sb.append("test_CD2.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("test_CD2.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("test_CD2.outputTypes = \\").append("\n");
+        sb.append("    binary: application/octet-stream,\\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
+        sb.append("##test_CD2.usageLog=false").append("\n");
+        sb.append("\n");
+        sb.append("# Disable or remove this to disable POST processing").append("\n");
+        sb.append("test_CD2.postEnabled=true").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("test_CD2.use404For204=true").append("\n");
+
+        os.write(sb.toString().getBytes());
     }
 }

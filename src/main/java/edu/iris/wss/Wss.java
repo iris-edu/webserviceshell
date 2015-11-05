@@ -181,7 +181,7 @@ public class Wss {
     			String inputLine = null ;
     			while ((inputLine = br.readLine()) != null) {
                     inputLine = inputLine.replace("WSSBASEURL",
-                          WebUtils.getConfigFileBase(context));
+                          Util.getWssFileNameBase(context.getContextPath()));
     				writer.write(inputLine);
     				writer.newLine();
     			}

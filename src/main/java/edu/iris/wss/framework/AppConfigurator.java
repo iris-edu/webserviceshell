@@ -23,7 +23,6 @@ import edu.iris.wss.provider.IrisProcessMarker;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
 import edu.iris.wss.provider.IrisStreamingOutput;
-import edu.iris.wss.utils.WebUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,9 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
 
-import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 
@@ -72,11 +69,11 @@ public class AppConfigurator {
     // store name for possible error message later in process
     private static String configFileName = null;
 
-    public AppConfigurator() {
+    public AppConfigurator() throws Exception {
         init();
     }
     
-    private void init()  {
+    private void init() throws Exception  {
         // set defaults, all parameters must be set here with
         // defaults of the correct (i.e. desired) object type.
         globals.put(GL_CFGS.appName.toString(), "notnamed");
@@ -90,7 +87,8 @@ public class AppConfigurator {
         // a slight dissonance, irisEndpointClassName will appear as a
         // string externally, but an instatiated object internally
         ep_defaults.put(EP_CFGS.irisEndpointClassName,
-              getIrisStreamingOutputInstance("edu.iris.wss.endpoints.CmdProcessorIrisEP"));
+              getIrisStreamingOutputInstance(
+                    "edu.iris.wss.endpoints.CmdProcessorIrisEP"));
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
@@ -98,8 +96,10 @@ public class AppConfigurator {
             //   default_outputTypes.put("BINARY", "application/octet-stream");
             ep_defaults.put(EP_CFGS.outputTypes, createOutputTypes(""));
         } catch (Exception ex) {
-            System.out.println("************** ERR ERR ERR in init ");
-            java.util.logging.Logger.getLogger(AppConfigurator.class.getName()).log(Level.SEVERE, null, ex);
+            String msg = "Exception while creating types";
+            System.out.println("************** " + msg + ", ex: " + ex);
+            logger.error(msg + ", ex: " + ex);
+            throw new Exception(msg, ex);
         }
         ep_defaults.put(EP_CFGS.usageLog, true);
         ep_defaults.put(EP_CFGS.postEnabled, false);
@@ -338,7 +338,7 @@ public class AppConfigurator {
 
     // split opening of properties file from parameter parsing to
     // make it easier for testing
-	public void loadConfigFile(String configBase, ServletContext context)
+	public void loadConfigFile(String configBase)
 			throws Exception {
 
 		// Depending on the way the servlet context starts, this can be called
@@ -355,7 +355,7 @@ public class AppConfigurator {
               DEFAULT_SERVICE_FILE_NAME);
         
         if (configurationProps != null) {
-            loadConfigurationParameters(configurationProps, context);
+            loadConfigurationParameters(configurationProps);
         }
     }
 
@@ -370,10 +370,10 @@ public class AppConfigurator {
 		// wssConfigDir property concatenated with the web application name
 		// (last part of context path), e.g. 'station' or 'dataselect'
 
-        String wssConfigDir = System.getProperty(WebUtils.wssConfigDirSignature);
+        String wssConfigDir = System.getProperty(Util.WSS_OS_CONFIG_DIR);
         
         String warnMsg1 = "***** check for system property "
-              + WebUtils.wssConfigDirSignature
+              + Util.WSS_OS_CONFIG_DIR
               + ", value found: " + wssConfigDir;
         String warnMsg2 = "***** or check webapp name on cfg files, value found: "
             + configBase;
@@ -422,8 +422,7 @@ public class AppConfigurator {
         return configurationProps;
     }
 
-	public void loadConfigurationParameters(Properties inputProps,
-          ServletContext context)
+	public void loadConfigurationParameters(Properties inputProps)
 			throws Exception {
 
 		// ------------------------------------------------------
@@ -468,7 +467,7 @@ public class AppConfigurator {
                     }
                     
                     loadEndpointParameter(inputProps, ep_defaults, endpoint,
-                          inputParm, propName, context);
+                          inputParm, propName);
                 } catch (IllegalArgumentException ex) {
                     System.out.println("****** ignoring ex: " + ex);
                     //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
@@ -598,7 +597,7 @@ public class AppConfigurator {
 	}
 
 	public void loadEndpointParameter(Properties input, Map epDefaults,
-          Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName, ServletContext context)
+          Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName)
           throws Exception {
         
 		String newVal = input.getProperty(propName);

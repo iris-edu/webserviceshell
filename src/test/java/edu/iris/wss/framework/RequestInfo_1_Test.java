@@ -58,7 +58,7 @@ public class RequestInfo_1_Test {
               + "json: " + jsonMediaType + ", "
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             // ignore handler exception for this test
             if (ex.toString().contains("Handler error for endpoint")) {

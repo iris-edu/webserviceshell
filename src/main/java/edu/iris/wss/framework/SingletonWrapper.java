@@ -19,21 +19,18 @@
 
 package edu.iris.wss.framework;
 
+// Reference to support JMS logging option.
 import edu.iris.dmc.jms.service.WebLogService;
-import javax.servlet.ServletContext;
 
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.provider.IrisSingleton;
-import edu.iris.wss.utils.WebUtils;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.List;
 
 public class SingletonWrapper {
 	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
 
-	public AppConfigurator appConfig = new AppConfigurator();
+	public AppConfigurator appConfig = null;
 	public ParamConfigurator paramConfig = null;
 	public StatsKeeper statsKeeper = new StatsKeeper();
 	public IrisSingleton singleton = null;
@@ -63,19 +60,18 @@ public class SingletonWrapper {
         HEADER_END_IDENTIFIER_BYTES = HEADER_END_IDENTIFIER.getBytes("UTF-8");
     }
 
-	public void configure(ServletContext context) throws Exception {		
-		// If we've already configured the application, don't do it again.
+	public void configure(String configFileBase) throws Exception {
+        if (appConfig == null) {
+            appConfig = new AppConfigurator();
+        }
 
+		// If we've already configured the application, don't do it again.
 		if (appConfig.isValid() ) {
 			return;
 		}
 
-		String configFileBase = null;
-		if (context != null) {
-			configFileBase = WebUtils.getConfigFileBase(context);
-		}
     	try {
-    		appConfig.loadConfigFile(configFileBase, context);
+            appConfig.loadConfigFile(configFileBase);
         } catch (Exception ex) {
             String msg = "----------- Error loading "
                   + AppConfigurator.getConfigFileNamed() + " file, message: "
@@ -86,10 +82,8 @@ public class SingletonWrapper {
             // even with error, try to load params so paramConfig is
             // not null
             paramConfig = getParamConfig(appConfig, configFileBase);
-            
-            throw new Exception(msg, ex);
 
-//    		return;
+            throw new Exception(msg, ex);
     	}
 
         paramConfig = getParamConfig(appConfig, configFileBase);

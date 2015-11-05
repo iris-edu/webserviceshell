@@ -24,15 +24,70 @@ import static edu.iris.wss.framework.SingletonWrapper.CONTENT_DISPOSITION;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.utils.LoggerUtils;
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
  * @author mike
  */
 public class Util {
+    public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
+
+    public static String getWssFileNameBase(String serveletContextPath) {
+        return serveletContextPath
+              .replaceFirst(Pattern.quote("/"), "")
+              .replaceAll(Pattern.quote("/"), ".");
+    }
+
+    public static void myNewInitLog4j(String configBase) {
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String now = fmt.format((new GregorianCalendar()).getTime());
+
+        String configDirName = System.getProperty(WSS_OS_CONFIG_DIR);
+        System.out.println(now + " Info, myNewInitLog4j, property "
+              + WSS_OS_CONFIG_DIR + ": " + configDirName);
+
+        if (configDirName == null) {
+            System.out.println(now + " *** Warning, myNewInitLog4j - system property, "
+                  + WSS_OS_CONFIG_DIR + " is not found, log4j is not initialize here");
+            System.out.println(now + " *** Warning, myNewInitLog4j - for tomcat, messages"
+                  + " may be in files logs/wss.log and logs/wss_usage.log");
+            return;
+        }
+
+        File configDir = new File(configDirName);
+
+        if (!configDir.isDirectory()) {
+            System.out.println(now + " *** Warning, myNewInitLog4j ,wssConfigDir path: "
+                + configDir.getAbsolutePath() + " does not exist");
+        }
+
+        String fileName = configBase + "-log4j.properties";
+        System.out.println(now + " Info, myNewInitLog4j, filename: " + fileName);
+
+        File file = new File(configDir, fileName);
+
+        if( !file.exists() ) {
+            System.out.println(now + " *** Warning, myNewInitLog4j, configBase: " + configBase
+                + " unable to locate log4j file: " + file.getAbsolutePath()
+                + " check for logs/wss.log and logs/wss_usage.log");
+            return;
+        }
+        System.out.println(now + " Info, myNewInitLog4j, configBase: " + configBase
+            + "  log4j file: " + file.getAbsolutePath());
+
+        PropertyConfigurator.configure(file.getAbsolutePath());
+    }
+
     public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb,
           RequestInfo ri, Map<String, String> headers) {
         if (ri.appConfig.isCorsEnabled()) {

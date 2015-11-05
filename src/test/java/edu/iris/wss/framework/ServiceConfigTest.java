@@ -24,7 +24,6 @@ import com.sun.grizzly.http.servlet.ServletAdapter;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.container.servlet.ServletContainer;*/
-import edu.iris.wss.utils.WebUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -73,7 +72,7 @@ public class ServiceConfigTest  {
     @BeforeClass
     public static void setUpClass() throws IOException {
         // setup config dir for test environment
-        System.setProperty(WebUtils.wssConfigDirSignature,
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
             "src"
               + File.separator + "test"
               + File.separator + "resources"
@@ -146,17 +145,5 @@ public class ServiceConfigTest  {
 //        System.out.println("* -------------------------------------------- testMsg: " + testMsg);
         assertTrue(testMsg.contains("<TD>URL</TD><TD>" + SOME_CONTEXT + "/wssstatus</TD>"));
         assertTrue(testMsg.contains("<TD>Port</TD><TD>" + BASE_PORT + "</TD>"));
-    }
-
-    @Test
-    public void test_getJsondata() throws Exception {
-        Client c = ClientBuilder.newClient();
-        WebTarget webTarget = c.target(BASE_URI);
-        Response response = webTarget.path("/jsonproxy").request().get();
-        assertEquals(200, response.getStatus());
-        assertEquals(response.getMediaType().toString(), "application/json");
-
-        String testMsg = response.readEntity(String.class);
-        assertTrue(testMsg.contains("data from specified test file"));
     }
 }

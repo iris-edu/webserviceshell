@@ -5,7 +5,6 @@ import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.Util;
-import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
@@ -53,7 +52,8 @@ System.out.println("***************&&& Info2 write wssVersion: " + myWssVersion)
             logger.info("Info2 write done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  totalBytesTransmitted: " + totalBytesTransmitted
-                    + "  usageLog: " + ri.appConfig.isUsageLogEnabled(WebUtils.getConfigFileBase(context)));
+                    + "  usageLog: " + ri.appConfig.isUsageLogEnabled(
+                          Util.getWssFileNameBase(context.getContextPath())));
 
             Util.logUsageMessage(ri, null, totalBytesTransmitted,
                   processingTime, null, Status.OK, null);

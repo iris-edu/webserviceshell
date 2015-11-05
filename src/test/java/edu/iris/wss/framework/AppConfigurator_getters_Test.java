@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -50,7 +48,7 @@ public class AppConfigurator_getters_Test {
      * @param propFileName - name of file with WSS service configuration parameters
      * @return 
      */
-    public static AppConfigurator createTestObjAppCfg(String propFileName) {
+    public static AppConfigurator createTestObjAppCfg(String propFileName) throws Exception {
         AppConfigurator appCfg = new AppConfigurator();
         
         java.util.Properties props = new java.util.Properties();
@@ -66,7 +64,7 @@ public class AppConfigurator_getters_Test {
         }
 
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             // ignore handler exception for this test
             if (ex.toString().contains("Handler error for endpoint")) {
@@ -115,7 +113,7 @@ public class AppConfigurator_getters_Test {
               + "json: " + jsonMediaType + ", "
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             // ignore handler exception for this test
             if (ex.toString().contains("Handler error for endpoint")) {
@@ -157,7 +155,7 @@ public class AppConfigurator_getters_Test {
               endpointName, AppConfigurator.EP_CFGS.usageLog);
         props.setProperty(property, "true");
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             // ignore handler exception for this test
             if (ex.toString().contains("Handler error for endpoint")) {
@@ -187,7 +185,7 @@ public class AppConfigurator_getters_Test {
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
         
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             // ignore handler exception for this test
             if (ex.toString().contains("Handler error for endpoint")) {
@@ -223,7 +221,7 @@ public class AppConfigurator_getters_Test {
         props.setProperty(property, edu.iris.wss.endpoints.ProxyResourceIrisEP.class.getName());
 
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail("Unexpected success, proxyURL should be a required property here.");
         } catch(Exception ex) {
             // successful test,
@@ -238,7 +236,7 @@ public class AppConfigurator_getters_Test {
         // load this version of properties
         appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail("Unexpected success, this load should fail with file not found.");
         } catch(Exception ex) {
             assert(ex.toString().contains("java.io.FileNotFoundException"));
@@ -258,7 +256,7 @@ public class AppConfigurator_getters_Test {
         
         // this version should load ok
         appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        appCfg.loadConfigurationParameters(props);
 
         // the default media type should be explicitly set
         // update output types property
@@ -270,7 +268,7 @@ public class AppConfigurator_getters_Test {
         
         // this version should load ok
         appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        appCfg.loadConfigurationParameters(props);
 
         assert(appCfg.getMediaType(endpointName, "json").equals(jsonMediaType));
     }

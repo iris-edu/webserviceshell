@@ -22,7 +22,7 @@ package edu.iris.wss;
 import edu.iris.wss.framework.AppConfigurator;
 import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
 import edu.iris.wss.framework.MyApplication;
-import edu.iris.wss.utils.WebUtils;
+import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -82,7 +82,7 @@ public class WssTest  {
         server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
 
         // setup config dir for log4j
-        System.setProperty(WebUtils.wssConfigDirSignature,
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
             "target/test-classes");
         server.start();
         System.out.println("********** started GrizzlyWebContainerFactory in class: "

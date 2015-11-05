@@ -34,7 +34,7 @@ public class AppConfig_2x_1Test {
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             if (ex.toString().contains("Handler error for endpoint")) {
                 // noop - accept this error since handler name check is an
@@ -69,7 +69,7 @@ public class AppConfig_2x_1Test {
         
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             if (ex.toString().contains("Handler error for endpoint")) {
                 // noop - accept this error since handler name check is an
@@ -97,7 +97,7 @@ public class AppConfig_2x_1Test {
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
         } catch (Exception ex) {
             if (ex.toString().contains("Handler error for endpoint")) {
                 // noop - accept this error since handler name check is an
@@ -127,7 +127,7 @@ public class AppConfig_2x_1Test {
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail();
         } catch (Exception ex) {
             //  noop - should throw exception
@@ -141,7 +141,7 @@ public class AppConfig_2x_1Test {
         
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail();
         } catch (Exception ex) {
             //  noop - should throw exception
@@ -160,7 +160,7 @@ public class AppConfig_2x_1Test {
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail();
         } catch (Exception ex) {
             //  noop - should throw exception
@@ -185,7 +185,7 @@ public class AppConfig_2x_1Test {
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail();
         } catch (Exception ex) {
             assert(ex.toString().contains("is not executable"));
@@ -193,7 +193,7 @@ public class AppConfig_2x_1Test {
         }
 
         file1.setExecutable(true);
-        appCfg.loadConfigurationParameters(props, null);
+        appCfg.loadConfigurationParameters(props);
     }
 
     @Test
@@ -203,12 +203,12 @@ public class AppConfig_2x_1Test {
               "edu.iris.wss.provider.TestSingleton");
 
         AppConfigurator appCfg = new AppConfigurator();
-        appCfg.loadConfigurationParameters(props, null);
+        appCfg.loadConfigurationParameters(props);
 
         props.put(AppConfigurator.GL_CFGS.singletonClassName.toString(),
               "some_singleton_notvalid_name");
         try {
-            appCfg.loadConfigurationParameters(props, null);
+            appCfg.loadConfigurationParameters(props);
             fail();
         } catch (Exception ex) {
             assert(ex.toString().contains("could not find"));

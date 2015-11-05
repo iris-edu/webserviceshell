@@ -18,9 +18,10 @@ import org.junit.Test;
  * @author mike
  */
 public class AppConfiguratorSetOutputTypesTest {
-    AppConfigurator thisAppCfg = new AppConfigurator();
+    AppConfigurator thisAppCfg;
 
-    public AppConfiguratorSetOutputTypesTest() {
+    public AppConfiguratorSetOutputTypesTest() throws Exception {
+        this.thisAppCfg = new AppConfigurator();
     }
 
     @Test

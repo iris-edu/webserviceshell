@@ -20,7 +20,6 @@
  */
 package edu.iris.wss.framework;
 
-import edu.iris.wss.utils.WebUtils;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
@@ -48,11 +47,12 @@ public class MyApplication extends ResourceConfig {
   public MyApplication(ServiceLocator serviceLocator,
         @Context ServletContext servletContext) throws Exception {
     // always setup log4j first
-    WebUtils.myInitLog4j(servletContext);
+    String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
+    Util.myNewInitLog4j(configBase);
 
     // get configuration information now
     SingletonWrapper sw = new SingletonWrapper();
-    sw.configure(servletContext);
+    sw.configure(configBase);
 
     // bind classes as needed to be available via a CONTEXT annotation
     DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
