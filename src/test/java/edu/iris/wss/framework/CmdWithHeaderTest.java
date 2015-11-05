@@ -186,7 +186,7 @@ public class CmdWithHeaderTest  {
         String testInput = "HTTello goodbye";
         ByteArrayInputStream sbis = new ByteArrayInputStream(
               testInput.getBytes("UTF-8"));
-        SingletonWrapper sw = new SingletonWrapper();
+        WssSingleton sw = new WssSingleton();
 
         Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
               sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
@@ -206,14 +206,14 @@ public class CmdWithHeaderTest  {
         String hdr2Name = "Headr2";
         String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
         String followingData = "some other data";
-        String data = SingletonWrapper.HEADER_START_IDENTIFIER
-              + headers + SingletonWrapper.HEADER_END_IDENTIFIER
+        String data = WssSingleton.HEADER_START_IDENTIFIER
+              + headers + WssSingleton.HEADER_END_IDENTIFIER
               + followingData;
 
         ByteArrayInputStream sbis = new ByteArrayInputStream(
               data.getBytes("UTF-8"));
 
-        SingletonWrapper sw = new SingletonWrapper();
+        WssSingleton sw = new WssSingleton();
         Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
               sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
               100, "\n", ":");
@@ -235,17 +235,17 @@ public class CmdWithHeaderTest  {
         String hdr2Name = "Headr2";
         String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
         String followingData = "some other data";
-        String data = SingletonWrapper.HEADER_START_IDENTIFIER
-              + headers + SingletonWrapper.HEADER_END_IDENTIFIER
+        String data = WssSingleton.HEADER_START_IDENTIFIER
+              + headers + WssSingleton.HEADER_END_IDENTIFIER
               + followingData;
 
         ByteArrayInputStream sbis = new ByteArrayInputStream(
               data.getBytes("UTF-8"));
 
         int bufferSizeToSmall = headers.length()
-              + SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1;
+              + WssSingleton.HEADER_END_IDENTIFIER.length() - 1;
 
-        SingletonWrapper sw = new SingletonWrapper();
+        WssSingleton sw = new WssSingleton();
         try {
             Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
@@ -267,17 +267,17 @@ public class CmdWithHeaderTest  {
         String hdr2Name = "Headr2";
         String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
         String followingData = "some other data";
-        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+        String data = WssSingleton.HEADER_START_IDENTIFIER
               + headers
-              + SingletonWrapper.HEADER_END_IDENTIFIER.substring(0,
-                    SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1 );
+              + WssSingleton.HEADER_END_IDENTIFIER.substring(0,
+                    WssSingleton.HEADER_END_IDENTIFIER.length() - 1 );
 
         ByteArrayInputStream sbis = new ByteArrayInputStream(
               data.getBytes("UTF-8"));
 
         int bufferSize = 100;
 
-        SingletonWrapper sw = new SingletonWrapper();
+        WssSingleton sw = new WssSingleton();
         try {
             Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
@@ -299,10 +299,10 @@ public class CmdWithHeaderTest  {
         String hdr2Name = "Headr2";
         String headers = hdr1Name + " : value1\n" + hdr2Name + " : value2\n";
         String followingData = "some other data";
-        String data = SingletonWrapper.HEADER_START_IDENTIFIER
+        String data = WssSingleton.HEADER_START_IDENTIFIER
               + headers
-              + SingletonWrapper.HEADER_END_IDENTIFIER.substring(0,
-                    SingletonWrapper.HEADER_END_IDENTIFIER.length() - 1 )
+              + WssSingleton.HEADER_END_IDENTIFIER.substring(0,
+                    WssSingleton.HEADER_END_IDENTIFIER.length() - 1 )
               + followingData;
 
         ByteArrayInputStream sbis = new ByteArrayInputStream(
@@ -310,7 +310,7 @@ public class CmdWithHeaderTest  {
 
         int bufferSize = 100;
 
-        SingletonWrapper sw = new SingletonWrapper();
+        WssSingleton sw = new WssSingleton();
         try {
             Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,

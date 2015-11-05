@@ -30,10 +30,10 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         System.out.println("**************************** AppContextListener contextDestroyedcalled, arg0: " + arg0);
-        if (SingletonWrapper.webLogService != null) {
+        if (WssSingleton.webLogService != null) {
             try {
                 // for JMS
-                SingletonWrapper.webLogService.cleanUp();
+                WssSingleton.webLogService.cleanUp();
             } catch (Exception ex) {
                 System.out.println("*** AppContextListener, WsStatsWriter"
                         + " cleanup exception: " + ex

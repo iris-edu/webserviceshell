@@ -27,8 +27,8 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.provider.IrisSingleton;
 import java.io.UnsupportedEncodingException;
 
-public class SingletonWrapper {
-	public static final Logger logger = Logger.getLogger(SingletonWrapper.class);	
+public class WssSingleton {
+	public static final Logger logger = Logger.getLogger(WssSingleton.class);	
 
 	public AppConfigurator appConfig = null;
 	public ParamConfigurator paramConfig = null;
@@ -49,7 +49,7 @@ public class SingletonWrapper {
     public final static String ACCESS_CONTROL_ALLOW_ORIGIN =
           "Access-Control-Allow-Origin";
 
-	public SingletonWrapper() throws UnsupportedEncodingException  {
+	public WssSingleton() throws UnsupportedEncodingException  {
         //System.out.println("***** SingletonWrapper no-arg construct");
 
         // only want to create this once, but use it on every request

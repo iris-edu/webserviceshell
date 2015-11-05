@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.AppConfigurator.LoggingMethod;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.WssSingleton;
 
 public class LoggerUtils {
 
@@ -161,10 +161,10 @@ public class LoggerUtils {
             // rather than in AppContextListener, if placed in AppContextListener, 
             // startup timing between components needs to be checked
             try {
-                if (SingletonWrapper.webLogService == null) {
-                    SingletonWrapper.webLogService = new WebLogService();
+                if (WssSingleton.webLogService == null) {
+                    WssSingleton.webLogService = new WebLogService();
                     try {
-                        SingletonWrapper.webLogService.init();
+                        WssSingleton.webLogService.init();
                         logger.info("webLogService init succeeded");
                     } catch (Exception ex) {
                         System.out.println("webLogService init exception: "
@@ -179,7 +179,7 @@ public class LoggerUtils {
 //                    + makeUsageLogString(wui)
 //                );
                 
-                SingletonWrapper.webLogService.send(wui);
+                WssSingleton.webLogService.send(wui);
 
 			} catch (Exception ex) {
 				logger.error("Error while logging via JMS ex: " + ex

@@ -8,7 +8,7 @@ package test;
 import edu.iris.wss.framework.ParamConfigurator;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.WssSingleton;
 import java.util.HashSet;
 import java.util.Set;
 import javax.ws.rs.core.HttpHeaders;

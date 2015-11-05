@@ -39,7 +39,7 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
@@ -287,7 +287,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                             hdrMap = checkForHeaders(is,
                                   ri.HEADER_START_IDENTIFIER_BYTES,
                                   ri.HEADER_END_IDENTIFIER_BYTES,
-                                  SingletonWrapper.HEADER_MAX_ACCEPTED_BYTE_COUNT,
+                                  WssSingleton.HEADER_MAX_ACCEPTED_BYTE_COUNT,
                                   "\n", ":");
                         } catch (Exception ex) {
                             System.out.println("* ---------------------- ** "
@@ -482,7 +482,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
             // did not read enough bytes to finish
             throw new Exception("Http Headers were not completely read, the"
                   + " stream was closed before the ending identifier: "
-                  + SingletonWrapper.HEADER_END_IDENTIFIER
+                  + WssSingleton.HEADER_END_IDENTIFIER
                   + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
                   + "  endMatchCnt: " + endMatchCnt);
         }
@@ -508,7 +508,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
     if (endMatchCnt != endId.length) {
         throw new Exception("Http Headers check buffer size too small or"
               + " malformed ending identifier, expected identifier: "
-              + SingletonWrapper.HEADER_END_IDENTIFIER
+              + WssSingleton.HEADER_END_IDENTIFIER
               + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
               + "  endMatchCnt: " + endMatchCnt);
     }

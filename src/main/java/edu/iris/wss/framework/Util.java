@@ -19,8 +19,8 @@
 
 package edu.iris.wss.framework;
 
-import static edu.iris.wss.framework.SingletonWrapper.ACCESS_CONTROL_ALLOW_ORIGIN;
-import static edu.iris.wss.framework.SingletonWrapper.CONTENT_DISPOSITION;
+import static edu.iris.wss.framework.WssSingleton.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static edu.iris.wss.framework.WssSingleton.CONTENT_DISPOSITION;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.utils.LoggerUtils;

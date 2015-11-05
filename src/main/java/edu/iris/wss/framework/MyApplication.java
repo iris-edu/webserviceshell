@@ -51,13 +51,13 @@ public class MyApplication extends ResourceConfig {
     Util.myNewInitLog4j(configBase);
 
     // get configuration information now
-    SingletonWrapper sw = new SingletonWrapper();
+    WssSingleton sw = new WssSingleton();
     sw.configure(configBase);
 
     // bind classes as needed to be available via a CONTEXT annotation
     DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
     Injections.addBinding(
-        Injections.newBinder(sw).to(SingletonWrapper.class), dc);
+        Injections.newBinder(sw).to(WssSingleton.class), dc);
     dc.commit();
 
     // add in classes which have static endpoints via annotations

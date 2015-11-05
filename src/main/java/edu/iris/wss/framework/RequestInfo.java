@@ -48,7 +48,7 @@ public  class RequestInfo {
 	public ParamConfigurator paramConfig;
 	public StatsKeeper statsKeeper;
 	
-	public SingletonWrapper sw;
+	public WssSingleton sw;
 
     public boolean isWriteToMiniseed = false;
 
@@ -60,7 +60,7 @@ public  class RequestInfo {
     private RequestInfo() {
     }
     
-    public static RequestInfo createInstance(SingletonWrapper sw,
+    public static RequestInfo createInstance(WssSingleton sw,
 			UriInfo uriInfo, 
 			javax.servlet.http.HttpServletRequest request,
 			HttpHeaders requestHeaders) {

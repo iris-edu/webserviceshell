@@ -23,9 +23,9 @@ import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
-import edu.iris.wss.framework.SingletonWrapper;
-import static edu.iris.wss.framework.SingletonWrapper.ACCESS_CONTROL_ALLOW_ORIGIN;
-import static edu.iris.wss.framework.SingletonWrapper.CONTENT_DISPOSITION;
+import edu.iris.wss.framework.WssSingleton;
+import static edu.iris.wss.framework.WssSingleton.ACCESS_CONTROL_ALLOW_ORIGIN;
+import static edu.iris.wss.framework.WssSingleton.CONTENT_DISPOSITION;
 import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +49,7 @@ public class IrisDynamicProvider {
     @Context 	UriInfo uriInfo;	
     @Context 	HttpHeaders requestHeaders;
 
-    @Context 	SingletonWrapper sw;
+    @Context 	WssSingleton sw;
 
     @Context    ContainerRequestContext containerRequestContext;
 

@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import org.apache.log4j.Logger;
 import edu.iris.wss.utils.WebUtils;
@@ -43,7 +43,7 @@ public class Wss {
     @Context 	UriInfo uriInfo;	
     @Context 	HttpHeaders requestHeaders;
 
-    @Context 	SingletonWrapper sw;
+    @Context 	WssSingleton sw;
 
     //private RequestInfo ri;
     

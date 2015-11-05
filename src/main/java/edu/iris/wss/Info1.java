@@ -4,7 +4,7 @@ package edu.iris.wss;
 import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import javax.servlet.ServletContext;
@@ -22,7 +22,7 @@ public class Info1 {
     @Context 	UriInfo uriInfo;	
     @Context 	HttpHeaders requestHeaders;
 
-    @Context 	SingletonWrapper sw;
+    @Context 	WssSingleton sw;
     
 	public static final Logger logger = Logger.getLogger(Info1.class);
 	
