@@ -55,6 +55,7 @@ public class MyApplication extends ResourceConfig {
     sw.configure(configBase);
 
     // bind classes as needed to be available via a CONTEXT annotation
+    // i.e. make is injectable
     DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
     Injections.addBinding(
         Injections.newBinder(sw).to(WssSingleton.class), dc);
