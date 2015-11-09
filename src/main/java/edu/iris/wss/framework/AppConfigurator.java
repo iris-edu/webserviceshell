@@ -623,7 +623,18 @@ public class AppConfigurator {
                     try {
                         endPt.put(epParm, getIrisStreamingOutputInstance(newVal));
                     } catch (Exception ex) {
-                        endPt.put(epParm, getIrisProcessorInstance(newVal));
+                        try {
+                            // not an error if this one works
+                            endPt.put(epParm, getIrisProcessorInstance(newVal));
+                        } catch(Exception ex2) {
+                            String msg =
+                                  "Could not find an instance of"
+                                  + " IrisProcessorInstance, ex2: " + ex2.getMessage()
+                                  + "  or an instance of IrisStreamingOutput, ex: "
+                                  + ex.getMessage() + "  for input: " + newVal;
+                            logger.fatal(msg);
+                            throw new Exception(msg, ex2);
+                        }
                     }
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.outputTypes)) {
@@ -742,22 +753,18 @@ public class AppConfigurator {
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisStreamingOutputInstance could not find "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
-            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
             String msg = "getIrisStreamingOutputInstance could not instantiate "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
-            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
             String msg = "getIrisStreamingOutputInstance illegal access while instantiating "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
-            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (ClassCastException ex) {
             String msg = "getIrisStreamingOutputInstance ClassCastException while instantiating "
                   + EP_CFGS.irisEndpointClassName + ": " + className;
-            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         }
         return iso;
@@ -798,7 +805,9 @@ public class AppConfigurator {
         IrisSingleton is = null;
         try {
             irisClass = Class.forName(className);
+            logger.info("---------------------- Create new instance of class: " + irisClass.getCanonicalName());
             is = (IrisSingleton) irisClass.newInstance();
+            logger.info("---------------------- End create of new instance of class: " + irisClass.getCanonicalName());
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisSingletonInstance could not find "
                   + GL_CFGS.singletonClassName + ": " + className;
