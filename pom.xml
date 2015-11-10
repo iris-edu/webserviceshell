@@ -120,8 +120,8 @@
     </build>
 
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<jersey.version.2x>2.21</jersey.version.2x>
 		<jersey.version.1x>1.18</jersey.version.1x>
 		<servlet.version>3.0.1</servlet.version>
@@ -129,7 +129,7 @@
         <dmc.usage.log.version>1.0.1</dmc.usage.log.version>
         <wsslog4jinit.version>0.95</wsslog4jinit.version>
         <grizzly2.version>2.11</grizzly2.version>
-        <hk2.version>2.3.0</hk2.version>
+        <hk2.version>2.4.0-b31</hk2.version>
     </properties>
 
 
