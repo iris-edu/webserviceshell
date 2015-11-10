@@ -6,7 +6,14 @@
 package edu.iris.wss.framework;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import org.junit.BeforeClass;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -22,6 +29,42 @@ public class AppConfig_2x_1Test {
     private final String itmg = "intermag";
 
     private final String testFileName = "AppConfiguratorTest/service_mix1.cfg";
+
+    private static final String SINGLETON_CONTEXT = "/test/singleton/classname";
+    private static final String SINGLETON_CFG =
+          Util.getWssFileNameBase(SINGLETON_CONTEXT) + "-service.cfg";
+
+    @BeforeClass
+    public static void setUpClass() throws IOException {
+    }
+
+    // create a config file to test against on a target test path
+    private static void createTestCfgFile(String filePath, String fileName)
+          throws FileNotFoundException, IOException {
+
+        File dirs = new File(filePath);
+        if(!dirs.exists()){
+            dirs.mkdirs();
+        }
+
+        File testFile = new File(filePath + File.separator + fileName);
+        if (testFile.exists()) {
+            testFile.delete();
+        }
+        testFile.createNewFile();
+
+        OutputStream os = new FileOutputStream(testFile);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ---------------- globals").append("\n");
+        sb.append("\n");
+        sb.append("appName=AppConfig_2x_1Test-noseingleton").append("\n");
+        sb.append("appVersion=test-0.123").append("\n");
+        sb.append("\n");
+
+        os.write(sb.toString().getBytes());
+    }
 
     @Test
     public void testAppConfigLoad() throws Exception {
@@ -205,14 +248,36 @@ public class AppConfig_2x_1Test {
         AppConfigurator appCfg = new AppConfigurator();
         appCfg.loadConfigurationParameters(props);
 
+        // test singleton should load without exception
+        appCfg.getIrisSingletonInstance(appCfg.getSingletonClassName());
+
         props.put(AppConfigurator.GL_CFGS.singletonClassName.toString(),
               "some_singleton_notvalid_name");
         try {
             appCfg.loadConfigurationParameters(props);
-            fail();
+            appCfg.getIrisSingletonInstance(
+                  appCfg.getSingletonClassName());
+            fail("Unexpectedly succeeded");
         } catch (Exception ex) {
             assert(ex.toString().contains("could not find"));
             //  noop - should throw exception
         }
+    }
+
+    @Test
+    public void testNoSingletonClassName() throws Exception {
+        // setup config dir for test environment
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
+            "target"
+              + File.separator + "test-classes"
+              + File.separator + "AppConfig_2x_1Test");
+
+        createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
+              SINGLETON_CFG);
+
+        WssSingleton ws = new WssSingleton();
+        ws.configure(SINGLETON_CONTEXT);
+
+        assert(null == ws.singleton);
     }
 }

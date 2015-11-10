@@ -64,8 +64,6 @@ public class AppConfigurator {
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
 
-    private IrisSingleton singleton = null;
-
     // store name for possible error message later in process
     private static String configFileName = null;
 
@@ -208,10 +206,6 @@ public class AppConfigurator {
 
     public String getWssVersion() {
         return wssVersion;
-    }
-
-    public IrisSingleton getIrisSingleton() {
-        return singleton;
     }
 
     public String getProxyUrl(String epName) {
@@ -567,16 +561,8 @@ public class AppConfigurator {
                               + " or " + LoggingMethod.JMS.toString(), ex);
                     }
                 } else {
-                    // should be String type if here
-                    if (eKey.equals(GL_CFGS.singletonClassName)) {
-                        if (isOkString(newVal)) {
-                            // Note: in the case of station, and maybe others,
-                            //       this will take a long time because the
-                            //       station.main sinlgeton is loading db
-                            //       content into cache.
-                            singleton = getIrisSingletonInstance(newVal);
-                        }
-                    }
+                    // should be String type if here in else
+
                     cfgs.put(key, newVal);
                 }
 //            } else {
@@ -800,14 +786,14 @@ public class AppConfigurator {
         return iso;
     }
 
-    private IrisSingleton getIrisSingletonInstance(String className) {
+    public IrisSingleton getIrisSingletonInstance(String className) {
         Class<?> irisClass = null;
         IrisSingleton is = null;
         try {
             irisClass = Class.forName(className);
-            logger.info("---------------------- Create new instance of class: " + irisClass.getCanonicalName());
+            logger.info("--- Create new instance of class: " + irisClass.getCanonicalName());
             is = (IrisSingleton) irisClass.newInstance();
-            logger.info("---------------------- End create of new instance of class: " + irisClass.getCanonicalName());
+            logger.info("--- End create of new instance of class: " + irisClass.getCanonicalName());
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisSingletonInstance could not find "
                   + GL_CFGS.singletonClassName + ": " + className;

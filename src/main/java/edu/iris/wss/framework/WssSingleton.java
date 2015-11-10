@@ -88,8 +88,17 @@ public class WssSingleton {
 
         paramConfig = getParamConfig(appConfig, configFileBase);
 
-        // the singleton is validated and created by appConfig
-        singleton = appConfig.getIrisSingleton();
+        // the singleton name is read in by appConfig, but validated here.
+        // just skip it if the name is null
+        if (appConfig.getSingletonClassName() == null) {
+            logger.warn("The value for "
+                  + AppConfigurator.GL_CFGS.singletonClassName.toString()
+                  + " is null. Therefore, the valuse for "
+                  + this.getClass().getName() + ".singleton will be null also.");
+        } else {
+            singleton = appConfig.getIrisSingletonInstance(
+                  appConfig.getSingletonClassName());
+        }
 	}
 
     private ParamConfigurator getParamConfig(AppConfigurator appCfg,
