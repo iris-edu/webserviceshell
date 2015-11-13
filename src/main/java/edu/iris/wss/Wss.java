@@ -212,7 +212,7 @@ public class Wss {
 		return builder.build();
 	}
 	
-	@Path("appversion")
+	@Path("version")
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
     	RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
