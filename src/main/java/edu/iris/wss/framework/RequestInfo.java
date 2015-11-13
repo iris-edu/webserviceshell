@@ -85,7 +85,11 @@ public  class RequestInfo {
             try {
                 if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
                       || ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
-                    ri.isWriteToMiniseed = true;
+                    if (ri.appConfig.isLogMiniseedExtents(trialEndpoint)) {
+                        ri.isWriteToMiniseed = true;
+                    } else {
+                        ri.isWriteToMiniseed = false;
+                    }
                 }
             } catch (Exception ex) {
                 String msg = "Service configuration problem, possibly missing"
@@ -161,9 +165,11 @@ public  class RequestInfo {
         } else {
             throw new Exception("Unrecognized format type requested: " + trialKey);
         }
+        
         isWriteToMiniseed = 
-              perRequestOutputTypeKey.equals(InternalTypes.MSEED.toString())
-              || perRequestOutputTypeKey.equals(InternalTypes.MINISEED.toString());
+              (perRequestOutputTypeKey.equals(InternalTypes.MSEED.toString())
+              || perRequestOutputTypeKey.equals(InternalTypes.MINISEED.toString()))
+              && appConfig.isLogMiniseedExtents(epName);
 	}
 	
     /**

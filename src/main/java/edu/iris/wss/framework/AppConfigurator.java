@@ -103,6 +103,7 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.postEnabled, false);
         ep_defaults.put(EP_CFGS.use404For204, false);
         ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
+        ep_defaults.put(EP_CFGS.logMiniseedExtents, false);
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -129,7 +130,7 @@ public class AppConfigurator {
     // endpoint configuration parameter names
     public static enum EP_CFGS { outputTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
-        irisEndpointClassName, proxyURL
+        irisEndpointClassName, proxyURL, logMiniseedExtents
     }
 
     // container for parameters that apply to all endpoints
@@ -274,12 +275,16 @@ public class AppConfigurator {
         return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
 	}
 
-	public Boolean isPostEnabled(String epName) {
+	public boolean isPostEnabled(String epName) {
 		return (boolean)endpoints.get(epName).get(EP_CFGS.postEnabled);
 	}
 
-	public Boolean isUse404For204Enabled(String epName) {
+	public boolean isUse404For204Enabled(String epName) {
 		return (boolean)endpoints.get(epName).get(EP_CFGS.use404For204);
+	}
+
+    public boolean isLogMiniseedExtents(String epName) {
+        return (boolean)endpoints.get(epName).get(EP_CFGS.logMiniseedExtents);
 	}
 
     // Note: this implements the rule that the first item in outputTypes
