@@ -79,7 +79,7 @@ public class AppConfigurator {
         globals.put(GL_CFGS.corsEnabled.toString(), true);
         globals.put(GL_CFGS.rootServiceDoc.toString(), null);
         globals.put(GL_CFGS.loggingMethod.toString(), LoggingMethod.LOG4J);
-        globals.put(GL_CFGS.sigkillDelay.toString(), 100);
+        globals.put(GL_CFGS.sigkillDelay.toString(), 60); // kill delay in seconds
         globals.put(GL_CFGS.singletonClassName.toString(), null);
 
         // a slight dissonance, irisEndpointClassName will appear as a

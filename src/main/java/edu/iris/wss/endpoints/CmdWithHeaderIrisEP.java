@@ -967,7 +967,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		try {
             logger.info("Stopping process, and waiting with delay: " + sigkillDelay);
 			process.destroy();
-			Thread.sleep(sigkillDelay);
+			Thread.sleep(sigkillDelay * 1000);
 		} catch (InterruptedException ie) {
 			logger.error("stopProcess Thread.sleep interrrupted: " + ie);
 		}
