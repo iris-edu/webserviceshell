@@ -75,7 +75,6 @@ public class CmdWithHeaderIrisEP extends IrisProcessor {
     
     private String epName = null;
     
-    boolean isWriteToMiniseed = false;
     RequestInfo ri;
 
 	public CmdWithHeaderIrisEP() {
@@ -159,7 +158,6 @@ public class CmdWithHeaderIrisEP extends IrisProcessor {
 
         this.ri = ri;
         epName = ri.getEndpointNameForThisRequest();
-        isWriteToMiniseed = ri.isWriteToMiniseed;
         
         // this needs to be done again since it is not part of the
         // IrisStreamingOutput interface, but any errors should have
@@ -176,7 +174,7 @@ public class CmdWithHeaderIrisEP extends IrisProcessor {
             ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
                   "CmdProcessStreamingOutput - " + ex.getMessage());
 		}
-        
+
         ProcessBuilder pb0 = new ProcessBuilder(cmd);
 
 	    processBuilder = new ProcessBuilder(cmd);
@@ -328,7 +326,7 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
                         StreamingOutput so = new StreamingOutput() {
                             @Override
                             public void write(OutputStream output) {
-                                if (isWriteToMiniseed) {
+                                if (ri.isWriteToMiniseed()) {
                                     writeMiniSeed(output);
                                 } else {
                                     writeNormal(output);

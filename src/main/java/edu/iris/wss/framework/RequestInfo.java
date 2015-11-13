@@ -50,7 +50,7 @@ public  class RequestInfo {
 	
 	public WssSingleton sw;
 
-    public boolean isWriteToMiniseed = false;
+    private boolean isWriteToMiniseed = false;
 
     public byte[] HEADER_START_IDENTIFIER_BYTES;
     public byte[] HEADER_END_IDENTIFIER_BYTES;
@@ -84,7 +84,7 @@ public  class RequestInfo {
         if (isThisEndpointConfigured(request, sw.appConfig)) {
             try {
                 if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
-                      | ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
+                      || ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
                     ri.isWriteToMiniseed = true;
                 }
             } catch (Exception ex) {
@@ -101,6 +101,9 @@ public  class RequestInfo {
         return ri;
     }
 
+    public boolean isWriteToMiniseed() {
+        return isWriteToMiniseed;
+    }
     /**
      * This method returns zero length string when the request is at root
      * on the base URL or or base URL minus a trailing /
@@ -152,12 +155,15 @@ public  class RequestInfo {
         }
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
-        
+
         if (appConfig.isConfiguredForTypeKey(epName, key)) {
             this.perRequestOutputTypeKey = key;
         } else {
             throw new Exception("Unrecognized format type requested: " + trialKey);
         }
+        isWriteToMiniseed = 
+              perRequestOutputTypeKey.equals(InternalTypes.MSEED.toString())
+              || perRequestOutputTypeKey.equals(InternalTypes.MINISEED.toString());
 	}
 	
     /**

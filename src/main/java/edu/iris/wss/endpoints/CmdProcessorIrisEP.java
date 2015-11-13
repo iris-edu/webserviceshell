@@ -308,9 +308,9 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		return Status.OK; // Won't get here.
 	}
 
-	   @Override
+	@Override
     public void write(OutputStream output) {
-        if (ri.isWriteToMiniseed) {
+        if (ri.isWriteToMiniseed()) {
             writeMiniSeed(output);
         } else {
             writeNormal(output);
