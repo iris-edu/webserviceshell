@@ -22,6 +22,7 @@ package edu.iris.wss.provider;
 
 import edu.iris.wss.framework.FdsnStatus;
 import java.util.Map;
+import javax.ws.rs.core.StreamingOutput;
 
 /**
  *
@@ -36,7 +37,8 @@ public class IrisProcessingResult {
     public FdsnStatus.Status fdsnSS = null;
     
     // A store for incoming header, value pairs which may be provided
-    // by handler, the header key should be trimmed and set to lowercase
+    // by the caller.
+    // - may be null, may be empty
     public Map<String, String> headers = null;
     
     /**
@@ -44,7 +46,7 @@ public class IrisProcessingResult {
      * @param entity
      * @param wssMediaType
      * @param fdsnSS
-     * @param headers - may be null
+     * @param headers - may be null, may be empty
      */
     public IrisProcessingResult(Object entity, String wssMediaType,
           FdsnStatus.Status fdsnSS, Map<String, String> headers) {
@@ -52,5 +54,23 @@ public class IrisProcessingResult {
         this.wssMediaType = wssMediaType;
         this.fdsnSS = fdsnSS;
         this.headers = headers;
+    }
+
+    // another version with StreamingOutput type for entity
+    public IrisProcessingResult(StreamingOutput so, String wssMediaType,
+          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
+        this.entity = so;
+        this.wssMediaType = wssMediaType;
+        this.fdsnSS = fdsnSS;
+        this.headers = headers;
+    }
+
+    // another version with String type for entity, no headers
+    public IrisProcessingResult(String str, String wssMediaType,
+          FdsnStatus.Status fdsnSS) {
+        this.entity = str;
+        this.wssMediaType = wssMediaType;
+        this.fdsnSS = fdsnSS;
+        this.headers = null;
     }
 }

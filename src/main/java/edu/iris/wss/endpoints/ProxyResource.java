@@ -115,7 +115,7 @@ public class ProxyResource extends IrisProcessor {
         }
 
         IrisProcessingResult ipr = new IrisProcessingResult(entity,
-              MediaType.TEXT_PLAIN, status, null);
+              MediaType.TEXT_PLAIN, status);
 
         // goahead and call exception handling directly, ipr is never used.
         Util.logAndThrowException(ri, status, globalErrMsg);

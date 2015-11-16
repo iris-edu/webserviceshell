@@ -80,46 +80,6 @@ public class CmdProcessor extends IrisProcessor {
 	public CmdProcessor() {
 	}
 
-////	@Override
-////	public void setRequestInfo(RequestInfo ri) {
-////        this.ri = ri;
-////        
-////        epName = ri.getEndpointNameForThisRequest();
-////        
-////        // this needs to be done again since it is not part of the
-////        // IrisStreamingOutput interface, but any errors should have
-////        // already been reported, so not checking for existance and
-////        // runability of handler program here
-////        String handlerName = ri.appConfig.getHandlerProgram(epName);
-////
-////        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
-////              handlerName.split(Pattern.quote(" "))));
-////        try {
-////            // this modifies the cmd list and adds each parameter.
-////			ParameterTranslator.parseQueryParams(cmd, ri, epName);
-////		} catch (Exception ex) {
-////            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
-////                  "CmdProcessStreamingOutput - " + ex.getMessage());
-////		}
-////        
-////        ProcessBuilder pb0 = new ProcessBuilder(cmd);
-////
-////	    processBuilder = new ProcessBuilder(cmd);
-////        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
-////
-////	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
-////	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
-////	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
-////	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
-////	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
-////        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
-////        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
-////        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
-////            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
-////                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-////        }
-////	}
-
     // Note: this is broken if ever threaded, exitVal should be
     // passed in, not a global, but it means a change to the
     // interface
@@ -365,7 +325,7 @@ public class CmdProcessor extends IrisProcessor {
 			if (gotExitValue) {
                 IrisProcessingResult ipr = new IrisProcessingResult(
                       this.getClass().getName() + " exitVal: " + exitVal,
-                      wssMediaType, processExitVal(exitVal, ri), null);
+                      wssMediaType, processExitVal(exitVal, ri));
 				return ipr;
             }
 
