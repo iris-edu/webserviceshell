@@ -388,7 +388,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ----------------  endpoints").append("\n");
         sb.append("\n");
-        sb.append("queryEP.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("queryEP.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
 
         // determine full file path within this test environment
         File file = new File(filePath + File.separator + "sleep_handle2.sh");
@@ -417,7 +417,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("jsonproxy.irisEndpointClassName=edu.iris.wss.endpoints.ProxyResourceIrisEP").append("\n");
+        sb.append("jsonproxy.endpointClassName=edu.iris.wss.endpoints.ProxyResourceIrisEP").append("\n");
         sb.append("\n");
 
         file = new File(filePath + File.separator + "testdata1.json");
@@ -433,7 +433,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("test_CD1.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("test_CD1.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
 
         file = new File(filePath + File.separator + "set_header_CD1.sh");
         file.setExecutable(true);
@@ -461,7 +461,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("test_CD2.irisEndpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("test_CD2.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
 
         file = new File(filePath + File.separator + "set_header_CD2.sh");
         file.setExecutable(true);

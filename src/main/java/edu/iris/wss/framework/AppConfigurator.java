@@ -82,9 +82,9 @@ public class AppConfigurator {
         globals.put(GL_CFGS.sigkillDelay.toString(), 60); // kill delay in seconds
         globals.put(GL_CFGS.singletonClassName.toString(), null);
 
-        // a slight dissonance, irisEndpointClassName will appear as a
+        // a slight dissonance, endpointClassName will appear as a
         // string externally, but an instatiated object internally
-        ep_defaults.put(EP_CFGS.irisEndpointClassName,
+        ep_defaults.put(EP_CFGS.endpointClassName,
               getIrisStreamingOutputInstance(
                     "edu.iris.wss.endpoints.CmdProcessorIrisEP"));
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
@@ -130,7 +130,7 @@ public class AppConfigurator {
     // endpoint configuration parameter names
     public static enum EP_CFGS { outputTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
-        irisEndpointClassName, proxyURL, logMiniseedExtents
+        endpointClassName, proxyURL, logMiniseedExtents
     }
 
     // container for parameters that apply to all endpoints
@@ -221,7 +221,7 @@ public class AppConfigurator {
      */
     public IrisProcessMarker getIrisEndpointClass(String epName) {
         return (IrisProcessMarker)endpoints.get(epName)
-              .get(EP_CFGS.irisEndpointClassName);
+              .get(EP_CFGS.endpointClassName);
     }
     
     public String getHandlerProgram(String epName) {
@@ -658,7 +658,7 @@ public class AppConfigurator {
                 // TBD add logging
                 System.out.println("*** default value not defined for key: "
                       + epParm + "  input property: " + propName);
-                if (epParm.equals(EP_CFGS.irisEndpointClassName)
+                if (epParm.equals(EP_CFGS.endpointClassName)
                       | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
                     System.out.println("Missing required default for endpoint parameter: "
                           + epParm + "  input property: " + propName);
@@ -670,7 +670,7 @@ public class AppConfigurator {
             // TBD add logging
             System.out.println("*** property is null or empty for key: "
                   + epParm + "  input property: " + propName);
-            if (epParm.equals(EP_CFGS.irisEndpointClassName)
+            if (epParm.equals(EP_CFGS.endpointClassName)
                   | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
                 System.out.println("*** *** *** Missing required endpoint parameter: "
                       + epParm + "  input property: " + propName);
@@ -743,19 +743,19 @@ public class AppConfigurator {
             iso = (IrisStreamingOutput) irisClass.newInstance();
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisStreamingOutputInstance could not find "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
             String msg = "getIrisStreamingOutputInstance could not instantiate "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
             String msg = "getIrisStreamingOutputInstance illegal access while instantiating "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             throw new RuntimeException(msg, ex);
         } catch (ClassCastException ex) {
             String msg = "getIrisStreamingOutputInstance ClassCastException while instantiating "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             throw new RuntimeException(msg, ex);
         }
         return iso;
@@ -769,22 +769,22 @@ public class AppConfigurator {
             iso = (IrisProcessor) irisClass.newInstance();
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisProcessorInstance could not find "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
             String msg = "getIrisProcessorInstance could not instantiate "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
             String msg = "getIrisProcessorInstance illegal access while instantiating "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (ClassCastException ex) {
             String msg = "getIrisProcessorInstance ClassCastException while instantiating "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         }
@@ -816,7 +816,7 @@ public class AppConfigurator {
             throw new RuntimeException(msg, ex);
         } catch (ClassCastException ex) {
             String msg = "getIrisSingletonInstance ClassCastException while instantiating "
-                  + EP_CFGS.irisEndpointClassName + ": " + className;
+                  + EP_CFGS.endpointClassName + ": " + className;
             logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         }

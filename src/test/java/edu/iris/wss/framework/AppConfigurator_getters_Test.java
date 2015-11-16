@@ -216,8 +216,7 @@ public class AppConfigurator_getters_Test {
         // setup up proxy resourse for JSON and text
         
         // first the respective class name
-        String property = AppConfigurator.createEPPropertiesName(
-              endpointName, AppConfigurator.EP_CFGS.irisEndpointClassName);
+        String property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.endpointClassName);
         props.setProperty(property, edu.iris.wss.endpoints.ProxyResourceIrisEP.class.getName());
 
         try {

@@ -196,7 +196,7 @@ public class AppConfig_2x_1Test {
         // when an endpoint defines the IRIS class for command processing
         // the loader expects to find a valid handler file
         java.util.Properties props = new java.util.Properties();
-        props.put("testEP." + AppConfigurator.EP_CFGS.irisEndpointClassName.toString(),
+        props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
               "edu.iris.wss.endpoints.CmdProcessorIrisEP");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               "randomname123abc");
@@ -221,7 +221,7 @@ public class AppConfig_2x_1Test {
         File file1 = File.createTempFile("hand", ".tmp", folder);
 
        java.util.Properties props = new java.util.Properties();
-        props.put("testEP." + AppConfigurator.EP_CFGS.irisEndpointClassName.toString(),
+        props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
               "edu.iris.wss.endpoints.CmdProcessorIrisEP");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               file1.getPath());
