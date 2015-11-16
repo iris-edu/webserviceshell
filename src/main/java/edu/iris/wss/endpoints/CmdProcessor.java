@@ -32,25 +32,30 @@ import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 import com.Ostermiller.util.CircularByteBuffer;
-import edu.iris.wss.provider.IrisStreamingOutput;
 
 import edu.iris.wss.framework.AppConfigurator;
+import edu.iris.wss.framework.FdsnStatus;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
+import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
+import edu.iris.wss.provider.IrisProcessingResult;
+import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.utils.WebUtils;
 import edu.sc.seis.seisFile.mseed.DataHeader;
 import edu.sc.seis.seisFile.mseed.DataRecord;
 import edu.sc.seis.seisFile.mseed.SeedRecord;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+import javax.ws.rs.core.StreamingOutput;
 
-public class CmdProcessorIrisEP extends IrisStreamingOutput {
-	public static final Logger logger = Logger.getLogger(CmdProcessorIrisEP.class);
+public class CmdProcessor extends IrisProcessor {
+	public static final Logger logger = Logger.getLogger(CmdProcessor.class);
 
 	public static final String outputDirSignature = "outputdir";
 
@@ -69,50 +74,51 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
     private final AtomicBoolean isKillingProcess = new AtomicBoolean(false);
     
     private String epName = null;
+    
+    RequestInfo ri;
 
-	public CmdProcessorIrisEP() {
-        //System.out.println("**************** CmdProcessorIrisEP no arg constructor");
+	public CmdProcessor() {
 	}
 
-	@Override
-	public void setRequestInfo(RequestInfo ri) {
-        this.ri = ri;
-        
-        epName = ri.getEndpointNameForThisRequest();
-        
-        // this needs to be done again since it is not part of the
-        // IrisStreamingOutput interface, but any errors should have
-        // already been reported, so not checking for existance and
-        // runability of handler program here
-        String handlerName = ri.appConfig.getHandlerProgram(epName);
-
-        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
-              handlerName.split(Pattern.quote(" "))));
-        try {
-            // this modifies the cmd list and adds each parameter.
-			ParameterTranslator.parseQueryParams(cmd, ri, epName);
-		} catch (Exception ex) {
-            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
-                  "CmdProcessStreamingOutput - " + ex.getMessage());
-		}
-        
-        ProcessBuilder pb0 = new ProcessBuilder(cmd);
-
-	    processBuilder = new ProcessBuilder(cmd);
-        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
-
-	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
-	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
-	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
-	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
-	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
-        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
-        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
-        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
-            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
-                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-        }
-	}
+////	@Override
+////	public void setRequestInfo(RequestInfo ri) {
+////        this.ri = ri;
+////        
+////        epName = ri.getEndpointNameForThisRequest();
+////        
+////        // this needs to be done again since it is not part of the
+////        // IrisStreamingOutput interface, but any errors should have
+////        // already been reported, so not checking for existance and
+////        // runability of handler program here
+////        String handlerName = ri.appConfig.getHandlerProgram(epName);
+////
+////        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
+////              handlerName.split(Pattern.quote(" "))));
+////        try {
+////            // this modifies the cmd list and adds each parameter.
+////			ParameterTranslator.parseQueryParams(cmd, ri, epName);
+////		} catch (Exception ex) {
+////            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
+////                  "CmdProcessStreamingOutput - " + ex.getMessage());
+////		}
+////        
+////        ProcessBuilder pb0 = new ProcessBuilder(cmd);
+////
+////	    processBuilder = new ProcessBuilder(cmd);
+////        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
+////
+////	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
+////	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
+////	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
+////	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
+////	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
+////        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
+////        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
+////        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
+////            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
+////                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+////        }
+////	}
 
     // Note: this is broken if ever threaded, exitVal should be
     // passed in, not a global, but it means a change to the
@@ -145,8 +151,45 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 	}
 
     @Override
-	public Status getResponse() {
+	public IrisProcessingResult getProcessingResults(RequestInfo ri,
+          String wssMediaType) {
 		startTime = new Date();
+
+        this.ri = ri;
+        epName = ri.getEndpointNameForThisRequest();
+        
+        // this needs to be done again since it is not part of the
+        // IrisStreamingOutput interface, but any errors should have
+        // already been reported, so not checking for existance and
+        // runability of handler program here
+        String handlerName = ri.appConfig.getHandlerProgram(epName);
+
+        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
+              handlerName.split(Pattern.quote(" "))));
+        try {
+            // this modifies the cmd list and adds each parameter.
+			ParameterTranslator.parseQueryParams(cmd, ri, epName);
+		} catch (Exception ex) {
+            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
+                  "CmdProcessStreamingOutput - " + ex.getMessage());
+		}
+
+        ProcessBuilder pb0 = new ProcessBuilder(cmd);
+
+	    processBuilder = new ProcessBuilder(cmd);
+        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
+
+	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
+	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
+	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
+	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
+	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
+        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
+        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
+        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
+            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
+                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        }
 
 		if (processBuilder == null) {
 			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
@@ -177,7 +220,7 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 					("Ex msg: " + e.getMessage()) );
 		}
 		is = process.getInputStream();
- 
+
         if (ri.postBody != null) {
             try {
 
@@ -216,7 +259,9 @@ public class CmdProcessorIrisEP extends IrisStreamingOutput {
 						"Failure writing POST body\n" + ioe.getMessage());
 			}
 		}
-System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
+
+        boolean isHeadersChecked = false;
+        Map<String, String> hdrMap = null;
 		// Wait for data, error or timeout.
 		while (true) {
 			Boolean gotExitValue = false;
@@ -234,8 +279,67 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 
 			try {
 				if (is.available() > 0) {
-                    rt.cancel();
-                    return Status.OK;
+                    if (! isHeadersChecked) {
+                        try {
+                            hdrMap = checkForHeaders(is,
+                                  ri.HEADER_START_IDENTIFIER_BYTES,
+                                  ri.HEADER_END_IDENTIFIER_BYTES,
+                                  WssSingleton.HEADER_MAX_ACCEPTED_BYTE_COUNT,
+                                  "\n", ":");
+                        } catch (Exception ex) {
+                            System.out.println("* ---------------------- ** "
+                                  + "Exception while checking for headers, ex: "
+                                  + ex);
+                            logger.error("Exception while checking for headers, ex: "
+                                  + ex);
+                            ex.printStackTrace();
+                        }
+                        isHeadersChecked = true;
+                    }
+                    
+                    // Assumed state at this point
+                    // 1) headers were read, and there is more data on the
+                    //    input stream - so create StreamingOutput object
+                    //    and return
+                    // 2) headers were read, stream bytes are not available
+                    //    for the moment - so loop
+                    // 3) exceptions were thrown, they were then caught
+                    //    and logged
+                    // 3a) if end of input stream - bytes are not available
+                    //    and exit value will be determined at the top of
+                    //    this loop
+                    // 3b) bytes were read upto the maxbuffer size when
+                    //    checking for headers, and some non-header data
+                    //    was consumed before the max buffer size was reached
+
+                    // so at this time, log any headers read exceptions and
+                    // keep going
+                    
+                    if (is.available() > 0) {
+                        // Check availability again as checkForHeaders may
+                        // have consumed exactly a number of bytes necessary
+                        // to get headers
+
+                        rt.cancel();
+
+                        StreamingOutput so = new StreamingOutput() {
+                            @Override
+                            public void write(OutputStream output) {
+                                if (ri.isWriteToMiniseed()) {
+                                    writeMiniSeed(output);
+                                } else {
+                                    writeNormal(output);
+                                }
+                            }
+                        };
+
+                        IrisProcessingResult ipr = new IrisProcessingResult(so,
+                              wssMediaType, FdsnStatus.Status.OK, hdrMap);
+
+                        return ipr;
+                    } else {
+                        // noop, continue to check for data
+                    }
 				} else {
 					// No data available yet. Just continue looping, waiting for
 					// data.
@@ -259,7 +363,10 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 			// which would change the response from 'NO_DATA' to 'OK' is read in
 			// the section above.
 			if (gotExitValue) {
-				return processExitVal(exitVal, ri);
+                IrisProcessingResult ipr = new IrisProcessingResult(
+                      this.getClass().getName() + " exitVal: " + exitVal,
+                      wssMediaType, processExitVal(exitVal, ri), null);
+				return ipr;
             }
 
 			// Sleep for a little while.
@@ -308,14 +415,124 @@ System.out.println("**-- CmdProcessorIrisEP staring cmd monitor while loop");
 		return Status.OK; // Won't get here.
 	}
 
-	@Override
-    public void write(OutputStream output) {
-        if (ri.isWriteToMiniseed()) {
-            writeMiniSeed(output);
+    /**
+     * This method does not time out, it will block on read if there is
+     * nothing to read, it expects the caller to be responsible for any
+     * time outs control
+     * .
+     * @param is
+     */
+    /**
+     * This method does not time out, it will block on read if there is
+     * nothing to read, it expects the caller to be responsible for any
+     * time outs control
+     *
+     * When making the returned map, the key part (i.e. the header name)
+     * is trimmed and set to lowercase.
+     *
+     * @param is
+     * @param startId - should be from global definition
+     * @param endId - should be from global definition
+     * @param maxBufferSize - should be from global definition, some
+     *                        references say Apache has 8 KB limit
+     * @return
+     * @throws Exception
+     */
+    public static Map checkForHeaders(InputStream is, byte[] startId,
+          byte[] endId, int maxBufferSize, String headerLineDelimiter,
+          String headerNameValueDelimiter)
+          throws Exception {
+
+    if (!is.markSupported()) {
+        throw new Exception("Http Headers cannot be detected on this stream"
+        + " because stream marking is not supported.");
+    }
+
+    is.mark(startId.length);
+
+    byte[] oneByte = new byte[1];
+    for (int i1 = 0; i1 < startId.length; i1++) {
+        int bytesRead = is.read(oneByte, 0, 1);
+        if (bytesRead < 0) {
+            // did not read enough bytes to determine if there is a header,
+            // so just let the caller continue
+            is.reset();
+            return new HashMap();
+        }
+        if (oneByte[0] == startId[i1]) {
+            // keep reading and matching characters
+            continue;
         } else {
-            writeNormal(output);
+            // data from stream does not include header information
+            is.reset();
+            return new HashMap();
         }
     }
+
+    byte[] maxBytes = new byte[maxBufferSize];
+    int endMatchCnt = 0;
+    int keepBytesCnt = 0;
+    int i1 = 0;
+    for (; i1 < maxBytes.length; i1++) {
+        int bytesRead = is.read(oneByte, 0, 1);
+        if (bytesRead < 0) {
+            // did not read enough bytes to finish
+            throw new Exception("Http Headers were not completely read, the"
+                  + " stream was closed before the ending identifier: "
+                  + WssSingleton.HEADER_END_IDENTIFIER
+                  + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
+                  + "  endMatchCnt: " + endMatchCnt);
+        }
+        if (oneByte[0] == endId[endMatchCnt]) {
+            // keep matching characters until all are matched
+            endMatchCnt++;
+            if (endMatchCnt == endId.length) {
+                // stop reading, the next byte should be data
+                keepBytesCnt = (i1 + 1) - endMatchCnt;
+                break;
+            } else if (endMatchCnt < endId.length) {
+                // drop down and store byte
+            } else if (endMatchCnt > endId.length) {
+                throw new Exception("Http Headers read error, programmer error"
+                    + "  bytes index: " + i1);
+            }
+        } else {
+            endMatchCnt = 0;
+        }
+        maxBytes[i1] = oneByte[0];
+    }
+
+    if (endMatchCnt != endId.length) {
+        throw new Exception("Http Headers check buffer size too small or"
+              + " malformed ending identifier, expected identifier: "
+              + WssSingleton.HEADER_END_IDENTIFIER
+              + "  bytes index: " + i1 + "  maxBufferSize: : " + maxBufferSize
+              + "  endMatchCnt: " + endMatchCnt);
+    }
+
+    String headers = new String(maxBytes, 0, keepBytesCnt, "UTF-8");
+    String[] headersArr = headers.split(Pattern.quote(headerLineDelimiter));
+
+    Map<String, String> headersMap = new HashMap<>();
+    for (int k1 = 0; k1 < headersArr.length; k1++) {
+        String header = headersArr[k1];
+        int idx = header.indexOf(headerNameValueDelimiter);
+        if (idx < 0) { continue; }
+        headersMap.put(header.substring(0, idx).trim().toLowerCase(),
+              header.substring(idx + 1).trim().toLowerCase());
+    }
+
+    return headersMap;
+}
+
+////    @Override
+////    public void write(OutputStream output) {
+////        if (isWriteToMiniseed) {
+////            writeMiniSeed(output);
+////        } else {
+////            writeNormal(output);
+////        }
+////    }
 
     /**
      * Reads stdin and writes to stdout, To capture processing statistics, the

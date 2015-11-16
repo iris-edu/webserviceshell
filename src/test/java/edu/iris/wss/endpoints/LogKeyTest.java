@@ -5,7 +5,7 @@
  */
 package edu.iris.wss.endpoints;
 
-import edu.iris.wss.endpoints.CmdProcessorIrisEP.LogKey;
+import edu.iris.wss.endpoints.V1CmdProcessor.LogKey;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;

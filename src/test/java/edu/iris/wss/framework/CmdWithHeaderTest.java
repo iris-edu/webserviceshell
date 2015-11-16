@@ -24,7 +24,7 @@ import com.sun.grizzly.http.servlet.ServletAdapter;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.spi.container.servlet.ServletContainer;*/
-import edu.iris.wss.endpoints.CmdWithHeaderIrisEP;
+import edu.iris.wss.endpoints.CmdProcessor;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -188,7 +188,7 @@ public class CmdWithHeaderTest  {
               testInput.getBytes("UTF-8"));
         WssSingleton sw = new WssSingleton();
 
-        Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+        Map map = CmdProcessor.checkForHeaders(sbis,
               sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
               100, "\n", ":");
 
@@ -214,7 +214,7 @@ public class CmdWithHeaderTest  {
               data.getBytes("UTF-8"));
 
         WssSingleton sw = new WssSingleton();
-        Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+        Map map = CmdProcessor.checkForHeaders(sbis,
               sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
               100, "\n", ":");
 
@@ -247,7 +247,7 @@ public class CmdWithHeaderTest  {
 
         WssSingleton sw = new WssSingleton();
         try {
-            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+            Map map = CmdProcessor.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
                 bufferSizeToSmall, "\n", ":");
             fail("buffer size to small unexpectedly succeeded,"
@@ -279,7 +279,7 @@ public class CmdWithHeaderTest  {
 
         WssSingleton sw = new WssSingleton();
         try {
-            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+            Map map = CmdProcessor.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
                 bufferSize, "\n", ":");
             fail("incomplete ending identifier, no following data unexpectedly"
@@ -312,7 +312,7 @@ public class CmdWithHeaderTest  {
 
         WssSingleton sw = new WssSingleton();
         try {
-            Map map = CmdWithHeaderIrisEP.checkForHeaders(sbis,
+            Map map = CmdProcessor.checkForHeaders(sbis,
                 sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
                 bufferSize, "\n", ":");
             fail("incomplete ending identifier, and following data unexpectedly succeeded,"
@@ -388,7 +388,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ----------------  endpoints").append("\n");
         sb.append("\n");
-        sb.append("queryEP.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("queryEP.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
 
         // determine full file path within this test environment
         File file = new File(filePath + File.separator + "sleep_handle2.sh");
@@ -417,7 +417,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("jsonproxy.endpointClassName=edu.iris.wss.endpoints.ProxyResourceIrisEP").append("\n");
+        sb.append("jsonproxy.endpointClassName=edu.iris.wss.endpoints.ProxyResource").append("\n");
         sb.append("\n");
 
         file = new File(filePath + File.separator + "testdata1.json");
@@ -433,7 +433,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("test_CD1.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("test_CD1.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
 
         file = new File(filePath + File.separator + "set_header_CD1.sh");
         file.setExecutable(true);
@@ -461,7 +461,7 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
-        sb.append("test_CD2.endpointClassName=edu.iris.wss.endpoints.CmdWithHeaderIrisEP").append("\n");
+        sb.append("test_CD2.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
 
         file = new File(filePath + File.separator + "set_header_CD2.sh");
         file.setExecutable(true);

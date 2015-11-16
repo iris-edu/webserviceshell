@@ -85,8 +85,7 @@ public class AppConfigurator {
         // a slight dissonance, endpointClassName will appear as a
         // string externally, but an instatiated object internally
         ep_defaults.put(EP_CFGS.endpointClassName,
-              getIrisStreamingOutputInstance(
-                    "edu.iris.wss.endpoints.CmdProcessorIrisEP"));
+              getIrisProcessorInstance("edu.iris.wss.endpoints.CmdProcessor"));
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
@@ -482,7 +481,7 @@ public class AppConfigurator {
 
         for (String epName : endpoints.keySet()) {
             IrisProcessMarker iso = getIrisEndpointClass(epName);
-            if (iso instanceof edu.iris.wss.endpoints.CmdProcessorIrisEP) {
+            if (iso instanceof edu.iris.wss.endpoints.V1CmdProcessor) {
                 String handlerName = getHandlerProgram(epName);
                 try {
                     if (isOkString(handlerName)) {
@@ -496,7 +495,7 @@ public class AppConfigurator {
                     logger.error(msg);
                     throw new Exception(msg, ex);
                 }
-            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResourceIrisEP) {
+            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
                 String resoureToProxyURL = getProxyUrl(epName);
                 try {
                     if (isOkString(resoureToProxyURL)) {

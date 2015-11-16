@@ -197,7 +197,7 @@ public class AppConfig_2x_1Test {
         // the loader expects to find a valid handler file
         java.util.Properties props = new java.util.Properties();
         props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
-              "edu.iris.wss.endpoints.CmdProcessorIrisEP");
+              "edu.iris.wss.endpoints.V1CmdProcessor");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               "randomname123abc");
 
@@ -222,7 +222,7 @@ public class AppConfig_2x_1Test {
 
        java.util.Properties props = new java.util.Properties();
         props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
-              "edu.iris.wss.endpoints.CmdProcessorIrisEP");
+              "edu.iris.wss.endpoints.V1CmdProcessor");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               file1.getPath());
 

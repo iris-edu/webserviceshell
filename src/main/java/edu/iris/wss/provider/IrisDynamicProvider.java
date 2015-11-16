@@ -167,7 +167,7 @@ public class IrisDynamicProvider {
         // classname to determine if the handlerProgram name should be
         // put into cmd array
         if (iso.getClass().getName().equals(
-              edu.iris.wss.endpoints.CmdProcessorIrisEP.class.getName())) {
+              edu.iris.wss.endpoints.V1CmdProcessor.class.getName())) {
             // i.e. if it is a command processing class, there must be
             // a command handler
             // Note: not error checking file handler existance or if

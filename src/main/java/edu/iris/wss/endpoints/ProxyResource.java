@@ -41,7 +41,7 @@ import javax.ws.rs.core.StreamingOutput;
  *
  * @author mike
  */
-public class ProxyResourceIrisEP extends IrisProcessor {
+public class ProxyResource extends IrisProcessor {
 
     String globalErrMsg = "no globalErrMessage";
 
