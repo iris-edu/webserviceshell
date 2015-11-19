@@ -22,6 +22,10 @@
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 
+    <session-config>
+        <tracking-mode>URL</tracking-mode>
+    </session-config>
+
 	<filter>
 		<filter-name>Remote Address Filter</filter-name>
 		<filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
