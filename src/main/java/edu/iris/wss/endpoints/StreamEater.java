@@ -26,16 +26,22 @@ import org.apache.log4j.Logger;
 
 public class StreamEater implements Runnable  {
 	public static final Logger logger = Logger.getLogger(StreamEater.class);
+	private static final int responseThreadDelayMsec = 50;
 
 	InputStream inputStream;
 
 	boolean     done    = false;
 	static final int stringSizeLimit = 20000;
 
-	String      output = null;
-	IOException ioException = null;
+    // accumulate stderr output here
+	StringBuilder output = new StringBuilder();
+
+	IOException ioExceptionWhileReading = null;
+
+    Process process;
 
 	public StreamEater(Process process, InputStream is ) throws Exception {
+        this.process = process;
 
 		if (is == null) {
 			throw new Exception("Null InputStream");
@@ -51,51 +57,79 @@ public class StreamEater implements Runnable  {
         Thread thread = new Thread(this, "StreamEater");
         thread.start();
 	}
-	
-	public synchronized String getOutputString() throws IOException {
+
+	public synchronized String getOutputString() {
 		// wait until done, then return the string
-		if (!done) {
+        String waitMsg = "";
+
+        if (!done) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				logger.info("interrupted while doing getOutputString");
-			}
+                String msg = "Error message output was interrupted while"
+                      + " waiting for stderr read to finish";
+                output.append(" -- ").append(msg);
+				logger.info(waitMsg);
+            }
 		}
 			
 		// Probably timed out if an IO exception has occurred
-		if( ioException != null )  {
-			// throw ioException;
-			return "ioException occurred, probably because request timed out.";
+		if( ioExceptionWhileReading != null )  {
+            output.append(" -- ")
+                  .append("Exception while reading stderr, excep: ")
+                  .append(ioExceptionWhileReading.getMessage());
 		}
-		return output;
+
+		return output.toString();
 	}
 
     @Override
 	public void run() {
-		// accumulate lines in this buffer
-		StringBuilder sb = new StringBuilder();		
-		
 		byte [] buffer = new byte[1024];
-		
+		int nRead = -2 ;
 		try {
-			int nRead;
-			while ((nRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
-				if (sb.length() + nRead <= stringSizeLimit)
-					sb.append(new String(buffer, 0, nRead));
-			}
-		} catch(IOException e ) {
-			logger.info("Got IO exception in stream eater");
-			ioException = e;
-		} finally {
-			output = sb.toString();
-			synchronized (this) {
-				// Set done and notify any waiting threads.
+            while (process.isAlive()) {
+                if (inputStream.available() > 0) {
+                    try {
+                        while ((nRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
+                            if (output.length() + nRead <= stringSizeLimit) {
+                                output.append(new String(buffer, 0, nRead));
+                            } else {
+                                output.append(" -- ERROR, error message size limit exceeded");
+                                output.append(", sizeLimit: ").append(stringSizeLimit);
+                            }
+                        }
+                    } catch(IOException e ) {
+                        logger.info("Got IOException in stream eater, e: " + e.getMessage());
+                        ioExceptionWhileReading = e;
+                    } finally {
+                        synchronized (this) {
+                            // Set done and notify any waiting threads.
+                            //Typically, somebody calling getOutputString()
+                            done = true;
+                            notify();
+                        }
+                        try { inputStream.close(); } catch( Exception e) {;} // noop
+                    }
+                } else {
+                    try { Thread.sleep(responseThreadDelayMsec); } catch( Exception e) {;} // noop
+                }
+            }
+        } catch (IOException e) {
+            logger.info("Got IOException in stream eater, e: " + e.getMessage());
+            ioExceptionWhileReading = e;
+        } finally {
+            synchronized (this) {
+                // Set done and notify any waiting threads.
                 //Typically, somebody calling getOutputString()
-				done = true;
-				notify();
-			}
-			try{ inputStream.close(); } catch( Exception e) {;}
-		}		
-	}
+                done = true;
+                notify();
+            }
+            try {
+                inputStream.close();
+            } catch (Exception e) {;
+            } // noop
+        }
+    }
 }
 

@@ -41,6 +41,10 @@ import org.apache.log4j.PropertyConfigurator;
 public class Util {
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
 
+	public static boolean isOkString(String s) {
+		return ((s != null) && !s.isEmpty());
+	}
+
     public static String getWssFileNameBase(String serveletContextPath) {
         return serveletContextPath
               .replaceFirst(Pattern.quote("/"), "")
@@ -139,11 +143,11 @@ public class Util {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
 	
-	public static void newerShellException(FdsnStatus.Status status, RequestInfo ri, 
-            IrisStreamingOutput iso) {
-		ServiceShellException.logAndThrowException(ri, status,
-                status.toString() + ". " + iso.getErrorString());
-	}
+////	public static void newerShellException(FdsnStatus.Status status, RequestInfo ri,
+////            IrisStreamingOutput iso) {
+////		ServiceShellException.logAndThrowException(ri, status,
+////                status.toString() + ". " + iso.getErrorString());
+////	}
 
     public static FdsnStatus.Status adjustByCfg(FdsnStatus.Status trialStatus,
           RequestInfo ri) {
@@ -156,14 +160,15 @@ public class Util {
         return trialStatus;
     }    
 
-	public static void newerShellException(FdsnStatus.Status status,
-          RequestInfo ri, IrisProcessor iso) {
-		ServiceShellException.logAndThrowException(ri, status,
-                status.toString() + ". " + iso.getErrorString());
-	}
+////	public static void newerShellException(FdsnStatus.Status status,
+////          RequestInfo ri, IrisProcessor iso) {
+////		ServiceShellException.logAndThrowException(ri, status,
+////                status.toString() + ". " + iso.getErrorString());
+////	}
 	public static void logAndThrowException(RequestInfo ri,
-          FdsnStatus.Status httpStatus, String message, Exception ex) {
-		ServiceShellException.logAndThrowException(ri, httpStatus, message, ex);
+          FdsnStatus.Status httpStatus, String briefMsg, String detailedMsg) {
+		ServiceShellException.logAndThrowException(ri, httpStatus, briefMsg,
+              detailedMsg);
 	}
 
     public static void logUsageMessage(RequestInfo ri, String appSuffix,

@@ -30,5 +30,5 @@ public abstract class IrisProcessor implements IrisProcessMarker {
 	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri,
           String wssMediaType);
 
-    public abstract String getErrorString();
+    //public abstract String getErrorString();
 }

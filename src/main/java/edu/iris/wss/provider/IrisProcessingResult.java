@@ -33,44 +33,61 @@ public class IrisProcessingResult {
     // write output, like String, StreamingOutput, FileInputStream, etc
     public Object entity = null;
     
+    // can set mediaType, otherwise pass through media type from framework,
+    // - null or zero length string means ignore this value.
     public String wssMediaType = null;
+
     public FdsnStatus.Status fdsnSS = null;
-    
-    // A store for incoming header, value pairs which may be provided
+
+    // Incoming header - value pairs, which may be provided
     // by the caller.
     // - may be null, may be empty
     public Map<String, String> headers = null;
-    
-    /**
-     * 
-     * @param entity
-     * @param wssMediaType
-     * @param fdsnSS
-     * @param headers - may be null, may be empty
-     */
-    public IrisProcessingResult(Object entity, String wssMediaType,
-          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
-        this.entity = entity;
-        this.wssMediaType = wssMediaType;
-        this.fdsnSS = fdsnSS;
-        this.headers = headers;
+
+    String briefErrMessage = null;
+    String detailedErrMessage = null;
+
+    private IrisProcessingResult() {
+        //noop
     }
 
-    // another version with StreamingOutput type for entity
-    public IrisProcessingResult(StreamingOutput so, String wssMediaType,
-          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
-        this.entity = so;
-        this.wssMediaType = wssMediaType;
-        this.fdsnSS = fdsnSS;
-        this.headers = headers;
+////    // another version with StreamingOutput type for entity
+////    public IrisProcessingResult(StreamingOutput so, String wssMediaType,
+////          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
+////        this.entity = so;
+////        this.wssMediaType = wssMediaType;
+////        this.fdsnSS = fdsnSS;
+////        this.headers = headers;
+////    }
+
+    public static IrisProcessingResult createSuccessfulResult(
+          StreamingOutput so, String wssMediaType, Map<String, String> headers) {
+
+        IrisProcessingResult ipr = new IrisProcessingResult();
+        ipr.fdsnSS = FdsnStatus.Status.OK;
+
+        ipr.entity = so;
+        ipr.wssMediaType = wssMediaType;
+        ipr.headers = headers;
+
+        return ipr;
     }
 
-    // another version with String type for entity, no headers
-    public IrisProcessingResult(String str, String wssMediaType,
-          FdsnStatus.Status fdsnSS) {
-        this.entity = str;
-        this.wssMediaType = wssMediaType;
-        this.fdsnSS = fdsnSS;
-        this.headers = null;
+    public static IrisProcessingResult createErrorResult(
+          FdsnStatus.Status fdsnSS, String wssMediaType,
+          Map<String, String> headers, String briefMessage,
+          String detailedMessage) {
+
+        IrisProcessingResult ipr = new IrisProcessingResult();
+
+        ipr.fdsnSS = fdsnSS;
+        ipr.entity = "";
+        ipr.wssMediaType = wssMediaType;
+        ipr.headers = headers;
+
+        ipr.briefErrMessage = briefMessage;
+        ipr.detailedErrMessage = detailedMessage;
+
+        return ipr;
     }
 }

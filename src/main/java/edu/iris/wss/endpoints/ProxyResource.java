@@ -19,6 +19,7 @@
 
 package edu.iris.wss.endpoints;
 
+import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.framework.FdsnStatus;
@@ -34,7 +35,6 @@ import java.io.OutputStreamWriter;
 import java.net.URL;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 /**
@@ -42,8 +42,6 @@ import javax.ws.rs.core.StreamingOutput;
  * @author mike
  */
 public class ProxyResource extends IrisProcessor {
-
-    String globalErrMsg = "no globalErrMessage";
 
     @Override
     public IrisProcessingResult getProcessingResults(RequestInfo ri,
@@ -55,7 +53,7 @@ public class ProxyResource extends IrisProcessor {
         String epName = ri.getEndpointNameForThisRequest();
         String proxyURLSource = ri.appConfig.getProxyUrl(epName);
 
-        if ((proxyURLSource != null) && (!proxyURLSource.isEmpty())) {
+        if (Util.isOkString(proxyURLSource)) {
             logger.info("Attempting to load resource from: " + proxyURLSource);
 
             InputStream is = null;
@@ -64,16 +62,16 @@ public class ProxyResource extends IrisProcessor {
                 url = new URL(proxyURLSource);
         		is = url.openStream();
         	} catch (Exception ex) {
-                globalErrMsg = this.getClass().getName()
-                      + ".getProcessingResults - Error resolving proxy URL: "
-                      + proxyURLSource + "  ex: " + ex;
-//                logger.error("Failure loading SwaggerV2 file from: " + url
-//                + "  ex: " + ex);
-//            	return  Response.status(Status.OK).entity(err).type("text/plain").build();
+                String briefMsg = this.getClass().getName()
+                      + " could not resolve proxy URL: " + proxyURLSource;
+                String detailedMsg = this.getClass().getName()
+                      + ".getProcessingResults -  exception: " + ex;
 
-                Util.logAndThrowException(ri,
-                      Util.adjustByCfg(FdsnStatus.Status.NO_CONTENT, ri),
-                      globalErrMsg, ex);
+                IrisProcessingResult ipr =
+                      IrisProcessingResult.createErrorResult(
+                            FdsnStatus.Status.NO_CONTENT, MediaType.TEXT_PLAIN,
+                            null, briefMsg, detailedMsg);
+				return ipr;
         	}
         	
             final InputStreamReader inputSR = new InputStreamReader(is);
@@ -95,36 +93,27 @@ public class ProxyResource extends IrisProcessor {
     			}
         	};
             
-            IrisProcessingResult ipr = new IrisProcessingResult(so,
-                  wssMediaType, FdsnStatus.Status.OK, null);
+            IrisProcessingResult ipr =
+                  IrisProcessingResult.createSuccessfulResult(
+                        so, wssMediaType, null);
 
     		return ipr;
     	}
 
-        // else - null or empty URL string - may have been checked
-        //        when paramters were loaded.
+        // if we are here, then proxyURLSource is null or empty,
+        // this should have been checked when parameters were loaded
 
-        FdsnStatus.Status status = FdsnStatus.Status.NO_CONTENT;
-        String entity = null; // for 204, no_content, should return nothing
+        String briefMsg = this.getClass().getName()
+                      + " found proxy URL to be null or empty";
+        String detailedMsg = "Unexpected error in " + this.getClass().getName()
+              + " class, also check parameter "
+              + AppConfigurator.EP_CFGS.proxyURL.toString()
+              + " in -service.cfg file";
         
-        if (ri.perRequestUse404for204) {
-            // use 404 instead
-            status =  FdsnStatus.Status.NOT_FOUND;
-            globalErrMsg = "input proxy URL was null or empty string";
-            entity = "entity is string of " + globalErrMsg;
-        }
-
-        IrisProcessingResult ipr = new IrisProcessingResult(entity,
-              MediaType.TEXT_PLAIN, status);
-
-        // goahead and call exception handling directly, ipr is never used.
-        Util.logAndThrowException(ri, status, globalErrMsg);
+        IrisProcessingResult ipr = IrisProcessingResult.createErrorResult(
+              FdsnStatus.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_PLAIN,
+              null, briefMsg, detailedMsg);
 
         return ipr;
-    }
-
-    @Override
-    public String getErrorString() {
-        return globalErrMsg;
     }
 }

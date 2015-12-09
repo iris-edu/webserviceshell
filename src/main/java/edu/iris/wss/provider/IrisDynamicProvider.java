@@ -24,7 +24,6 @@ import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.WssSingleton;
-import static edu.iris.wss.framework.WssSingleton.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static edu.iris.wss.framework.WssSingleton.CONTENT_DISPOSITION;
 import edu.iris.wss.framework.Util;
 import java.io.IOException;
@@ -188,8 +187,6 @@ public class IrisDynamicProvider {
 		}
             
         if (ri.request.getMethod().equals("HEAD")) {
-            System.out.println("** doIrisStreaming, returning head request: "
-                  + " cmd: " + cmd);
             // return to Jersey before any more processing
             String noData = "";
             Response.ResponseBuilder builder = Response.status(Status.OK)
@@ -204,16 +201,17 @@ public class IrisDynamicProvider {
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
 		Status status = iso.getResponse();
-        System.out.println("** doIrisStreaming after iso.getResponse, status: "
-              + status);
     	if (status == null) {
-            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Null status from IrisStreamingOutput class");
+            String briefMsg = iso.getClass().getName()
+                  + " class programming error, FDSN Status is null";
+            Util.logAndThrowException(ri, status, briefMsg, null);
         }
 
         status = Util.adjustByCfg(status, ri);
         if (status != Status.OK) {
-            Util.newerShellException(status, ri, iso);
+            String briefMsg = iso.getClass().getName()
+                  + " error: " + iso.getErrorString();
+            Util.logAndThrowException(ri, status, briefMsg, null);
 		}
 
         // TBD - check to see if this test is done up front and
@@ -225,8 +223,10 @@ public class IrisDynamicProvider {
             mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Unknow mediaType for" + " mediaTypeKey: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex));
+                  "Unknown mediaType from mediaTypeKey, endpoint: "
+                        + requestedEpName,
+                  "Error, mediaTypeKey: " + outputTypeKey +
+                        ServiceShellException.getErrorString(ex));
         }
 
         Response.ResponseBuilder builder = Response.status(status)
@@ -239,12 +239,13 @@ public class IrisDynamicProvider {
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
-                        + " endpoint: " + requestedEpName
-                        + ServiceShellException.getErrorString(ex));
+                        + " endpoint: " + requestedEpName,
+                  "Error, " + ServiceShellException.getErrorString(ex));
         }
 
         Util.addCORSHeadersIfConfigured(builder, ri, null);
-		return builder.build();
+
+        return builder.build();
     }
 
     /**
@@ -290,12 +291,16 @@ public class IrisDynamicProvider {
             // this might happen if the service config has been set with
             // some other valid IRIS class, since the one parameter is now
             // used with more than one class type.
+            
+            String briefMsg = "An IrisProcessor object was not found, "
+                  + " this class was found: "
+                  + sw.appConfig.getIrisEndpointClass(requestedEpName).getClass();
+            
+            String moreDetails = "Check the setup in service config or dynamic"
+                  + " class assignment in MyApplication";
+            
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "An IrisProcessor object could not be found, "
-                        + " class found: "
-                        + sw.appConfig.getIrisEndpointClass(requestedEpName).getClass()
-                        + "  MyApplication or the service.cfg did not setup"
-                        + " the correct class for method doIrisProcessing");
+                  briefMsg, moreDetails);
         }
 
         cmd = new ArrayList<>();
@@ -318,13 +323,14 @@ public class IrisDynamicProvider {
             wssMediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Unknown mediaType for" + " type parameter: " + outputTypeKey
-                    + ServiceShellException.getErrorString(ex));
+                  "Unknown mediaType from mediaTypeKey, endpoint: "
+                        + requestedEpName,
+                  "Error, mediaTypeKey: " + outputTypeKey +
+                        ServiceShellException.getErrorString(ex));
         }
 
         if (ri.request.getMethod().equals("HEAD")) {
-            System.out.println("** doIrisProcessing, returning head request: "
-                  + " cmd: " + cmd);
+
             // return to Jersey before any more processing
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain");
@@ -335,15 +341,37 @@ public class IrisDynamicProvider {
 
 		// Wait for an exit code, expecting the start of data transmission
         // or exception or timeout.
+        // provide incoming media type to isdo in case the it is needed for
+        // processing, the isdo can return the same value or possible a new
+        // value.
 		IrisProcessingResult irr = isdo.getProcessingResults(ri, wssMediaType);
-        if (irr.fdsnSS == null) {
+
+        // check for programming error
+        boolean isStatusNull = irr.fdsnSS == null;
+        boolean isMediaTypeNull = irr.wssMediaType == null;
+        if (isStatusNull || isMediaTypeNull) {
+            String phrase = "";
+            if (isStatusNull && isMediaTypeNull) {
+                phrase = "FDSN Status and mediaType are";
+            } else if (isStatusNull && ! isMediaTypeNull) {
+                phrase = "FDSN Status is";
+            } else if (! isStatusNull && isMediaTypeNull) {
+                phrase = "mediaType is";
+            }
+
+            String briefMsg = isdo.getClass().getName()
+                  + " class programming error, " + phrase + " null";
+            String detailedMsg = "Reported brief message: " + irr.briefErrMessage
+                  + "  detailed message: " + irr.detailedErrMessage;
+
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Null status from IrisStreamingOutput class");
+                  briefMsg, detailedMsg);
         }
 
         Status status = Util.adjustByCfg(irr.fdsnSS, ri);
         if (status != Status.OK) {
-            Util.newerShellException(status, ri, isdo);
+            Util.logAndThrowException(ri, status, irr.briefErrMessage,
+                  irr.detailedErrMessage);
 		}
 
         Response.ResponseBuilder builder = Response.status(status)
@@ -364,9 +392,9 @@ public class IrisDynamicProvider {
             builder.header(CONTENT_DISPOSITION, value);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Error creating Content-Disposition header value"
-                        + " endpoint: " + requestedEpName
-                        + ServiceShellException.getErrorString(ex));
+                  "Error creating Content-Disposition header value,"
+                        + " endpoint: " + requestedEpName,
+                  "Error, " + ServiceShellException.getErrorString(ex));
         }
 
         Util.addCORSHeadersIfConfigured(builder, ri, irr.headers);

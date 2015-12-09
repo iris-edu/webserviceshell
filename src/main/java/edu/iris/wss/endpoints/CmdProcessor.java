@@ -34,11 +34,9 @@ import org.apache.log4j.Logger;
 import com.Ostermiller.util.CircularByteBuffer;
 
 import edu.iris.wss.framework.AppConfigurator;
-import edu.iris.wss.framework.FdsnStatus;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
@@ -50,6 +48,7 @@ import edu.sc.seis.seisFile.mseed.SeedRecord;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.StreamingOutput;
@@ -67,6 +66,8 @@ public class CmdProcessor extends IrisProcessor {
 	private Process process;
 
 	private int exitVal;
+    private String exitDetailedMsg = null;
+    private Status exitStatus = Status.INTERNAL_SERVER_ERROR;
 
 	private InputStream is = null;
 	private StreamEater se = null;
@@ -78,36 +79,6 @@ public class CmdProcessor extends IrisProcessor {
     RequestInfo ri;
 
 	public CmdProcessor() {
-	}
-
-    // Note: this is broken if ever threaded, exitVal should be
-    // passed in, not a global, but it means a change to the
-    // interface
-    @Override
-	public String getErrorString() {
-        return getErrorString(exitVal);
-	}
-    
-	public String getErrorString(int exitCode) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("  handler exit code: ").append(exitCode);
-
-		if (se == null) {
-            sb.append("  stderr: none, stderr is null");
-        } else {
-
-            try {
-                if (se.getOutputString().length() <= 0) {
-                    sb.append("  stderr: none, message is zero length");
-                } else {
-                    sb.append("  stderr: ").append(se.getOutputString());
-                }
-            } catch (IOException ioe) {
-                sb.append("  stderr: none, IOException reading stderr");
-            }
-        }
-        
-        return sb.toString();
 	}
 
     @Override
@@ -130,8 +101,9 @@ public class CmdProcessor extends IrisProcessor {
             // this modifies the cmd list and adds each parameter.
 			ParameterTranslator.parseQueryParams(cmd, ri, epName);
 		} catch (Exception ex) {
-            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
-                  "CmdProcessStreamingOutput - " + ex.getMessage());
+            String briefMsg = this.getClass().getName() + " parameter error: "
+                  + ex.getMessage();
+            Util.logAndThrowException(ri, Status.BAD_REQUEST, briefMsg, null);
 		}
 
         ProcessBuilder pb0 = new ProcessBuilder(cmd);
@@ -165,7 +137,8 @@ public class CmdProcessor extends IrisProcessor {
 
 			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"IOException when starting handler: "
-                          + processBuilder.command(), ioe);
+                          + processBuilder.command(),
+                    "IOException: " + ioe.getMessage());
 		}
 
 		ReschedulableTimer rt = new ReschedulableTimer(
@@ -222,7 +195,8 @@ public class CmdProcessor extends IrisProcessor {
 
         boolean isHeadersChecked = false;
         Map<String, String> hdrMap = null;
-		// Wait for data, error or timeout.
+
+        // Wait for data, error or timeout.
 		while (true) {
 			Boolean gotExitValue = false;
 
@@ -237,7 +211,7 @@ public class CmdProcessor extends IrisProcessor {
                 // when process is not yet terminated
 			}
 
-			try {
+            try {
 				if (is.available() > 0) {
                     if (! isHeadersChecked) {
                         try {
@@ -247,9 +221,6 @@ public class CmdProcessor extends IrisProcessor {
                                   WssSingleton.HEADER_MAX_ACCEPTED_BYTE_COUNT,
                                   "\n", ":");
                         } catch (Exception ex) {
-                            System.out.println("* ---------------------- ** "
-                                  + "Exception while checking for headers, ex: "
-                                  + ex);
                             logger.error("Exception while checking for headers, ex: "
                                   + ex);
                             ex.printStackTrace();
@@ -292,20 +263,20 @@ public class CmdProcessor extends IrisProcessor {
                                 }
                             }
                         };
-
-                        IrisProcessingResult ipr = new IrisProcessingResult(so,
-                              wssMediaType, FdsnStatus.Status.OK, hdrMap);
+                        IrisProcessingResult ipr =
+                              IrisProcessingResult.createSuccessfulResult(
+                                    so, wssMediaType, hdrMap);
 
                         return ipr;
                     } else {
                         // noop, continue to check for data
                     }
-				} else {
-					// No data available yet. Just continue looping, waiting for
-					// data.
-					// The timer will kill the process after the defined
-					// interval.
-				}
+                } else {
+                    // No data available yet. Just continue looping, waiting for
+                    // data.
+                    // The timer will kill the process after the defined
+                    // interval.
+                }
 			} catch (IOException ioe) {
 				// This means the process died or timed out and that the
 				// InputStream object
@@ -323,56 +294,84 @@ public class CmdProcessor extends IrisProcessor {
 			// which would change the response from 'NO_DATA' to 'OK' is read in
 			// the section above.
 			if (gotExitValue) {
-                IrisProcessingResult ipr = new IrisProcessingResult(
-                      this.getClass().getName() + " exitVal: " + exitVal,
-                      wssMediaType, processExitVal(exitVal, ri));
-				return ipr;
+                processExitVal(exitVal);
+                String briefMessage = getBriefMsg(exitVal);
+
+                logger.error("exitStatus: " + exitStatus
+                      + "  briefMessage: " + briefMessage
+                      + "  exitDetailedMsg: " + exitDetailedMsg);
+
+                IrisProcessingResult ipr =
+                      IrisProcessingResult.createErrorResult(exitStatus,
+                            wssMediaType, null, briefMessage, exitDetailedMsg);
+                return ipr;
             }
 
 			// Sleep for a little while.
 			try {
 				Thread.sleep(responseThreadDelayMsec);
 			} catch (InterruptedException ie) {
-				;
+                // noop
 			}
 		}
 	}
 
-	public Status processExitVal(Integer exitVal, RequestInfo ri) {
+    /**
+     * Note: This method may block while it is waiting for the inputstream
+     *       in StreamEater to finish and be closed
+     * @param handlerExitCode
+     * @return
+     */
+	public String getBriefMsg(int handlerExitCode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("  handler exited");
 
-		// An exit value of '0' here indicates an 'OK' return, but obv.
-		// with no data. Therefore, interpret it as 204.
-		if ((exitVal == 0) || (exitVal == 2)) {
-			if (ri.appConfig.isUse404For204Enabled(epName))
-				return Status.NOT_FOUND;
-			else
-				return Status.NO_CONTENT;
-		} else if (exitVal == 1) {
-            logger.error("Handler exited," + this.getErrorString(exitVal));
-			return Status.INTERNAL_SERVER_ERROR;
-		} else if (exitVal == 3) {
-			return Status.BAD_REQUEST;
-		} else if (exitVal == 4) {
-			return Status.REQUEST_ENTITY_TOO_LARGE;
-		}
+		if (se == null) {
+            sb.append(", no stream error reading object");
+        } else {
+            String stderrMsg = se.getOutputString();
+            if (stderrMsg.length() <= 0) {
+                sb.append(", no error message from handler");
+            } else {
+                sb = new StringBuilder(stderrMsg);
+            }
+        }
 
-		if (exitVal == 9 + 128) {
+        return sb.toString();
+	}
+
+	public void processExitVal(Integer handlerExitCode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("handler exited, code: ").append(handlerExitCode);
+        sb.append("  reason: ");
+
+		// An exit value of '0' here indicates an 'OK' from handler,
+        // but at this point in the processing, it is assumend there
+        // was not data on the output stream, so use 204.
+        exitStatus = Status.INTERNAL_SERVER_ERROR;
+		if ((handlerExitCode == 0) || (handlerExitCode == 2)) {
+			exitStatus = Status.NO_CONTENT;
+            sb.append(exitStatus.toString());
+		} else if (handlerExitCode == 1) {
+			exitStatus = Status.INTERNAL_SERVER_ERROR;
+            sb.append(exitStatus.toString());
+		} else if (handlerExitCode == 3) {
+			exitStatus = Status.BAD_REQUEST;
+            sb.append(exitStatus.toString());
+		} else if (handlerExitCode == 4) {
+			exitStatus = Status.REQUEST_ENTITY_TOO_LARGE;
+            sb.append(exitStatus.toString());
+		} else if (handlerExitCode == 9 + 128) {
 			// SIGKILL
-			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"Enforced timeout or unexpected termination of handler,"
-                            + this.getErrorString(exitVal));
-		} else if (exitVal == 15 + 128) {
+            sb.append("SIGKILL, Enforced timeout or unexpected termination of handler");
+		} else if (handlerExitCode == 15 + 128) {
 			// SIGTERM
-			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"Timeout or unexpected termination of handler,"
-                            + this.getErrorString(exitVal));
+            sb.append("SIGTERM, Timeout or unexpected termination of handler");
 		} else {
-			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					"Unexpected termination of handler,"
-                            + this.getErrorString(exitVal));;
+            sb.append("unknown");
 		}
 
-		return Status.OK; // Won't get here.
+		exitDetailedMsg = sb.toString();
 	}
 
     /**
@@ -648,8 +647,13 @@ public class CmdProcessor extends IrisProcessor {
             try {
                 localExitVal = process.waitFor();
                 if (localExitVal != 0) {
-                    logger.info("writeMiniSeed finishing, errMsg: "
-                            + getErrorString(localExitVal));
+                    processExitVal(localExitVal);
+                    String briefMessage = getBriefMsg(localExitVal);
+
+                    logger.error("writeMiniSeed finishing with error"
+                          + ", exitStatus: " + exitStatus
+                          + "  briefMessage: " + briefMessage
+                          + "  exitDetailedMsg: " + exitDetailedMsg);
                     try {
                         output.write(AppConfigurator
                                 .miniseedStreamInterruptionIndicator.getBytes());
@@ -816,16 +820,20 @@ public class CmdProcessor extends IrisProcessor {
 			stopProcess(process, ri.appConfig.getSigkillDelay(), output);
 		} finally {
             long processingTime = (new Date()).getTime() - startTime.getTime();
-            
+
             // set some arbitrary exit values to help determine if the test
             // for process exit code is failing versus the process itself
             int localExitVal = -99999;
             try {
                 localExitVal = process.waitFor();
                 if (localExitVal != 0) {
-                    String msg = "writeNormal finishing, errMsg: "
-                          + getErrorString(localExitVal);
-                    logger.info(msg);
+                    processExitVal(localExitVal);
+                    String briefMessage = getBriefMsg(localExitVal);
+
+                    logger.error("writeNormal finishing with error"
+                          + ", exitStatus: " + exitStatus
+                          + "  briefMessage: " + briefMessage
+                          + "  exitDetailedMsg: " + exitDetailedMsg);
                     try {
                         output.write(AppConfigurator
                                 .miniseedStreamInterruptionIndicator.getBytes());
@@ -920,26 +928,31 @@ public class CmdProcessor extends IrisProcessor {
             logger.error("stopProcess called for timeout or exception, outputStream"
             + " is null, this indicates the handler never wrote data.");
         }
-        
+
 		// Send a SIGTERM (friendly-like) via the destroy() method.
 		// Wait for sigkillDelay msec, then terminate with SIGKILL.
-		try {
-            logger.info("Stopping process, and waiting with delay: " + sigkillDelay);
-			process.destroy();
-			Thread.sleep(sigkillDelay * 1000);
-		} catch (InterruptedException ie) {
-			logger.error("stopProcess Thread.sleep interrrupted: " + ie);
-		}
 
-		// See if the process is still running by getting its exit value.
-		// If still running, it'll throw an IllegaThreadStateException
-		try {
-			int exitVal = process.exitValue();
-			logger.info("Process terminated, exit code: " + exitVal);
-		} catch (IllegalThreadStateException itse) {
-			killUnixProcess(process);
-			logger.info("Process recalcitrant.  Killing w/ SIGKILL");
-		}
+        try {
+            logger.info("Stopping process, and waitFor with delay: " + sigkillDelay);
+            process.destroy();
+
+            //Thread.sleep(sigkillDelay * 1000);
+            // waitFor may return faster if the process handles the terminate
+            // exits before sigKillDelay time is exceeded.
+            process.waitFor(sigkillDelay, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            logger.error("stopProcess Thread.sleep interrrupted: " + ie);
+        }
+
+        // See if the process is still running by getting its exit value.
+        // If still running, it'll throw an IllegaThreadStateException
+        try {
+            int exitVal = process.exitValue();
+            logger.info("Process terminated, exit code: " + exitVal);
+        } catch (IllegalThreadStateException itse) {
+            killUnixProcess(process);
+            logger.info("Process recalcitrant.  Killing w/ SIGKILL");
+        }
 	}
 
 	// Obv. only works w/ Unix processes.

@@ -91,7 +91,7 @@ public class V1CmdProcessor extends IrisStreamingOutput {
             // this modifies the cmd list and adds each parameter.
 			ParameterTranslator.parseQueryParams(cmd, ri, epName);
 		} catch (Exception ex) {
-            ServiceShellException.logAndThrowException(ri, Status.BAD_REQUEST,
+            Util.logAndThrowException(ri, Status.BAD_REQUEST,
                   "CmdProcessStreamingOutput - " + ex.getMessage());
 		}
         
@@ -126,17 +126,12 @@ public class V1CmdProcessor extends IrisStreamingOutput {
         sb.append("  handler exit code: ").append(exitCode);
 
 		if (se == null) {
-            sb.append("  stderr: none, stderr is null");
+            sb.append("  stderr: se is null");
         } else {
-
-            try {
-                if (se.getOutputString().length() <= 0) {
-                    sb.append("  stderr: none, message is zero length");
-                } else {
-                    sb.append("  stderr: ").append(se.getOutputString());
-                }
-            } catch (IOException ioe) {
-                sb.append("  stderr: none, IOException reading stderr");
+            if (se.getOutputString().length() <= 0) {
+                sb.append("  stderr: none, message is zero length");
+            } else {
+                sb.append("  stderr: ").append(se.getOutputString());
             }
         }
         
@@ -161,7 +156,8 @@ public class V1CmdProcessor extends IrisStreamingOutput {
 
 			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
 					"IOException when starting handler: "
-                          + processBuilder.command(), ioe);
+                          + processBuilder.command(),
+                    "IOException: " + ioe.getMessage());
 		}
 
 		ReschedulableTimer rt = new ReschedulableTimer(
@@ -170,10 +166,11 @@ public class V1CmdProcessor extends IrisStreamingOutput {
 
 		try {
 			se = new StreamEater(process, process.getErrorStream());
-		} catch (Exception e) {
-            logger.error("getResponse StreamEater exception: ", e);
+		} catch (Exception ex) {
+            logger.error("getResponse StreamEater exception: ", ex);
 			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-					("Ex msg: " + e.getMessage()) );
+                  "error getting handler error stream",
+                  "Exception: " + ex.getMessage());
 		}
 		is = process.getInputStream();
  
