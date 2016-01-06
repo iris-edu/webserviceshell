@@ -734,7 +734,7 @@ public class AppConfigurator {
         return validVal;
     }
 
-    private IrisProcessMarker getIrisStreamingOutputInstance(String className) {
+    public static IrisProcessMarker getIrisStreamingOutputInstance(String className) {
         Class<?> irisClass = null;
         IrisStreamingOutput iso = null;
         try {
@@ -743,24 +743,28 @@ public class AppConfigurator {
         } catch (ClassNotFoundException ex) {
             String msg = "getIrisStreamingOutputInstance could not find "
                   + EP_CFGS.endpointClassName + ": " + className;
+            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (InstantiationException ex) {
             String msg = "getIrisStreamingOutputInstance could not instantiate "
                   + EP_CFGS.endpointClassName + ": " + className;
+            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (IllegalAccessException ex) {
             String msg = "getIrisStreamingOutputInstance illegal access while instantiating "
                   + EP_CFGS.endpointClassName + ": " + className;
+            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         } catch (ClassCastException ex) {
             String msg = "getIrisStreamingOutputInstance ClassCastException while instantiating "
                   + EP_CFGS.endpointClassName + ": " + className;
+            logger.fatal(msg);
             throw new RuntimeException(msg, ex);
         }
         return iso;
     }
 
-    private IrisProcessMarker getIrisProcessorInstance(String className) {
+    public static IrisProcessMarker getIrisProcessorInstance(String className) {
         Class<?> irisClass = null;
         IrisProcessor iso = null;
         try {
@@ -790,7 +794,7 @@ public class AppConfigurator {
         return iso;
     }
 
-    public IrisSingleton getIrisSingletonInstance(String className) {
+    public static IrisSingleton getIrisSingletonInstance(String className) {
         Class<?> irisClass = null;
         IrisSingleton is = null;
         try {
@@ -862,7 +866,7 @@ public class AppConfigurator {
                 Object value = endpoint.get(cfgName);
                 if (value == null) {
                     value = "null";
-                } else if(value instanceof IrisStreamingOutput) {
+                } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
@@ -940,8 +944,8 @@ public class AppConfigurator {
                 Object value = endpoint.get(cfgName);
                 if (value == null) {
                     value = "null";
-                } else if(value instanceof Class) {
-                    value = ((Class)value).getName();
+                } else if(value instanceof IrisProcessMarker) {
+                    value = value.getClass().getName();
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
                 }

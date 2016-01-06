@@ -130,7 +130,7 @@ public class MyApplication extends ResourceConfig {
     registerResources(endpointRes);
     
     String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath()
-          + "  httpMethod: " + httpMethod;
+          + "  httpMethod: " + httpMethod + "  epMethodName: " + epMethodName;
     System.out.println(msg);
     logger.info(msg);
   }

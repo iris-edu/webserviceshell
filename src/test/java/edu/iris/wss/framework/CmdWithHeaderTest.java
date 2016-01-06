@@ -160,6 +160,28 @@ public class CmdWithHeaderTest  {
     }
 
     @Test
+    public void test_getCmd0() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/v1Cmd").request().get();
+
+        assertEquals(200, response.getStatus());
+
+        String testMsg = response.readEntity(String.class);
+
+        // response should be from sleep_handle2.sh
+        // handler name set in the service cfg file, which is depends on the value
+        // of SOME_CONTEXT
+        // Note: this test is like test_getCmd1, except the string
+        //       "HTTP_HEADERS_START" is not recognized as significant
+        //       by the older version 1 command line reader
+        assertTrue(testMsg.indexOf("HTTP_HEADERS_STARTheader1") == 0);
+
+        // mediatype should be default value from outputs on queryEP
+        assertEquals(response.getMediaType().toString(), "text/plain");
+    }
+
+    @Test
     public void test_getCmd1() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
@@ -415,6 +437,35 @@ public class CmdWithHeaderTest  {
         sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
         sb.append("queryEP.use404For204=true").append("\n");
         sb.append("\n");
+
+        // setup something to test IrisStreamingOutput instantiation
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("v1Cmd.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+        sb.append("v1Cmd.endpointClassName=edu.iris.wss.endpoints.V1CmdProcessor").append("\n");
+        sb.append("\n");
+
+        sb.append("v1Cmd.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("v1Cmd.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("v1Cmd.outputTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
+        sb.append("##v1Cmd.usageLog=false").append("\n");
+        sb.append("\n");
+        sb.append("# Disable or remove this to disable POST processing").append("\n");
+        sb.append("v1Cmd.postEnabled=true").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("v1Cmd.use404For204=true").append("\n");
+        sb.append("\n");
+
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
         sb.append("jsonproxy.endpointClassName=edu.iris.wss.endpoints.ProxyResource").append("\n");
@@ -431,6 +482,7 @@ public class CmdWithHeaderTest  {
         sb.append("    texttree: text/plain,\\").append("\n");
         sb.append("    xml: application/xml").append("\n");
         sb.append("\n");
+
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
         sb.append("test_CD1.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");

@@ -19,6 +19,7 @@
 
 package edu.iris.wss.provider;
 
+import edu.iris.wss.framework.AppConfigurator;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
@@ -157,10 +158,16 @@ public class IrisDynamicProvider {
 
 		ArrayList<String> cmd = null;
 
-        // No object existance check done here as it should have been
-        // done when the configuration parameters were loaded
+        // Instantiate a new object everytime to avoid latent memory or
+        // threading problems if endpoint class is not specifically coded for
+        // repeated calls
+        // AppConfigurator stores the first instantiates and verifie an
+        // object as defined by the config file. Get the classname of
+        // that object and re-instantiate - DON'T reuse it!
         IrisStreamingOutput iso =
               (IrisStreamingOutput)ri.appConfig.getIrisEndpointClass(requestedEpName);
+        iso = (IrisStreamingOutput)AppConfigurator.getIrisStreamingOutputInstance(
+              iso.getClass().getName());
 
         // until some other mechanism exist, use our command line processor
         // classname to determine if the handlerProgram name should be
@@ -281,12 +288,18 @@ public class IrisDynamicProvider {
 
 		ArrayList<String> cmd = null;
 
-        // No object existance check done here as it should have been
-        // done when the configuration parameters were loaded
         IrisProcessor isdo = null;
         if (sw.appConfig.getIrisEndpointClass(requestedEpName) instanceof
               edu.iris.wss.provider.IrisProcessor) {
+            // Instantiate a new object everytime to avoid latent memory or
+            // threading problems if endpoint class is not specifically coded for
+            // repeated calls
+            // AppConfigurator stores the first instantiates and verifie an
+            // object as defined by the config file. Get the classname of
+            // that object and re-instantiate - DON'T reuse it!
             isdo = (IrisProcessor)sw.appConfig.getIrisEndpointClass(requestedEpName);
+            isdo = (IrisProcessor)AppConfigurator.getIrisProcessorInstance(
+                  isdo.getClass().getName());
         } else {
             // this might happen if the service config has been set with
             // some other valid IRIS class, since the one parameter is now
