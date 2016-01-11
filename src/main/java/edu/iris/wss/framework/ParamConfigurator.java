@@ -244,30 +244,39 @@ public class ParamConfigurator {
     @Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("WSS Parameter Configuration\n");
+        String line = "----------------------";
 
+        sb.append("\n");
+		sb.append("Web Service Shell Interface Parameter Configuration").append("\n");
+
+        sb.append(line).append(" endpoints\n");
         for (String epName : epParams.keySet()) {
             Map<String, ConfigParam> params = epParams.get(epName);
-            for (String key: params.keySet()) {
-                ConfigParam cp = params.get(key);
+            if (params.isEmpty()) {
                 sb.append(epName)
-                      .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
-                      .append(strAppend(cp.name))
-                      .append(cp.type)
+                      .append(" has no interface parameters")
                       .append("\n");
+            } else {
+                for (String key: params.keySet()) {
+                    ConfigParam cp = params.get(key);
+                    sb.append(epName)
+                          .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                          .append(strAppend(cp.name))
+                          .append(cp.type)
+                          .append("\n");
+                }
             }
+            sb.append("\n");
 
             Map aliases = epAliases.get(epName);
-            if (aliases.isEmpty()) {
-                // noop, skip
-            } else {
-                sb.append(epName)
-                      .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
-                      .append(strAppend(ALIASES_KEY_NAME))
-                      .append(aliases)
-                      .append("\n");
-            }
+            sb.append(epName)
+                  .append(AppConfigurator.ENDPOINT_TO_PROPERTIES_DELIMITER)
+                  .append(strAppend(ALIASES_KEY_NAME))
+                  .append(aliases)
+                  .append("\n");
+            sb.append("\n");
         }
+        sb.append(line).append(" endpoints end\n");
 
 		return sb.toString();
 	}
@@ -280,13 +289,13 @@ public class ParamConfigurator {
 		}
 		return s;
 	}
-	
+
 	public String toHtmlString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<TABLE border=2 style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH colspan=\"2\" >")
-              .append("WSS Parameter Configuration")
+              .append("Web Service Shell Interface Parameter Configuration")
               .append("</TH></TR>");
 
         for (String epName : epParams.keySet()) {

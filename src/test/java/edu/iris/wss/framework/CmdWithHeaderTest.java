@@ -391,7 +391,7 @@ public class CmdWithHeaderTest  {
         sb.append("# ---------------- globals").append("\n");
         sb.append("\n");
         sb.append("appName=cmd-with-headers-test").append("\n");
-        sb.append("appVersion=default-0.1").append("\n");
+        sb.append("version=default-0.1").append("\n");
         sb.append("\n");
         sb.append("# CORS is enabled by default, set to false to disable CORS processing").append("\n");
         sb.append("#corsEnabled=false").append("\n");

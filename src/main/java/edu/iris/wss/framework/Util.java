@@ -21,8 +21,6 @@ package edu.iris.wss.framework;
 
 import static edu.iris.wss.framework.WssSingleton.ACCESS_CONTROL_ALLOW_ORIGIN;
 import static edu.iris.wss.framework.WssSingleton.CONTENT_DISPOSITION;
-import edu.iris.wss.provider.IrisProcessor;
-import edu.iris.wss.provider.IrisStreamingOutput;
 import edu.iris.wss.utils.LoggerUtils;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -40,6 +38,7 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public class Util {
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
+    private static final String LOG4J_CFG_NAME_SUFFIX = "-log4j.properties";
 
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
@@ -75,7 +74,7 @@ public class Util {
                 + configDir.getAbsolutePath() + " does not exist");
         }
 
-        String fileName = configBase + "-log4j.properties";
+        String fileName = configBase + LOG4J_CFG_NAME_SUFFIX;
         System.out.println(now + " Info, myNewInitLog4j, filename: " + fileName);
 
         File file = new File(configDir, fileName);

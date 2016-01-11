@@ -86,7 +86,7 @@ public class AppConfigurator_getters_Test {
         props.setProperty(
               AppConfigurator.GL_CFGS.appName.toString(), "mock_appname");
         props.setProperty(
-              AppConfigurator.GL_CFGS.appVersion.toString(), "mock_version");
+              AppConfigurator.GL_CFGS.version.toString(), "mock_version");
 
         // handlerProgram is required, but not part of this test
         String property = AppConfigurator.createEPPropertiesName(

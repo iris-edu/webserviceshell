@@ -63,9 +63,13 @@ public class Wss {
 		sb.append("<TABLE BORDER=2 cellpadding='2' style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH COLSPAN=\"2\">Servlet Environment</TH></TR>");
-		sb.append("<TR><TD>" + "URL" + "</TD><TD>")
+		sb.append("<TR><TD>").append("URL").append("</TD><TD>")
               .append(request.getRequestURI())
               .append("</TD></TR>");
+
+        sb.append("<TR><TD>").append("Web Service Shell Version").append("</TD><TD>")
+              .append(sw.appConfig.getWssVersion()).append("</TD></TR>");
+
 		sb.append("<TR><TD>" + "Host" + "</TD><TD>")
               .append(WebUtils.getHost(request))
               .append("</TD></TR>");

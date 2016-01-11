@@ -75,7 +75,7 @@ public class AppConfigurator {
         // set defaults, all parameters must be set here with
         // defaults of the correct (i.e. desired) object type.
         globals.put(GL_CFGS.appName.toString(), "notnamed");
-        globals.put(GL_CFGS.appVersion.toString(), "notversioned");
+        globals.put(GL_CFGS.version.toString(), "notversioned");
         globals.put(GL_CFGS.corsEnabled.toString(), true);
         globals.put(GL_CFGS.rootServiceDoc.toString(), null);
         globals.put(GL_CFGS.loggingMethod.toString(), LoggingMethod.LOG4J);
@@ -122,7 +122,7 @@ public class AppConfigurator {
     
     // Make enum names the same as the names the user sees in the cfg file
     // global configuration parameter names
-    public static enum GL_CFGS { appName, appVersion, corsEnabled,
+    public static enum GL_CFGS { appName, version, corsEnabled,
         rootServiceDoc, loggingMethod, sigkillDelay,
         jndiUrl, singletonClassName};
     
@@ -181,7 +181,7 @@ public class AppConfigurator {
     }
 
     public String getAppVersion() {
-        return (String) globals.get(GL_CFGS.appVersion.toString());
+        return (String) globals.get(GL_CFGS.version.toString());
     }
 
     public boolean isCorsEnabled() {
@@ -426,7 +426,7 @@ public class AppConfigurator {
 		// ------------------------------------------------------
 
         loadGlobalParameter(inputProps, globals, GL_CFGS.appName);
-        loadGlobalParameter(inputProps, globals, GL_CFGS.appVersion);
+        loadGlobalParameter(inputProps, globals, GL_CFGS.version);
         loadGlobalParameter(inputProps, globals, GL_CFGS.corsEnabled);
         loadGlobalParameter(inputProps, globals, GL_CFGS.rootServiceDoc);
         loadGlobalParameter(inputProps, globals, GL_CFGS.loggingMethod);
@@ -579,7 +579,7 @@ public class AppConfigurator {
                   "The service cfg file did not contain a valid value for parameter: "
                   + key + "  value: " + newVal;
             logger.info(msg);
-            if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.appVersion)) {
+            if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.version)) {
                 System.out.println("*** *** *** TBD - is this needed and for what - Missing required global parameter: " + key);
                 //throw new Exception("Missing required global parameter: " + key );
             }
@@ -840,14 +840,14 @@ public class AppConfigurator {
         String line = "----------------------";
         
         sb.append("\n");
-		sb.append(line).append(" WebServiceShell Configuration").append("\n");
+		sb.append(line).append(" Web Service Shell Service Configuration").append("\n");
 
-		sb.append(strAppend("WSS Version")).append(wssVersion).append("\n");
+		sb.append(strAppend("Web Service Shell Version")).append(wssVersion).append("\n");
 
         sb.append(line).append(" globals\n");
         List<String> keyList = new ArrayList();
         keyList.add(GL_CFGS.appName.toString());
-        keyList.add(GL_CFGS.appVersion.toString());
+        keyList.add(GL_CFGS.version.toString());
         keyList.add(GL_CFGS.corsEnabled.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
@@ -907,19 +907,16 @@ public class AppConfigurator {
 		sb.append("<col style='width: 30%' />");
 
 		sb.append("<TR><TH colspan=\"2\" >")
-              .append("WSS Service Configuration")
+              .append("Web Service Shell Configuration")
               .append("</TH></TR>");
 
         sb.append("<TR><TH colspan=\"2\" >")
               .append("global paramaters")
               .append("</TH></TR>");
 
-		sb.append("<TR><TD>").append("WSS Version").append("</TD><TD>")
-              .append(wssVersion).append("</TD></TR>");
-
         List<String> keyList = new ArrayList();
         keyList.add(GL_CFGS.appName.toString());
-        keyList.add(GL_CFGS.appVersion.toString());
+        keyList.add(GL_CFGS.version.toString());
         keyList.add(GL_CFGS.corsEnabled.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
@@ -927,10 +924,9 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.singletonClassName.toString());
         
         for (String key: keyList) {
-            if (globals.get(key) != null) {
-                sb.append("<TR><TD>").append(key).append("</TD><TD>")
-                      .append(globals.get(key).toString()).append("</TD></TR>");
-            }
+            Object value = globals.get(key) != null ? globals.get(key) : "null";
+            sb.append("<TR><TD>").append(key).append("</TD><TD>")
+                    .append(value.toString()).append("</TD></TR>");
         }
 
         for (String epName : endpoints.keySet()) {
@@ -956,7 +952,6 @@ public class AppConfigurator {
                       .append(value)
                       .append("</TD></TR>");
             }
-            //sb.append("\n");
 
             try {
                 sb.append("<TR><TD>")
@@ -967,7 +962,6 @@ public class AppConfigurator {
             } catch (Exception ex) {
                 // ignore this, it should have been tested in the testcode
             }
-            //sb.append("\n");
         }
 
 		sb.append("</TABLE>");

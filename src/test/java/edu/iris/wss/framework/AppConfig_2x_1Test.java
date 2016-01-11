@@ -60,7 +60,7 @@ public class AppConfig_2x_1Test {
         sb.append("# ---------------- globals").append("\n");
         sb.append("\n");
         sb.append("appName=AppConfig_2x_1Test-noseingleton").append("\n");
-        sb.append("appVersion=test-0.123").append("\n");
+        sb.append("version=test-0.123").append("\n");
         sb.append("\n");
 
         os.write(sb.toString().getBytes());
