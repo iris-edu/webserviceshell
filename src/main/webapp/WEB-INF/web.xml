@@ -36,7 +36,7 @@
 	</filter>
 	<filter-mapping>
 		<filter-name>Remote Address Filter</filter-name>
-		<url-pattern>/status</url-pattern>
+		<url-pattern>/wssstatus</url-pattern>
 	</filter-mapping>
 
 	<security-role>
