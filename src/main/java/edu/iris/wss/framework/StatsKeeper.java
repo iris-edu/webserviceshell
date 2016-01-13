@@ -62,6 +62,10 @@ public class StatsKeeper {
               .append("</TD><TD>") .append(sdf.format(startTime))
               .append("</TD></TR>");
 
+        sb.append("<TR><TD>") .append("Current Time")
+              .append("</TD><TD>") .append(sdf.format(new Date()))
+              .append("</TD></TR>");
+
 		sb.append("<TR><TD>") .append("Number of Gets")
               .append("</TD><TD>") .append(gets)
               .append("</TD></TR>");

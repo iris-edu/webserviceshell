@@ -44,7 +44,7 @@ public class RequestInfo_2_service_file_Test {
         
         // test for default
         // endpoint name is taken from the service.cfg file
-        String endpointName = "queryEP";
+        String endpointName = "dummyEP";
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
         
         // Note, these tests are determined by the values in service.cfg
@@ -81,7 +81,7 @@ public class RequestInfo_2_service_file_Test {
         RequestInfo ri = new RequestInfo(appCfg);
 
         // endpoint name is taken from the service.cfg file
-        String endpointName = "queryEP";
+        String endpointName = "dummyEP";
 
         try {
             ri.setPerRequestOutputType(endpointName, null);

@@ -177,7 +177,8 @@ public class WssTest  {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
         final String TEST_STR = "some-post-data-text";
-        Response response = webTarget.path("queryEPpostecho").request()
+        // Note: the dummyEP part of the string comes from default service.cfg file
+        Response response = webTarget.path("dummyEPpostecho").request()
               .post(Entity.text(TEST_STR));
         String responseMsg = response.readEntity(String.class);
 
