@@ -391,6 +391,14 @@ public class IrisDynamicProvider {
               .type(irr.wssMediaType)
               .entity(irr.entity);
 
+        // TBD look for 1 or more occurrances of irr.wssMediaType in outputTypes
+        // if zero give warning?
+//        logger.warn("An inconsistency has occured between endpoint code and "
+//            + "...");
+        // if one then let it's key override the disposition?
+        // if more than 1 has the same media type, default to first?
+        // and give warning? or make a hard error
+
         try {
             // from previous way code worked
             String value = ri.createContentDisposition(requestedEpName);

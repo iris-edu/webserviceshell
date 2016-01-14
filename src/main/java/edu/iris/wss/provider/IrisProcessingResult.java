@@ -90,4 +90,16 @@ public class IrisProcessingResult {
 
         return ipr;
     }
+
+    public static IrisProcessingResult createSuccessfulResult(String str) {
+
+        IrisProcessingResult ipr = new IrisProcessingResult();
+
+        ipr.fdsnSS = FdsnStatus.Status.OK;
+        ipr.entity = str;
+        ipr.wssMediaType = "text/plain";
+        ipr.headers = null;
+
+        return ipr;
+    }
 }
