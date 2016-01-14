@@ -27,6 +27,20 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.provider.IrisSingleton;
 import java.io.UnsupportedEncodingException;
 
+/**
+ *  A top level class used by Web Service Shell to create and hold objects
+ *  needed for the entire application. Objects in this class are available
+ *  to other objects in the Jersey framework via the @Context annotation.
+ *  WssSingleton objects are made available to the framework with the
+ *  Injections.addBinding code in the MyApplication object.
+ *
+ *  WssSingleton is used to:
+ *  - contain StatsKeeper
+ *  - contain JMS logging object if needed
+ *  - load service.cfg and param.cfg information
+ *  - instantiate an application IrisSingleton if specified in service.cfg
+ *
+ */
 public class WssSingleton {
 	public static final Logger logger = Logger.getLogger(WssSingleton.class);	
 
@@ -88,8 +102,8 @@ public class WssSingleton {
 
         paramConfig = getParamConfig(appConfig, configFileBase);
 
-        // the singleton name is read in by appConfig, but validated here.
-        // just skip it if the name is null
+        // the singleton name is read in by appConfig, but instantiated here.
+        // Null is ok, it indicates the application does not need a singleton
         if (appConfig.getSingletonClassName() == null) {
             logger.warn("The value for "
                   + AppConfigurator.GL_CFGS.singletonClassName.toString()

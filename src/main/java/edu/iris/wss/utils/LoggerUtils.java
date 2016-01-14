@@ -157,9 +157,10 @@ public class LoggerUtils {
 				break;	
 			}
 		} else if (loggingType == LoggingMethod.JMS) {
-            // for now, webLogService startup is here as in the original code
-            // rather than in AppContextListener, if placed in AppContextListener, 
-            // startup timing between components needs to be checked
+            // for now, webLogService startup is here as in the original code.
+            // It could be placed in AppContextListener, or possibly
+            // MyApplication. If placed in AppContextListener, the
+            // startup timing between components needs to be checked.
             try {
                 if (WssSingleton.webLogService == null) {
                     WssSingleton.webLogService = new WebLogService();

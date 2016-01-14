@@ -35,14 +35,14 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 
 // Set up application for injection and loading to container
 
-// Don't use annotation ApplicationPath here 
+// Don't use annotation ApplicationPath here, it is configured in web.xml
 //@ApplicationPath("/")
 public class MyApplication extends ResourceConfig {
     
   public static final Logger logger = Logger.getLogger(MyApplication.class);
   public static final String CLASS_NAME = MyApplication.class.getSimpleName();
 
-  // first thing to run, setup logging, load configuration, etc.
+  // Should be first thing to run when web application starts.
   @Inject
   public MyApplication(ServiceLocator serviceLocator,
         @Context ServletContext servletContext) throws Exception {
@@ -50,22 +50,23 @@ public class MyApplication extends ResourceConfig {
     String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
     Util.myNewInitLog4j(configBase);
 
-    // get configuration information now
+    // get configuration information next
     WssSingleton sw = new WssSingleton();
     sw.configure(configBase);
 
-    // bind classes as needed to be available via a CONTEXT annotation
-    // i.e. make is injectable
+    // bind classes as needed to make other objects be available to the
+    // framework via a CONTEXT annotation
     DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
     Injections.addBinding(
         Injections.newBinder(sw).to(WssSingleton.class), dc);
     dc.commit();
 
-    // add in classes which have static endpoints via annotations
+    // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
 
-    // add in endpoints  TBD remove soon
-    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
+////    // example for adding an endpoint from a basic pojo class
+////    // that may not use annotations, e.g. Info1.java
+////    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
 
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
@@ -85,19 +86,24 @@ public class MyApplication extends ResourceConfig {
             addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
                   methodName, "POST");
 
-            // temporary test
-            addEndpoint(epName + "postecho",
-                  edu.iris.wss.provider.IrisDynamicProvider.class,
-                  "echoPostString", "POST");
+////            // saved for now for future post request testing, see
+////            // echoPostString method in IrisDynamicProvider class
+////            addEndpoint(epName + "postecho",
+////                  edu.iris.wss.provider.IrisDynamicProvider.class,
+////                  "echoPostString", "POST");
         }
     }
   }
   
   public MyApplication() {
+    // This constructor should not get called if MyApplication is being
+    // created by the framework in the expected way
     System.out.println("*****  " + CLASS_NAME + " no-arg constructor");
   }
 
   /**
+   * This method encapsulates key details for dynamically anding an
+   * endpoint.
    * 
    * @param epName - name of last part of URI path
    * @param epClass - the class containing the method to respond to a request

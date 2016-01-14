@@ -172,19 +172,19 @@ public class WssTest  {
         assertEquals(200, response.getStatus());
     }
 
-    @Test
-    public void testPost1() throws Exception {
-        Client c = ClientBuilder.newClient();
-        WebTarget webTarget = c.target(BASE_URI);
-        final String TEST_STR = "some-post-data-text";
-        // Note: the dummyEP part of the string comes from default service.cfg file
-        Response response = webTarget.path("dummyEPpostecho").request()
-              .post(Entity.text(TEST_STR));
-        String responseMsg = response.readEntity(String.class);
-
-        assertEquals(200, response.getStatus());
-        assertTrue(responseMsg.equals(TEST_STR));
-    }
+////    @Test
+////    public void testPost1() throws Exception {
+////        Client c = ClientBuilder.newClient();
+////        WebTarget webTarget = c.target(BASE_URI);
+////        final String TEST_STR = "some-post-data-text";
+////        // Note: the dummyEP part of the string comes from default service.cfg file
+////        Response response = webTarget.path("dummyEPpostecho").request()
+////              .post(Entity.text(TEST_STR));
+////        String responseMsg = response.readEntity(String.class);
+////
+////        assertEquals(200, response.getStatus());
+////        assertTrue(responseMsg.equals(TEST_STR));
+////    }
 
     @Test
     public void testPost2() throws Exception {

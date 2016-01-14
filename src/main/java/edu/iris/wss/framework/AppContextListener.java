@@ -24,12 +24,17 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 
+/**
+ *
+ * Activated by being defined as a listener in web.xml
+ */
 public class AppContextListener implements ServletContextListener {
     public static final Logger logger = Logger.getLogger(AppContextListener.class);
 
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
-        System.out.println("**************************** AppContextListener contextDestroyedcalled, arg0: " + arg0);
+//        System.out.println("**************************** AppContextListener contextDestroyedcalled, arg0: " + arg0);
+        logger.info("AppContextListener contextDestroyed called, web app is being shutdown");
         if (WssSingleton.webLogService != null) {
             try {
                 // for JMS
@@ -46,7 +51,7 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
-        System.out.println("**************************** AppContextListener contextInitialized called, arg0: " + arg0);
-        logger.info("Web application AppContextListener called");
+//        System.out.println("**************************** AppContextListener contextInitialized called, arg0: " + arg0);
+        logger.info("AppContextListener contextInitialized called, web app is starting");
     }
 }

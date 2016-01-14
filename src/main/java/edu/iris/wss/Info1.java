@@ -16,6 +16,16 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 
+/**
+ *
+ * @author mike
+ *
+ * Keeping this class around to illustrate a simple way to add functionality
+ * using the addEndpoint method in MyApplication.java.
+ *
+ * @Context variables are populated with every request. The remainder of the
+ * of the class can be pojo methods that are configured by addEndpoint.
+ */
 public class Info1 {
 	@Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
@@ -40,23 +50,4 @@ public class Info1 {
 
 		return builder.build();
 	}
-
-//    private void addCORSHeadersIfConfigured(ResponseBuilder rb, RequestInfo ri) {
-//		if (ri.appConfig.isCorsEnabled()) {
-//            // Insert CORS header elements.
-//		    rb.header("Access-Control-Allow-Origin", "*");
-//
-//            // dont add this unless cookies are expected
-////            rb.header("Access-Control-Allow-Credentials", "true");
-//
-//            // Not setting these at this time - 2015-08-12
-////            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
-////            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
-//
-//            // not clear if needed now, 2015-08-12, but this is how to let client
-//            // see what headers are available, although "...Allow-Headers" may be
-//            // sufficient
-////            rb.header("Access-Control-Expose-Headers", "X-mycustomheader1, X-mycustomheader2");
-//		}
-//    }
 }
