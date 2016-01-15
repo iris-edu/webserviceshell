@@ -90,8 +90,7 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
         try {
-            //   default_outputTypes.put("BINARY", "application/octet-stream");
-            ep_defaults.put(EP_CFGS.formatTypes, createOutputTypes(""));
+            ep_defaults.put(EP_CFGS.formatTypes, createFormatTypes(""));
         } catch (Exception ex) {
             String msg = "Exception while creating types";
             System.out.println("************** " + msg + ", ex: " + ex);
@@ -154,7 +153,7 @@ public class AppConfigurator {
      * @return
      * @throws Exception
      */
-    public Map<String, String> createOutputTypes(String newTypes)
+    public Map<String, String> createFormatTypes(String newTypes)
           throws Exception
     {
         // must use LinkedHashMap or equivalent to preserve order of types
@@ -163,11 +162,11 @@ public class AppConfigurator {
 
         // set newTypes first so as to preserve order from configuration file
         if (isOkString(newTypes)) {
-            setOutputTypes(types, newTypes);
+            setFormatTypes(types, newTypes);
         }
 
         // set default last
-        setOutputTypes(types, "BINARY: application/octet-stream");
+        setFormatTypes(types, "BINARY: application/octet-stream");
 
         return types;
     }
@@ -245,24 +244,24 @@ public class AppConfigurator {
 	}
 
     // Note: this can throw NullPointerException and ClassCastException
-    public boolean isConfiguredForTypeKey(String epName, String outputTypeKey) {
+    public boolean isConfiguredForTypeKey(String epName, String formatTypeKey) {
         Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName)
               .get(EP_CFGS.formatTypes);
-        return outTypes.containsKey(outputTypeKey);
+        return outTypes.containsKey(formatTypeKey);
 	}
 
-    public String getMediaType(String epName, String outputTypeKey)
+    public String getMediaType(String epName, String formatTypeKey)
           throws Exception {
         if (endpoints.containsKey(epName)) {
-            Map<String, String> outputTypes = (Map<String, String>)endpoints
+            Map<String, String> formatTypes = (Map<String, String>)endpoints
                   .get(epName).get(EP_CFGS.formatTypes);
 
-            // Note: do the same operation on outputTypeKey as the setter, e.g. trim
+            // Note: do the same operation on formatTypeKey as the setter, e.g. trim
             //       and toUpperCase
-            String mediaType = outputTypes.get(outputTypeKey.trim().toUpperCase());
+            String mediaType = formatTypes.get(formatTypeKey.trim().toUpperCase());
             if (mediaType == null) {
                 throw new Exception("WebServiceShell getMediaType, no mediaType"
-                      + " found for outputType: " + outputTypeKey
+                      + " found for formatType: " + formatTypeKey
                       + "  on endpoint: " + epName);
             }
             return mediaType;
@@ -286,28 +285,28 @@ public class AppConfigurator {
         return (boolean)endpoints.get(epName).get(EP_CFGS.logMiniseedExtents);
 	}
 
-    // Note: this implements the rule that the first item in outputTypes
+    // Note: this implements the rule that the first item in formatTypes
     //       is the default output type
     //       
-    public String getDefaultOutputTypeKey(String epName) throws Exception {
+    public String getDefaultFormatTypeKey(String epName) throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> types = (Map<String, String>)endpoints
                   .get(epName).get(EP_CFGS.formatTypes);
 
-            String defaultOutputTypeKey = (String)types.keySet().toArray()[0];
+            String defaultFormatTypeKey = (String)types.keySet().toArray()[0];
 
-            return defaultOutputTypeKey;
+            return defaultFormatTypeKey;
         }
         throw new Exception(
-              "WebServiceShell getDefaultOutputTypeKey, there is no endpoint"
+              "WebServiceShell getDefaultFormatTypeKey, there is no endpoint"
                     + " configured for endpoint name: " + epName);
 	}
 
     // ---------------------------------
-	public void setOutputTypes(Map<String, String> outTypes, String s)
+	public void setFormatTypes(Map<String, String> outTypes, String s)
           throws Exception {
         if (!isOkString(s)) {
-			throw new Exception("WebServiceShell setOutputTypes, outputTypes"
+			throw new Exception("WebServiceShell setFormatTypes, formatTypes"
                   + " pair values are null or empty string.");
         }
 
@@ -317,7 +316,7 @@ public class AppConfigurator {
             String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
             if (oneKV.length != 2) {
                 throw new Exception(
-                        "WebserviceShell setOutputTypes is expecting 2 items in"
+                        "WebserviceShell setFormatTypes is expecting 2 items in"
                         + " a comma separated list of pairs of output type"
                         + " and HTTP Content-Type,"
                         + " instead item count: " + oneKV.length
@@ -644,14 +643,12 @@ public class AppConfigurator {
                         //       might look like a concatenation of values
                         //       if there is more than one entry in the
                         //       config file, instead use only this newVal
-                        Map<String, String> new_outputTypes = createOutputTypes(newVal);
-
-//                        new_outputTypes.putAll(default_outputTypes);
-                        endPt.put(EP_CFGS.formatTypes, new_outputTypes);
+                        Map<String, String> new_formatTypes = createFormatTypes(newVal);
+                        endPt.put(EP_CFGS.formatTypes, new_formatTypes);
                     } else {
                         String msg = "Unexpected Map type for paramater: "
                               + propName + "  value found: " + newVal
-                              + "  only handling outputTypes";
+                              + "  only handling formatTypes";
                         logger.fatal(msg);
                         throw new Exception(msg);
                     }
@@ -690,14 +687,14 @@ public class AppConfigurator {
         }
 	}
 
-    private static String formatOutputTypes(Map<String, String> outputTypes) {
+    private static String toStringFormatTypes(Map<String, String> formatTypes) {
         StringBuilder s = new StringBuilder();
         s.append(EP_CFGS.formatTypes.toString() + " = ");
         
-        Iterator<String> keyIt = outputTypes.keySet().iterator();
+        Iterator<String> keyIt = formatTypes.keySet().iterator();
         while(keyIt.hasNext()) {
             String key = keyIt.next();
-            s.append(key).append(": ").append(outputTypes.get(key));
+            s.append(key).append(": ").append(formatTypes.get(key));
             if (keyIt.hasNext()) {
                 s.append(", ");
             }
@@ -880,7 +877,7 @@ public class AppConfigurator {
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
-                    value = formatOutputTypes((Map<String, String>)value);
+                    value = toStringFormatTypes((Map<String, String>)value);
                 }
                 
                 sb.append(strAppend(createEPPropertiesName(epName, cfgName)))
@@ -890,7 +887,7 @@ public class AppConfigurator {
             
             try {
                 sb.append(strAppend(epName + " - default output type"))
-                      .append(getDefaultOutputTypeKey(epName)).append("\n");
+                      .append(getDefaultFormatTypeKey(epName)).append("\n");
             } catch (Exception ex) {
                 // ignore this, it should have been tested in the testcode
             }
@@ -954,7 +951,7 @@ public class AppConfigurator {
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
                 } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
-                    value = formatOutputTypes((Map<String, String>)value);
+                    value = toStringFormatTypes((Map<String, String>)value);
                 }
 
                 sb.append("<TR><TD>")
@@ -968,7 +965,7 @@ public class AppConfigurator {
                 sb.append("<TR><TD>")
                       .append("Default Output Type Key")
                       .append("</TD><TD>")
-                      .append(getDefaultOutputTypeKey(epName))
+                      .append(getDefaultFormatTypeKey(epName))
                       .append("</TD></TR>");
             } catch (Exception ex) {
                 // ignore this, it should have been tested in the testcode

@@ -125,9 +125,9 @@ public class AppConfig_2x_1Test {
         }
         
         // match output to values in cfg file
-        assert(appCfg.getDefaultOutputTypeKey(slpr).equals("BINARY"));
-        assert(appCfg.getDefaultOutputTypeKey(v99).equals("TEXT"));
-        assert(appCfg.getDefaultOutputTypeKey(itmg).equals("JSON"));
+        assert(appCfg.getDefaultFormatTypeKey(slpr).equals("BINARY"));
+        assert(appCfg.getDefaultFormatTypeKey(v99).equals("TEXT"));
+        assert(appCfg.getDefaultFormatTypeKey(itmg).equals("JSON"));
     }
 
     @Test

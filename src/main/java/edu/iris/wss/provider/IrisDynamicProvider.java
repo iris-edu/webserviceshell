@@ -224,15 +224,15 @@ public class IrisDynamicProvider {
         // TBD - check to see if this test is done up front and
         //       this code can be removed?
         String mediaType = null;
-        String outputTypeKey = null;
+        String formatTypeKey = null;
         try {
-            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
+            formatTypeKey = ri.getPerRequestFormatTypeKey(requestedEpName);
             mediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Unknown mediaType from mediaTypeKey, endpoint: "
                         + requestedEpName,
-                  "Error, mediaTypeKey: " + outputTypeKey +
+                  "Error, mediaTypeKey: " + formatTypeKey +
                         ServiceShellException.getErrorString(ex));
         }
 
@@ -330,15 +330,15 @@ public class IrisDynamicProvider {
         // in the parameter outputs.
         // the string here should be of the form "type/subtype"
         String wssMediaType = null;
-        String outputTypeKey = null;
+        String formatTypeKey = null;
         try {
-            outputTypeKey = ri.getPerRequestOutputTypeKey(requestedEpName);
+            formatTypeKey = ri.getPerRequestFormatTypeKey(requestedEpName);
             wssMediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Unknown mediaType from mediaTypeKey, endpoint: "
                         + requestedEpName,
-                  "Error, mediaTypeKey: " + outputTypeKey +
+                  "Error, mediaTypeKey: " + formatTypeKey +
                         ServiceShellException.getErrorString(ex));
         }
 
@@ -391,7 +391,7 @@ public class IrisDynamicProvider {
               .type(irr.wssMediaType)
               .entity(irr.entity);
 
-        // TBD look for 1 or more occurrances of irr.wssMediaType in outputTypes
+        // TBD look for 1 or more occurrances of irr.wssMediaType in formatTypes
         // if zero give warning?
 //        logger.warn("An inconsistency has occured between endpoint code and "
 //            + "...");

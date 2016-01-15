@@ -40,7 +40,7 @@ public  class RequestInfo {
     // Note: The setter should be validating this string, trim it
     //       and set to uppercase. This should enable any gets of
     //       this value to not need to trim, validate, etc.
-	public String perRequestOutputTypeKey = null;
+	public String perRequestFormatTypeKey = null;
 	
 	public String postBody = null;
 	
@@ -153,7 +153,7 @@ public  class RequestInfo {
      * @param trialKey
      * @throws Exception 
      */
-	public void setPerRequestOutputType(String epName, String trialKey) throws Exception {
+	public void setPerRequestFormatType(String epName, String trialKey) throws Exception {
         if (trialKey == null) {
             throw new Exception("format type requested is null");
         }
@@ -161,14 +161,14 @@ public  class RequestInfo {
         String key = trialKey.trim().toUpperCase();
 
         if (appConfig.isConfiguredForTypeKey(epName, key)) {
-            this.perRequestOutputTypeKey = key;
+            this.perRequestFormatTypeKey = key;
         } else {
             throw new Exception("Unrecognized format type requested: " + trialKey);
         }
         
         isWriteToMiniseed = 
-              (perRequestOutputTypeKey.equals(InternalTypes.MSEED.toString())
-              || perRequestOutputTypeKey.equals(InternalTypes.MINISEED.toString()))
+              (perRequestFormatTypeKey.equals(InternalTypes.MSEED.toString())
+              || perRequestFormatTypeKey.equals(InternalTypes.MINISEED.toString()))
               && appConfig.isLogMiniseedExtents(epName);
 	}
 	
@@ -178,30 +178,30 @@ public  class RequestInfo {
      * 
      * @return 
      */
-	public String getPerRequestOutputTypeKey(String epName) throws Exception {
+	public String getPerRequestFormatTypeKey(String epName) throws Exception {
         // Note: Callers should expect the return value to be
         //       validated, trimmed, and uppercase
-        String key = perRequestOutputTypeKey;
+        String key = perRequestFormatTypeKey;
         if (key == null) {
-            key = appConfig.getDefaultOutputTypeKey(epName);
+            key = appConfig.getDefaultFormatTypeKey(epName);
 		}
         return key;
 	}
     
     private boolean isCurrentTypeKey(String epName, InternalTypes typeKey)
           throws Exception {
-        return getPerRequestOutputTypeKey(epName).equals(typeKey.toString());
+        return getPerRequestFormatTypeKey(epName).equals(typeKey.toString());
     }
     
     /**
-     * Override configuration outputType with request outputType if the
+     * Override configuration formatType with request formatType if the
      * request included &format.
      * 
      * @return 
      * @throws java.lang.Exception 
      */
     public String getPerRequestMediaType(String epName) throws Exception {
-        return appConfig.getMediaType(epName, getPerRequestOutputTypeKey(epName));
+        return appConfig.getMediaType(epName, getPerRequestFormatTypeKey(epName));
     }
 
     /**
@@ -229,7 +229,7 @@ public  class RequestInfo {
                 
         if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             // put suffix when not binary
-            sb.append(".").append(getPerRequestOutputTypeKey(epName).toLowerCase());
+            sb.append(".").append(getPerRequestFormatTypeKey(epName).toLowerCase());
         }
                 
         return sb.toString();

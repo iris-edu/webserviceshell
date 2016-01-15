@@ -6,29 +6,25 @@
 package edu.iris.wss.framework;
 
 import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.fail;
 
 /**
  *
  * @author mike
  */
-public class AppConfiguratorSetOutputTypesTest {
+public class AppConfiguratorSetFormatTypesTest {
     AppConfigurator thisAppCfg;
 
-    public AppConfiguratorSetOutputTypesTest() throws Exception {
+    public AppConfiguratorSetFormatTypesTest() throws Exception {
         this.thisAppCfg = new AppConfigurator();
     }
 
     @Test
-    public void testForMSeExceptionInOutputTypesSetter() throws Exception {
+    public void testForMSeExceptionInFormatTypesSetter() throws Exception {
         try {
-            Map<String, String> map = thisAppCfg.createOutputTypes("");
-            thisAppCfg.setOutputTypes(map, "miniseed");
+            Map<String, String> map = thisAppCfg.createFormatTypes("");
+            thisAppCfg.setFormatTypes(map, "miniseed");
             fail("no colon try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -37,10 +33,10 @@ public class AppConfiguratorSetOutputTypesTest {
     }
     
     @Test
-    public void testForZeroLengthExceptionInOutputTypesSetter() throws Exception {
+    public void testForZeroLengthExceptionInFormatTypesSetter() throws Exception {
         try {
-            Map<String, String> map = thisAppCfg.createOutputTypes("");
-            thisAppCfg.setOutputTypes(map, "");
+            Map<String, String> map = thisAppCfg.createFormatTypes("");
+            thisAppCfg.setFormatTypes(map, "");
             fail("zero length try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -49,10 +45,10 @@ public class AppConfiguratorSetOutputTypesTest {
     }
     
     @Test
-    public void testForNullExceptionInOutputTypesSetter() throws Exception {
+    public void testForNullExceptionInFormatTypesSetter() throws Exception {
         try {
-            Map<String, String> map = thisAppCfg.createOutputTypes("");
-            thisAppCfg.setOutputTypes(map, null);
+            Map<String, String> map = thisAppCfg.createFormatTypes("");
+            thisAppCfg.setFormatTypes(map, null);
             fail("null try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -60,14 +56,14 @@ public class AppConfiguratorSetOutputTypesTest {
     }
     
     @Test
-    public void testForMissingCommasExceptionInOutputTypesSetter() throws Exception {
+    public void testForMissingCommasExceptionInFormatTypesSetter() throws Exception {
         // no commas should throw exception
-        String outputTypes = "MINISEED: application/vnd.fdsn.mseed"
+        String formatTypes = "MINISEED: application/vnd.fdsn.mseed"
                 + " BINARY: application/octet-stream"
                 + " TEXT: text/plain";
         try {
-            Map<String, String> map = thisAppCfg.createOutputTypes("");
-            thisAppCfg.setOutputTypes(map, outputTypes);
+            Map<String, String> map = thisAppCfg.createFormatTypes("");
+            thisAppCfg.setFormatTypes(map, formatTypes);
             fail("comma try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -75,14 +71,14 @@ public class AppConfiguratorSetOutputTypesTest {
     }
     
     @Test
-    public void testForNoColonExceptionInInOutputTypesSetter() throws Exception {
+    public void testForNoColonExceptionInInFormatTypesSetter() throws Exception {
         // no colons should throw exception
-        String outputTypes = "MINISEED: application/vnd.fdsn.mseed,"
+        String formatTypes = "MINISEED: application/vnd.fdsn.mseed,"
                 + " BINARY| application/octet-stream,"
                 + " TEXT: text/plain";
         try {
-            Map<String, String> map = thisAppCfg.createOutputTypes("");
-            thisAppCfg.setOutputTypes(map, outputTypes);
+            Map<String, String> map = thisAppCfg.createFormatTypes("");
+            thisAppCfg.setFormatTypes(map, formatTypes);
             fail("colon try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result

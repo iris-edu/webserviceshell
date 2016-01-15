@@ -37,7 +37,7 @@ public class RequestInfo_2_service_file_Test {
     }
 
     @Test
-    public void testLoadOfOutputTypes() throws Exception {
+    public void testLoadOfFormatTypes() throws Exception {
         AppConfigurator appCfg = 
               AppConfigurator_getters_Test.createTestObjAppCfg("META-INF/service.cfg");
         RequestInfo ri = new RequestInfo(appCfg);
@@ -48,34 +48,34 @@ public class RequestInfo_2_service_file_Test {
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
         
         // Note, these tests are determined by the values in service.cfg
-        ri.setPerRequestOutputType(endpointName, "xml");
+        ri.setPerRequestFormatType(endpointName, "xml");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/xml"));
-        ri.setPerRequestOutputType(endpointName, "xMl");
+        ri.setPerRequestFormatType(endpointName, "xMl");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/xml"));
-        ri.setPerRequestOutputType(endpointName, "text");
+        ri.setPerRequestFormatType(endpointName, "text");
         assert(ri.getPerRequestMediaType(endpointName).equals("text/plain"));
-        ri.setPerRequestOutputType(endpointName, "texttree");
+        ri.setPerRequestFormatType(endpointName, "texttree");
         assert(ri.getPerRequestMediaType(endpointName).equals("text/plain"));
-        ri.setPerRequestOutputType(endpointName, "json");
+        ri.setPerRequestFormatType(endpointName, "json");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/json"));
     
-        ri.setPerRequestOutputType(endpointName, "miniseed");
+        ri.setPerRequestFormatType(endpointName, "miniseed");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType(endpointName, "miniseed ");
+        ri.setPerRequestFormatType(endpointName, "miniseed ");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType(endpointName, " Miniseed");
+        ri.setPerRequestFormatType(endpointName, " Miniseed");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType(endpointName, "    minisEed ");
+        ri.setPerRequestFormatType(endpointName, "    minisEed ");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
         
-        ri.setPerRequestOutputType(endpointName, "mseed");
+        ri.setPerRequestFormatType(endpointName, "mseed");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/vnd.fdsn.mseed"));
-        ri.setPerRequestOutputType(endpointName, "binary");
+        ri.setPerRequestFormatType(endpointName, "binary");
         assert(ri.getPerRequestMediaType(endpointName).equals("application/octet-stream"));
     }
 
     @Test
-    public void testLoadExceptionOfOutputTypes() throws Exception {
+    public void testLoadExceptionOfFormatTypes() throws Exception {
         AppConfigurator appCfg = 
               AppConfigurator_getters_Test.createTestObjAppCfg("META-INF/service.cfg");
         RequestInfo ri = new RequestInfo(appCfg);
@@ -84,7 +84,7 @@ public class RequestInfo_2_service_file_Test {
         String endpointName = "dummyEP";
 
         try {
-            ri.setPerRequestOutputType(endpointName, null);
+            ri.setPerRequestFormatType(endpointName, null);
             fail("getting null type succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -92,7 +92,7 @@ public class RequestInfo_2_service_file_Test {
         }
 
         try {
-            ri.setPerRequestOutputType(endpointName, "unknown2");
+            ri.setPerRequestFormatType(endpointName, "unknown2");
             fail("getting unknown2 type succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {

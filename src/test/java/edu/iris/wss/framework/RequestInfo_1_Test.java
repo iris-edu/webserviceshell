@@ -41,7 +41,7 @@ public class RequestInfo_1_Test {
     }
 
     @Test
-    public void test_getPerRequestOutputTypeKey() throws Exception {
+    public void test_getPerRequestFormatTypeKey() throws Exception {
         String endpointName = "endpnt1";
         Properties props = AppConfigurator_getters_Test
               .createInitialTestProperties(endpointName);
@@ -81,18 +81,18 @@ public class RequestInfo_1_Test {
         }
 
         // set new default and test
-        ri.setPerRequestOutputType(endpointName, "json");
+        ri.setPerRequestFormatType(endpointName, "json");
         assert(ri.getPerRequestMediaType(endpointName).equals(jsonMediaType));
 
         try {
-            ri.setPerRequestOutputType(endpointName, "unconfigured_type");
+            ri.setPerRequestFormatType(endpointName, "unconfigured_type");
             fail("Unexpected successful try, this test should have thrown an exception.");
         } catch(Exception ex) {
             // is successful
         }
 
         try {
-            ri.setPerRequestOutputType(endpointName, null);
+            ri.setPerRequestFormatType(endpointName, null);
             fail("Unexpected successful try, this test should have thrown an exception.");
         } catch(Exception ex) {
             // is successful
@@ -100,7 +100,7 @@ public class RequestInfo_1_Test {
     }
 
     @Test
-    public void testMiniseedAsDefaultOutputType() throws Exception {
+    public void testMiniseedAsDefaultFormatType() throws Exception {
         AppConfigurator appCfg = 
               AppConfigurator_getters_Test.createTestObjAppCfg(
                     "AppConfiguratorTest/serviceFile2.cfg");
@@ -111,12 +111,12 @@ public class RequestInfo_1_Test {
         assert(ri.getPerRequestMediaType("querysf2").equals("application/vnd.fdsn.mseed"));
 
         // the default type should still be available
-        ri.setPerRequestOutputType("querysf2", "binary");
+        ri.setPerRequestFormatType("querysf2", "binary");
         assert(ri.getPerRequestMediaType("querysf2").equals("application/octet-stream"));
 
         // no other types should be found
         try {
-            ri.setPerRequestOutputType("querysf2", "text");
+            ri.setPerRequestFormatType("querysf2", "text");
             fail("getting text type succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {

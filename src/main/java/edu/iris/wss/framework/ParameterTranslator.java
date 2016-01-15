@@ -218,7 +218,7 @@ public class ParameterTranslator {
 			if (nonAliasNameKey.equalsIgnoreCase(outputControlSignature1)
 					|| nonAliasNameKey.equalsIgnoreCase(outputControlSignature2)) {
                 
-				ri.setPerRequestOutputType(epName, value);
+				ri.setPerRequestFormatType(epName, value);
 			}
 
 			// Add key and also value if valid.

@@ -15,6 +15,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -144,7 +146,7 @@ public class AppConfigurator_getters_Test {
     }
     
     @Test
-    public void test_getDefaultOutputTypeKey() throws Exception {
+    public void test_getDefaultFormatTypeKey() throws Exception {
         String endpointName = "endpnt2";
         Properties props = createInitialTestProperties(endpointName);
         AppConfigurator appCfg = new AppConfigurator();
@@ -167,10 +169,10 @@ public class AppConfigurator_getters_Test {
 
         // start tests
         // test for default of default output type, it should be binary. 
-        assert(appCfg.getDefaultOutputTypeKey(endpointName).equals("BINARY"));
+        assert(appCfg.getDefaultFormatTypeKey(endpointName).equals("BINARY"));
 
         // *********************
-        // change outputTypes and test again
+        // change formatTypes and test again
         props = createInitialTestProperties(endpointName);
 
         String textMediaType = "text/plain";
@@ -195,10 +197,10 @@ public class AppConfigurator_getters_Test {
         }
 
         // test for default output type, should be first one in list
-        assert(appCfg.getDefaultOutputTypeKey(endpointName).equals("TEXT"));
+        assert(appCfg.getDefaultFormatTypeKey(endpointName).equals("TEXT"));
 
         try {
-            assert(appCfg.getDefaultOutputTypeKey("unknown_endpoint").equals("TEXT"));
+            assert(appCfg.getDefaultFormatTypeKey("unknown_endpoint").equals("TEXT"));
             fail("Unexpected successful try, this test should have thrown an exception.");
         } catch(Exception ex) {
             // is successful
