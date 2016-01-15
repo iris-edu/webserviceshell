@@ -422,7 +422,7 @@ public class CmdWithHeaderTest  {
         sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
         sb.append("queryEP.handlerTimeout=40").append("\n");
         sb.append("\n");
-        sb.append("queryEP.outputTypes = \\").append("\n");
+        sb.append("queryEP.formatTypes = \\").append("\n");
         sb.append("    text: text/plain,\\").append("\n");
         sb.append("    json: application/json, \\").append("\n");
         sb.append("    texttree: text/plain,\\").append("\n");
@@ -450,7 +450,7 @@ public class CmdWithHeaderTest  {
         sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
         sb.append("v1Cmd.handlerTimeout=40").append("\n");
         sb.append("\n");
-        sb.append("v1Cmd.outputTypes = \\").append("\n");
+        sb.append("v1Cmd.formatTypes = \\").append("\n");
         sb.append("    text: text/plain,\\").append("\n");
         sb.append("    json: application/json, \\").append("\n");
         sb.append("    texttree: text/plain,\\").append("\n");
@@ -476,7 +476,7 @@ public class CmdWithHeaderTest  {
 
         sb.append("jsonproxy.proxyURL=file://").append(file.getAbsolutePath()).append("\n");
         sb.append("\n");
-        sb.append("jsonproxy.outputTypes = \\").append("\n");
+        sb.append("jsonproxy.formatTypes = \\").append("\n");
         sb.append("    json: application/json, \\").append("\n");
         sb.append("    text: text/plain,\\").append("\n");
         sb.append("    texttree: text/plain,\\").append("\n");
@@ -496,7 +496,7 @@ public class CmdWithHeaderTest  {
         sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
         sb.append("test_CD1.handlerTimeout=40").append("\n");
         sb.append("\n");
-        sb.append("test_CD1.outputTypes = \\").append("\n");
+        sb.append("test_CD1.formatTypes = \\").append("\n");
         sb.append("    binary: application/octet-stream,\\").append("\n");
         sb.append("    text: text/plain,\\").append("\n");
         sb.append("    json: application/json, \\").append("\n");
@@ -524,7 +524,7 @@ public class CmdWithHeaderTest  {
         sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
         sb.append("test_CD2.handlerTimeout=40").append("\n");
         sb.append("\n");
-        sb.append("test_CD2.outputTypes = \\").append("\n");
+        sb.append("test_CD2.formatTypes = \\").append("\n");
         sb.append("    binary: application/octet-stream,\\").append("\n");
         sb.append("    text: text/plain,\\").append("\n");
         sb.append("    json: application/json, \\").append("\n");

@@ -47,8 +47,7 @@ public class RequestInfo_1_Test {
               .createInitialTestProperties(endpointName);
         AppConfigurator appCfg =  new AppConfigurator();
 
-        String property = AppConfigurator.createEPPropertiesName(
-              endpointName, AppConfigurator.EP_CFGS.outputTypes);
+        String property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
 
         String textMediaType = "text/plain";
         String jsonMediaType = "application/json";

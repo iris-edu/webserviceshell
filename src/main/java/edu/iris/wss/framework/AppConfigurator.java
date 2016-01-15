@@ -91,7 +91,7 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
         try {
             //   default_outputTypes.put("BINARY", "application/octet-stream");
-            ep_defaults.put(EP_CFGS.outputTypes, createOutputTypes(""));
+            ep_defaults.put(EP_CFGS.formatTypes, createOutputTypes(""));
         } catch (Exception ex) {
             String msg = "Exception while creating types";
             System.out.println("************** " + msg + ", ex: " + ex);
@@ -127,7 +127,7 @@ public class AppConfigurator {
         jndiUrl, singletonClassName};
     
     // endpoint configuration parameter names
-    public static enum EP_CFGS { outputTypes, handlerTimeout,
+    public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
         endpointClassName, proxyURL, logMiniseedExtents
     }
@@ -247,7 +247,7 @@ public class AppConfigurator {
     // Note: this can throw NullPointerException and ClassCastException
     public boolean isConfiguredForTypeKey(String epName, String outputTypeKey) {
         Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName)
-              .get(EP_CFGS.outputTypes);
+              .get(EP_CFGS.formatTypes);
         return outTypes.containsKey(outputTypeKey);
 	}
 
@@ -255,7 +255,7 @@ public class AppConfigurator {
           throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> outputTypes = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.outputTypes);
+                  .get(epName).get(EP_CFGS.formatTypes);
 
             // Note: do the same operation on outputTypeKey as the setter, e.g. trim
             //       and toUpperCase
@@ -292,7 +292,7 @@ public class AppConfigurator {
     public String getDefaultOutputTypeKey(String epName) throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> types = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.outputTypes);
+                  .get(epName).get(EP_CFGS.formatTypes);
 
             String defaultOutputTypeKey = (String)types.keySet().toArray()[0];
 
@@ -481,7 +481,12 @@ public class AppConfigurator {
 
         for (String epName : endpoints.keySet()) {
             IrisProcessMarker iso = getIrisEndpointClass(epName);
-            if (iso instanceof edu.iris.wss.endpoints.V1CmdProcessor) {
+            if (iso instanceof edu.iris.wss.endpoints.V1CmdProcessor
+//                  cannot do this because it forces an endpoint to always
+//                  point to a runnable file, even the endpoint does not
+//                  use a handler.
+//                  || iso instanceof edu.iris.wss.endpoints.CmdProcessor
+                  ) {
                 String handlerName = getHandlerProgram(epName);
                 try {
                     if (isOkString(handlerName)) {
@@ -609,13 +614,19 @@ public class AppConfigurator {
                     }
                 } else if(defaultz instanceof IrisProcessMarker) {
                     // Note: for validation of instatiable class, must do
-                    //       nested trys for each class WSS supports.
+                    // nested trys for each class WSS supports. This is
+                    // because the value used for default can only be one of
+                    // the possibilies.
                     try {
                         endPt.put(epParm, getIrisStreamingOutputInstance(newVal));
                     } catch (Exception ex) {
                         try {
-                            // not an error if this one works
                             endPt.put(epParm, getIrisProcessorInstance(newVal));
+                            // not an error if this one works, but there is a
+                            // false fatal error from the outer get...Instance
+                            logger.info("The endpointClassName class loaded"
+                              + " here, ignore the previous fatal"
+                              + " getIrisStreamingOutputInstance message");
                         } catch(Exception ex2) {
                             String msg =
                                   "Could not find an instance of"
@@ -627,7 +638,7 @@ public class AppConfigurator {
                         }
                     }
                 } else if(defaultz instanceof Map) {
-                    if (epParm.equals(EP_CFGS.outputTypes)) {
+                    if (epParm.equals(EP_CFGS.formatTypes)) {
                         // note: for references to mutable objects,
                         //       dont get the previous value as this
                         //       might look like a concatenation of values
@@ -636,7 +647,7 @@ public class AppConfigurator {
                         Map<String, String> new_outputTypes = createOutputTypes(newVal);
 
 //                        new_outputTypes.putAll(default_outputTypes);
-                        endPt.put(EP_CFGS.outputTypes, new_outputTypes);
+                        endPt.put(EP_CFGS.formatTypes, new_outputTypes);
                     } else {
                         String msg = "Unexpected Map type for paramater: "
                               + propName + "  value found: " + newVal
@@ -681,7 +692,7 @@ public class AppConfigurator {
 
     private static String formatOutputTypes(Map<String, String> outputTypes) {
         StringBuilder s = new StringBuilder();
-        s.append("outputTypes = ");
+        s.append(EP_CFGS.formatTypes.toString() + " = ");
         
         Iterator<String> keyIt = outputTypes.keySet().iterator();
         while(keyIt.hasNext()) {
@@ -868,7 +879,7 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
+                } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
                 }
                 
@@ -942,7 +953,7 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && cfgName.equals(EP_CFGS.outputTypes)) {
+                } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
                     value = formatOutputTypes((Map<String, String>)value);
                 }
 

@@ -102,8 +102,7 @@ public class AppConfigurator_getters_Test {
         Properties props = createInitialTestProperties(endpointName);
         AppConfigurator appCfg = new AppConfigurator();
 
-        String property = AppConfigurator.createEPPropertiesName(
-              endpointName, AppConfigurator.EP_CFGS.outputTypes);
+        String property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
 
         String textMediaType = "text/plain";
         String jsonMediaType = "application/json";
@@ -178,8 +177,7 @@ public class AppConfigurator_getters_Test {
         String jsonMediaType = "application/json";
         String xmlMediaType = "application/xml";
 
-        property = AppConfigurator.createEPPropertiesName(
-              endpointName, AppConfigurator.EP_CFGS.outputTypes);
+        property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
         props.setProperty(property, "text: " + textMediaType + ", "
               + "json: " + jsonMediaType + ", "
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
@@ -260,8 +258,7 @@ public class AppConfigurator_getters_Test {
         // the default media type should be explicitly set
         // update output types property
         String jsonMediaType = "application/json";
-        property = AppConfigurator.createEPPropertiesName(
-              endpointName, AppConfigurator.EP_CFGS.outputTypes);
+        property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
         props.setProperty(property, "json: " + jsonMediaType
               + ", "+ "text: text/plain");
         
