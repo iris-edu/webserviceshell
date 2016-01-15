@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
 
 
 import org.apache.log4j.Logger;
@@ -462,7 +464,7 @@ public class AppConfigurator {
                         endpoint.putAll(ep_defaults);
                         endpoints.put(epName, endpoint);
                     }
-                    
+
                     loadEndpointParameter(inputProps, ep_defaults, endpoint,
                           inputParm, propName);
                 } catch (IllegalArgumentException ex) {
@@ -612,29 +614,14 @@ public class AppConfigurator {
                               + "  it should be an integer");
                     }
                 } else if(defaultz instanceof IrisProcessMarker) {
-                    // Note: for validation of instatiable class, must do
-                    // nested trys for each class WSS supports. This is
-                    // because the value used for default can only be one of
-                    // the possibilies.
                     try {
-                        endPt.put(epParm, getIrisStreamingOutputInstance(newVal));
+                        Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
+                        endPt.put(epParm, ipm);
                     } catch (Exception ex) {
-                        try {
-                            endPt.put(epParm, getIrisProcessorInstance(newVal));
-                            // not an error if this one works, but there is a
-                            // false fatal error from the outer get...Instance
-                            logger.info("The endpointClassName class loaded"
-                              + " here, ignore the previous fatal"
-                              + " getIrisStreamingOutputInstance message");
-                        } catch(Exception ex2) {
-                            String msg =
-                                  "Could not find an instance of"
-                                  + " IrisProcessorInstance, ex2: " + ex2.getMessage()
-                                  + "  or an instance of IrisStreamingOutput, ex: "
-                                  + ex.getMessage() + "  for input: " + newVal;
-                            logger.fatal(msg);
-                            throw new Exception(msg, ex2);
-                        }
+                        String msg = "loadEndpointParameter error, ex: "
+                              + ex.getMessage();
+                        logger.fatal(msg);
+                        throw new Exception(msg, ex);
                     }
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.formatTypes)) {
@@ -740,6 +727,35 @@ public class AppConfigurator {
         }
 
         return validVal;
+    }
+
+    public static Object getClassInstance(String className,
+          Class expectedClass) {
+        Object iso = null;
+
+        // The exception objects don't include the exception name in the
+        // message, so get the class type with this.
+        Exception exObj = null;
+
+        try {
+            iso = expectedClass.cast(Class.forName(className).newInstance());
+        } catch (ClassNotFoundException ex) {
+            exObj = ex;
+        } catch (InstantiationException ex) {
+            exObj = ex;
+        } catch (IllegalAccessException ex) {
+            exObj = ex;
+        } catch (ClassCastException ex) {
+            exObj = ex;
+        }
+
+        if (null == iso) {
+            String msg = exObj.getClass() + ", className: " + className
+                  + "  expected Class type: " + expectedClass.getName();
+            throw new RuntimeException(msg, exObj);
+        }
+
+        return iso;
     }
 
     public static IrisProcessMarker getIrisStreamingOutputInstance(String className) {

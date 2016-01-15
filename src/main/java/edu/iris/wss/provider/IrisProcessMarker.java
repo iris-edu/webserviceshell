@@ -20,7 +20,8 @@
 package edu.iris.wss.provider;
 
 /**
- * Marker interface, not methods specified
+ * Marker interface, this class is used to process class objects
+ * when the exact type of class is unknown.
  * 
  * @author mike
  */

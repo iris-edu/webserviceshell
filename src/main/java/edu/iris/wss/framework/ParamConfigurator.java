@@ -128,9 +128,9 @@ public class ParamConfigurator {
                 String paramName = withDots[1];
 
                 if (!epParams.containsKey(epName)) {
-                    logger.warn("Ignoring property when endpoint name is not"
-                          + " previously defined in the service cfg parameters,"
-                          + " ignored epName: " + epName + "  propName: " + propName);
+                    logger.warn("A name is not defined in service.cfg for"
+                          + " endpoint: " + epName
+                          + "  ignoring property: " + propName);
                     continue;
                 }
 
