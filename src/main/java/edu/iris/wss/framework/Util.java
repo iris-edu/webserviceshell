@@ -91,52 +91,37 @@ public class Util {
         PropertyConfigurator.configure(file.getAbsolutePath());
     }
 
-    public static void addCORSHeadersIfConfigured(Response.ResponseBuilder rb,
-          RequestInfo ri, Map<String, String> headers) {
+    public static void updateWithCORSHeadersIfConfigured(RequestInfo ri, Map<String,
+          String> headers) {
         if (ri.appConfig.isCorsEnabled()) {
-            String value = "*";
-            if (headers != null) {
-                if (headers.containsKey(
-                      ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase())) {
-                    value = headers.get(ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase());
-                }
-            }
-            // Insert CORS header elements.
-            rb.header(ACCESS_CONTROL_ALLOW_ORIGIN, value);
+            headers.put(ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase(), "*");
 
+//            // some references show using some of the following, however...
+//
 //            // dont add this unless cookies are expected
-//            rb.header("Access-Control-Allow-Credentials", "true");
+//            headers.put("Access-Control-Allow-Credentials", "true");
 
 //            // Not setting these at this time - 2015-08-12
-//            rb.header("Access-Control-Allow-Methods", "HEAD, GET, POST");
-//            rb.header("Access-Control-Allow-Headers", "Content-Type, Accept");
+//            headers.put("Access-Control-Allow-Methods", "HEAD, GET, POST");
+//            headers.put("Access-Control-Allow-Headers", "Content-Type, Accept");
 
 //            // not clear if needed now, 2015-08-12, but this is how to let client
 //            // see what headers are available, although "...Allow-Headers" may be
 //            // sufficient
-//            rb.header("Access-Control-Expose-Headers",
+//            headers.put("Access-Control-Expose-Headers",
 //                  "X-mycustomheader1, X-mycustomheader2");
 		}
     }
     
-    public static void addOtherHeadersIfAvailable(Response.ResponseBuilder rb,
-          Map<String, String> headers) {
-        if (headers != null) {
-            for (String headerKey : headers.keySet()) {
-                 if (headerKey.equals(CONTENT_DISPOSITION.toLowerCase())) {
-                    // this key is processed elsewhere
-                    continue;
-                }
-                if (headerKey.equals(ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase())) {
-                    // this key is processed elsewhere
-                    continue;
-                }
-
-                rb.header(headerKey, headers.get(headerKey));
+    public static void setResponseHeaders(Response.ResponseBuilder rb,
+          Map<String, String> headersIn) {
+        if (headersIn != null) {
+            for (String headerKey : headersIn.keySet()) {
+                rb.header(headerKey, headersIn.get(headerKey));
             }
         }
     }
-    
+
 	public static void logAndThrowException(RequestInfo ri,
           FdsnStatus.Status status, String message) {
 		ServiceShellException.logAndThrowException(ri, status, message);       

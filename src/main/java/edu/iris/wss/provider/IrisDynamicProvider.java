@@ -31,11 +31,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
@@ -108,6 +112,11 @@ public class IrisDynamicProvider {
 ////        Response.ResponseBuilder builder = Response.status(Status.OK)
 ////                  .type("text/plain")
 ////                  .entity(sb.toString());
+////
+////
+////        Map<String, String> headersMap = new HashMap<>();
+////        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+////        Util.setResponseHeaders(builder, headersMap);
 ////
 ////        return builder.build();
 ////    }
@@ -199,8 +208,11 @@ public class IrisDynamicProvider {
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain")
                   .entity(noData);
-            
-            Util.addCORSHeadersIfConfigured(builder, ri, null);
+
+            Map<String, String> headersMap = new HashMap<>();
+            Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+            Util.setResponseHeaders(builder, headersMap);
+
             return builder.build();
         }
 
@@ -250,7 +262,9 @@ public class IrisDynamicProvider {
                   "Error, " + ServiceShellException.getErrorString(ex));
         }
 
-        Util.addCORSHeadersIfConfigured(builder, ri, null);
+        Map<String, String> headersMap = new HashMap<>();
+        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+        Util.setResponseHeaders(builder, headersMap);
 
         return builder.build();
     }
@@ -348,7 +362,10 @@ public class IrisDynamicProvider {
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain");
 
-            Util.addCORSHeadersIfConfigured(builder, ri, null);
+            Map<String, String> headersMap = new HashMap<>();
+            Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+            Util.setResponseHeaders(builder, headersMap);
+
             return builder.build();
         }
 
@@ -387,30 +404,24 @@ public class IrisDynamicProvider {
                   irr.detailedErrMessage);
 		}
 
+        // TBD - look for an occurrances of irr.wssMediaType in formatTypes
+        // values, if not there, meaning this type is not configured, give
+        // a warning.
+//        logger.warn("An inconsistency has occured between endpoint code and "
+//            + "...");
+
         Response.ResponseBuilder builder = Response.status(status)
               .type(irr.wssMediaType)
               .entity(irr.entity);
 
-        // TBD look for 1 or more occurrances of irr.wssMediaType in formatTypes
-        // if zero give warning?
-//        logger.warn("An inconsistency has occured between endpoint code and "
-//            + "...");
-        // if one then let it's key override the disposition?
-        // if more than 1 has the same media type, default to first?
-        // and give warning? or make a hard error
-
+        // establish default headers for this request, update map in order of
+        // of precedence
+        Map<String, String> headersMap = new HashMap<>();
         try {
-            // from previous way code worked
+            // createContentDisposition is from earlier version of WSS
+            // keep it as a default
             String value = ri.createContentDisposition(requestedEpName);
-            if (irr.headers != null) {
-                if (irr.headers.containsKey(
-                      CONTENT_DISPOSITION.toLowerCase())) {
-                    // this is for new capability where handler can override
-                    // response headers
-                    value = irr.headers.get(CONTENT_DISPOSITION.toLowerCase());
-                }
-            }
-            builder.header(CONTENT_DISPOSITION, value);
+            headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value,"
@@ -418,9 +429,28 @@ public class IrisDynamicProvider {
                   "Error, " + ServiceShellException.getErrorString(ex));
         }
 
-        Util.addCORSHeadersIfConfigured(builder, ri, irr.headers);
-        Util.addOtherHeadersIfAvailable(builder, irr.headers);
+        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
 
-		return builder.build();
+        // add new feature, content-distribution from config for endpoint
+        // add new feature, content-distribution form config for format type for endpoint
+
+        // highest priority, add any headers from user processes
+        if (null != irr.headers) {
+            headersMap.putAll(irr.headers);
+        }
+
+        Util.setResponseHeaders(builder, headersMap);
+
+        Response response = builder.build();
+
+        MultivaluedMap<String, Object> mm = response.getHeaders();
+        Set<String> mmKeys = mm.keySet();
+        for (String mmKey : mmKeys) {
+            System.out.println("******************** www output headers mmKey: " + mmKey
+                  + "         value: " + mm.get(mmKey));
+        }
+        return response;
+
+////		return builder.build();
     }
 }

@@ -7,6 +7,8 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -46,7 +48,9 @@ public class Info1 {
               .type(MediaType.TEXT_PLAIN)
               .entity("Dynamiclly added, wssVersion: " + AppConfigurator.wssVersion);
 
-        Util.addCORSHeadersIfConfigured(builder, ri, null);
+        Map<String, String> headersMap = new HashMap<>();
+        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+        Util.setResponseHeaders(builder, headersMap);
 
 		return builder.build();
 	}
