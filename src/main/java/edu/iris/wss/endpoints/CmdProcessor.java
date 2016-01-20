@@ -378,22 +378,20 @@ public class CmdProcessor extends IrisProcessor {
      * This method does not time out, it will block on read if there is
      * nothing to read, it expects the caller to be responsible for any
      * time outs control
-     * .
-     * @param is
-     */
-    /**
-     * This method does not time out, it will block on read if there is
-     * nothing to read, it expects the caller to be responsible for any
-     * time outs control
      *
      * When making the returned map, the key part (i.e. the header name)
-     * is trimmed and set to lowercase.
+     * and value are trimmed and set to lowercase.
+     *
+     * Also note: This method works for line termination with \n and \r\n
+     * because the trim removes the \r
      *
      * @param is
      * @param startId - should be from global definition
      * @param endId - should be from global definition
      * @param maxBufferSize - should be from global definition, some
      *                        references say Apache has 8 KB limit
+     * @param headerLineDelimiter
+     * @param headerNameValueDelimiter
      * @return
      * @throws Exception
      */
@@ -477,6 +475,8 @@ public class CmdProcessor extends IrisProcessor {
         String header = headersArr[k1];
         int idx = header.indexOf(headerNameValueDelimiter);
         if (idx < 0) { continue; }
+        // Note: for the value substring, trim also provides the removal
+        // of \r if it is present
         headersMap.put(header.substring(0, idx).trim().toLowerCase(),
               header.substring(idx + 1).trim().toLowerCase());
     }

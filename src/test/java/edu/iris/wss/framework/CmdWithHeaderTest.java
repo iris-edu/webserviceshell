@@ -249,6 +249,34 @@ public class CmdWithHeaderTest  {
     }
 
     @Test
+    public void test_getCmd3b() throws Exception {
+        // canonical form with carriage return, new lines as delimiter
+
+        String hdr1Name = "Headr1";
+        String hdr2Name = "Headr2";
+        String headers = hdr1Name + " : value1\r\n" + hdr2Name + " : value2\r\n";
+        String followingData = "some other data";
+        String data = WssSingleton.HEADER_START_IDENTIFIER
+              + headers + WssSingleton.HEADER_END_IDENTIFIER
+              + followingData;
+
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+              data.getBytes("UTF-8"));
+
+        WssSingleton sw = new WssSingleton();
+        Map map = CmdProcessor.checkForHeaders(sbis,
+              sw.HEADER_START_IDENTIFIER_BYTES, sw.HEADER_END_IDENTIFIER_BYTES,
+              100, "\n", ":");
+
+        String remaining = readInputStream(sbis, 100);
+
+        assertTrue(map.get(hdr1Name.toLowerCase()).equals("value1"));
+        assertTrue(map.get(hdr2Name.toLowerCase()).equals("value2"));
+        assertTrue(map.size() == 2);
+        assertTrue(remaining.equals(followingData));
+    }
+
+    @Test
     public void test_getCmd4() throws Exception {
         // canonical form with too small of buffer, throwing an exception
         // is the expected result
