@@ -51,10 +51,15 @@ public class ServiceShellException extends WebApplicationException {
     	if (message != null)
     		logAndThrowException(ri, status, message, null);
         else {
-            // This should not happen, it means WSS is inconsistent about setting
-            // values for message earlier in the call stack
+            // This probably should not happen, it implies a programmer error
+            // either in the a WSS call sequence or the from external code
+            // via endpoint the public interfaces.
+            //
+            // make a new message and explain the problem
             Thread.dumpStack();
-            String newMsg = "*** note, WSS warning, received unexpected null message";
+            String newMsg = "*** note, WSS warning, a possible programing error"
+                  + " has occurred - a null error message was received, along"
+                  +  "with Status: " + status;
             logAndThrowException(ri, status, newMsg, null);
         }
     }
