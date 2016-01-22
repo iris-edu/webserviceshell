@@ -254,7 +254,7 @@ public class IrisDynamicProvider {
 
         try {
             builder.header(CONTENT_DISPOSITION,
-                  ri.createContentDisposition(requestedEpName));
+                  ri.createDefaultContentDisposition(requestedEpName));
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   "Error creating Content-Disposition header value"
@@ -420,7 +420,7 @@ public class IrisDynamicProvider {
         try {
             // createContentDisposition is from earlier version of WSS
             // keep it as a default
-            String value = ri.createContentDisposition(requestedEpName);
+            String value = ri.createDefaultContentDisposition(requestedEpName);
             headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
         } catch (Exception ex) {
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
@@ -431,9 +431,14 @@ public class IrisDynamicProvider {
 
         Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
 
-        // add new feature, content-distribution from config for endpoint
-        // add new feature, content-distribution form config for format type for endpoint
+        // TBD add new feature, content-distribution from config by endpoint
 
+        // content-distribution from config by format type per endpoint
+        String value = ri.appConfig.getDisposition(requestedEpName, formatTypeKey);
+        if (null != value) {
+            headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
+        }
+        
         // highest priority, add any headers from user processes
         if (null != irr.headers) {
             headersMap.putAll(irr.headers);
@@ -441,14 +446,15 @@ public class IrisDynamicProvider {
 
         Util.setResponseHeaders(builder, headersMap);
 
+        // manual test code
         Response response = builder.build();
-
         MultivaluedMap<String, Object> mm = response.getHeaders();
         Set<String> mmKeys = mm.keySet();
         for (String mmKey : mmKeys) {
             System.out.println("******************** www output headers mmKey: " + mmKey
                   + "         value: " + mm.get(mmKey));
         }
+        System.out.println("------ return response");
         return response;
 
 ////		return builder.build();

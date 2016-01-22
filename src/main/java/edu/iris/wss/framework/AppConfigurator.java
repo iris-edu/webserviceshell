@@ -91,19 +91,14 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
         ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
         ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
-        try {
-            ep_defaults.put(EP_CFGS.formatTypes, createFormatTypes(""));
-        } catch (Exception ex) {
-            String msg = "Exception while creating types";
-            System.out.println("************** " + msg + ", ex: " + ex);
-            logger.error(msg + ", ex: " + ex);
-            throw new Exception(msg, ex);
-        }
+        ep_defaults.put(EP_CFGS.formatTypes, createFormatTypes(""));
         ep_defaults.put(EP_CFGS.usageLog, true);
         ep_defaults.put(EP_CFGS.postEnabled, false);
         ep_defaults.put(EP_CFGS.use404For204, false);
         ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
         ep_defaults.put(EP_CFGS.logMiniseedExtents, false);
+        ep_defaults.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
+        ep_defaults.put(EP_CFGS.addHeaders, null);
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -130,7 +125,8 @@ public class AppConfigurator {
     // endpoint configuration parameter names
     public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
-        endpointClassName, proxyURL, logMiniseedExtents
+        endpointClassName, proxyURL, logMiniseedExtents, formatDispositions,
+        addHeaders
     }
 
     // container for parameters that apply to all endpoints
@@ -164,13 +160,38 @@ public class AppConfigurator {
 
         // set newTypes first so as to preserve order from configuration file
         if (isOkString(newTypes)) {
-            setFormatTypes(types, newTypes);
+            setKeyValueMap(types, newTypes, EP_CFGS.formatTypes.toString());
         }
 
         // set default last
-        setFormatTypes(types, "BINARY: application/octet-stream");
+        setKeyValueMap(types, "BINARY: application/octet-stream",
+              EP_CFGS.formatTypes.toString());
 
         return types;
+    }
+
+    /**
+     *
+     * @param newDispositions - key, value pairs in the comma separated list
+     * with colon separating key from value, same as createFormatTypes, except
+     * the value here is an HTTP header Content-Disposition string.
+     *
+     * @return
+     * @throws Exception
+     */
+    public Map<String, String> createFormatDispositions(String newDispositions)
+          throws Exception
+    {
+        // I may not needed a linked version, but for now, implementing
+        // the same way as formatTypes
+        Map<String, String> dispositions = new LinkedHashMap<>();
+
+        if (isOkString(newDispositions)) {
+            setKeyValueMap(dispositions, newDispositions,
+                 EP_CFGS.formatDispositions.toString());
+        }
+
+        return dispositions;
     }
 
     public static String getConfigFileNamed() {
@@ -271,7 +292,43 @@ public class AppConfigurator {
         throw new Exception("WebServiceShell getMediaType, there is no endpoint"
                       + " configured for endpoint name: " + epName);
 	}
-	public boolean isUsageLogEnabled(String epName) {
+
+    /**
+     * There does not have to be a disposition parameter for a given endpoint,
+     * nor does there have to be a disposition for a respective format
+     *
+     * @param epName
+     * @param formatTypeKey
+     * @return - the caller should skip use of this product when null is
+     *           returned
+     * @throws Exception
+     */
+    public String getDisposition(String epName, String formatTypeKey)
+          throws Exception {
+        if (endpoints.containsKey(epName)) {
+            Map<String, String> dispositions = (Map<String, String>)endpoints
+                  .get(epName).get(EP_CFGS.formatDispositions);
+
+            // Note: do the same operation on formatTypeKey as the setter, e.g. trim
+            //       and toUpperCase
+            String disposition = dispositions.get(formatTypeKey.trim().toUpperCase());
+            if (null == disposition) {
+                // returning null is okay, there is no dispostion configured for
+                // this format
+            } else {
+                // replace recognized ${...} values
+                disposition = disposition.replaceAll("\\$\\{"
+                      + GL_CFGS.appName.toString() + "\\}", getAppName());
+                disposition = disposition.replaceAll("\\$\\{"
+                      + "UTC" + "\\}", Util.getUTCISO8601());
+            }
+            return disposition;
+        }
+        throw new Exception("WebServiceShell getDisposition, there is no endpoint"
+                      + " configured for endpoint name: " + epName);
+	}
+
+    public boolean isUsageLogEnabled(String epName) {
         return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
 	}
 
@@ -304,12 +361,38 @@ public class AppConfigurator {
                     + " configured for endpoint name: " + epName);
 	}
 
-    // ---------------------------------
-	public void setFormatTypes(Map<String, String> outTypes, String s)
+////    // ---------------------------------
+////	public void setFormatTypes(Map<String, String> outTypes, String s)
+////          throws Exception {
+////        if (!isOkString(s)) {
+////			throw new Exception("WebServiceShell setFormatTypes, formatTypes"
+////                  + " pair values are null or empty string.");
+////        }
+////
+////        String[] pairs = s.split(java.util.regex.Pattern.quote(","));
+////
+////        for (String pair : pairs) {
+////            String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
+////            if (oneKV.length != 2) {
+////                throw new Exception(
+////                        "WebserviceShell setFormatTypes is expecting 2 items in"
+////                        + " a comma separated list of pairs of output type"
+////                        + " and HTTP Content-Type,"
+////                        + " instead item count: " + oneKV.length
+////                        + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
+////                        + "  input: " + s);
+////            }
+////
+////            String key = oneKV[0].trim().toUpperCase();
+////            outTypes.put(key, oneKV[1].trim());
+////        }
+////    }
+	public void setKeyValueMap(Map<String, String> outTypes, String s,
+          String paramName)
           throws Exception {
         if (!isOkString(s)) {
-			throw new Exception("WebServiceShell setFormatTypes, formatTypes"
-                  + " pair values are null or empty string.");
+			throw new Exception("setKeyValueMap, cfg parameter: "
+                  + paramName + " pair values are null or empty string.");
         }
 
         String[] pairs = s.split(java.util.regex.Pattern.quote(","));
@@ -318,12 +401,12 @@ public class AppConfigurator {
             String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
             if (oneKV.length != 2) {
                 throw new Exception(
-                        "WebserviceShell setFormatTypes is expecting 2 items in"
-                        + " a comma separated list of pairs of output type"
-                        + " and HTTP Content-Type,"
-                        + " instead item count: " + oneKV.length
-                        + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
-                        + "  input: " + s);
+                        "setKeyValueMap could not parse a"
+                      + " <key: value> pair for parameter: " + paramName
+                      + "  Pairs should be separated by commas."
+                      + " Items found: " + oneKV.length
+                      + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
+                      + "  input string in question: " + s);
             }
 
             String key = oneKV[0].trim().toUpperCase();
@@ -436,7 +519,7 @@ public class AppConfigurator {
 
         Enumeration keys = inputProps.propertyNames();
         while (keys.hasMoreElements()) {
-            String propName = (String)keys.nextElement();      
+            String propName = (String)keys.nextElement();
 
             // by design, in this version of WSS, a global parameter is 
             // defined as a string with no epname. decoration.
@@ -470,10 +553,14 @@ public class AppConfigurator {
                 } catch (IllegalArgumentException ex) {
                     System.out.println("****** ignoring ex: " + ex);
                     //throw new Exception("Unrecognized paramater: " + withDots[1], ex);
+                    logger.warn("unexpected exception: " + ex
+                      + "  propName: " + propName);
                 }
             } else if (withDots.length > 2) {
                 System.out.println("*** ERR *** multiple dots not allowed, key: "
                 + propName);
+                logger.warn("more than 2 dot delimeters found in endpoint name,"
+                      + " found: " + withDots.length + " dots, propName: " + propName);
             }
         }
 
@@ -585,10 +672,10 @@ public class AppConfigurator {
                   "The service cfg file did not contain a valid value for parameter: "
                   + key + "  value: " + newVal;
             logger.info(msg);
-            if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.version)) {
-                System.out.println("*** *** *** TBD - is this needed and for what - Missing required global parameter: " + key);
-                //throw new Exception("Missing required global parameter: " + key );
-            }
+//            if (eKey.equals(GL_CFGS.appName) | eKey.equals(GL_CFGS.version)) {
+//                System.out.println("*** *** *** TBD - is this needed and for what - Missing required global parameter: " + key);
+//                //throw new Exception("Missing required global parameter: " + key );
+//            }
         }
 	}
 
@@ -625,13 +712,16 @@ public class AppConfigurator {
                     }
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.formatTypes)) {
-                        // note: for references to mutable objects,
-                        //       dont get the previous value as this
-                        //       might look like a concatenation of values
-                        //       if there is more than one entry in the
-                        //       config file, instead use only this newVal
+                        // note: Don't use the map from from the default object,
+                        //       create a new one.
                         Map<String, String> new_formatTypes = createFormatTypes(newVal);
                         endPt.put(EP_CFGS.formatTypes, new_formatTypes);
+                    } else if (epParm.equals(EP_CFGS.formatDispositions)) {
+                        // note: Don't use the map from from the default object,
+                        //       create a new one.
+                        Map<String, String> new_formatDispositions =
+                              createFormatDispositions(newVal);
+                        endPt.put(EP_CFGS.formatDispositions, new_formatDispositions);
                     } else {
                         String msg = "Unexpected Map type for paramater: "
                               + propName + "  value found: " + newVal
@@ -649,9 +739,12 @@ public class AppConfigurator {
                     endPt.put(epParm, newVal);
                 }
             } else {
-                // TBD add logging
-                System.out.println("*** default value not defined for key: "
-                      + epParm + "  input property: " + propName);
+                String msg = "*** default value not defined for key: "
+                      + epParm + "  input property: " + propName;
+                System.out.println(msg);
+                logger.warn(msg);
+
+                // code for required parameters?
                 if (epParm.equals(EP_CFGS.endpointClassName)
                       | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
                     System.out.println("Missing required default for endpoint parameter: "
@@ -661,9 +754,12 @@ public class AppConfigurator {
                 }
             }
         } else {
-            // TBD add logging
-            System.out.println("*** property is null or empty for key: "
-                  + epParm + "  input property: " + propName);
+            String msg = "*** property is null or empty for key: "
+                  + epParm + "  input property: " + propName;
+            System.out.println(msg);
+            logger.warn(msg);
+
+            // code for required parameters?
             if (epParm.equals(EP_CFGS.endpointClassName)
                   | epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
                 System.out.println("*** *** *** Missing required endpoint parameter: "
@@ -674,17 +770,22 @@ public class AppConfigurator {
         }
 	}
 
-    private static String toStringFormatTypes(Map<String, String> formatTypes) {
+    private static String toStringMapStringTypes(Map<String, String> stringMaps,
+          EP_CFGS paramName) {
         StringBuilder s = new StringBuilder();
-        s.append(EP_CFGS.formatTypes.toString() + " = ");
+        //??s.append(paramName.toString() + " = ");
         
-        Iterator<String> keyIt = formatTypes.keySet().iterator();
-        while(keyIt.hasNext()) {
-            String key = keyIt.next();
-            s.append(key).append(": ").append(formatTypes.get(key));
-            if (keyIt.hasNext()) {
-                s.append(", ");
+        if (null == stringMaps) {
+            Iterator<String> keyIt = stringMaps.keySet().iterator();
+            while(keyIt.hasNext()) {
+                String key = keyIt.next();
+                s.append(key).append(": ").append(stringMaps.get(key));
+                if (keyIt.hasNext()) {
+                    s.append(", ");
+                }
             }
+        } else {
+            s.append("null");
         }
         
         return s.toString();
@@ -854,7 +955,7 @@ public class AppConfigurator {
 		return ((s != null) && !s.isEmpty());
 	}
     
-    public static String createEPPropertiesName(String epName, EP_CFGS cfgName) {
+    public static String createEPdotPropertyName(String epName, EP_CFGS cfgName) {
         return epName + ENDPOINT_TO_PROPERTIES_DELIMITER + cfgName.toString();
     }
 
@@ -892,11 +993,14 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
-                    value = toStringFormatTypes((Map<String, String>)value);
+                } else if (value instanceof Map && (cfgName.equals(
+                      EP_CFGS.formatTypes.toString()) || cfgName.equals(
+                      EP_CFGS.formatDispositions.toString()))) {
+                    value = toStringMapStringTypes((Map<String, String>)value,
+                          cfgName);
                 }
                 
-                sb.append(strAppend(createEPPropertiesName(epName, cfgName)))
+                sb.append(strAppend(createEPdotPropertyName(epName, cfgName)))
                       .append(value).append("\n");
             }
             sb.append("\n");
@@ -966,12 +1070,15 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && cfgName.equals(EP_CFGS.formatTypes)) {
-                    value = toStringFormatTypes((Map<String, String>)value);
+                } else if (value instanceof Map && (cfgName.equals(
+                      EP_CFGS.formatTypes.toString()) || cfgName.equals(
+                      EP_CFGS.formatDispositions.toString()))) {
+                    value = toStringMapStringTypes((Map<String, String>)value,
+                          cfgName);
                 }
 
                 sb.append("<TR><TD>")
-                      .append(createEPPropertiesName(epName, cfgName))
+                      .append(createEPdotPropertyName(epName, cfgName))
                       .append("</TD><TD>")
                       .append(value)
                       .append("</TD></TR>");

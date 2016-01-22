@@ -40,6 +40,12 @@ public class Util {
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
     private static final String LOG4J_CFG_NAME_SUFFIX = "-log4j.properties";
 
+    private static final SimpleDateFormat ISO_8601_ZULU_FORMAT =
+          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    static {
+        ISO_8601_ZULU_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
+
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
@@ -48,6 +54,10 @@ public class Util {
         return serveletContextPath
               .replaceFirst(Pattern.quote("/"), "")
               .replaceAll(Pattern.quote("/"), ".");
+    }
+
+    public static String getUTCISO8601() {
+        return ISO_8601_ZULU_FORMAT.format((new GregorianCalendar()).getTime());
     }
 
     public static void myNewInitLog4j(String configBase) {

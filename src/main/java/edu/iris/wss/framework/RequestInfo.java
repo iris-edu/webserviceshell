@@ -210,8 +210,7 @@ public  class RequestInfo {
      * 
      * @return 
      */
-    public String createContentDisposition(String epName) throws Exception {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public String createDefaultContentDisposition(String epName) throws Exception {
         StringBuilder sb = new StringBuilder();
         
         if (isCurrentTypeKey(epName, InternalTypes.MSEED)
@@ -225,7 +224,7 @@ public  class RequestInfo {
         sb.append("; filename=");
         sb.append(appConfig.getAppName());
         sb.append("_");
-        sb.append(sdf.format(new Date()));
+        sb.append(Util.getUTCISO8601());
                 
         if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             // put suffix when not binary

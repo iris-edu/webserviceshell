@@ -5,6 +5,7 @@
  */
 package edu.iris.wss.framework;
 
+import edu.iris.wss.framework.AppConfigurator.EP_CFGS;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
@@ -13,8 +14,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -91,7 +90,7 @@ public class AppConfigurator_getters_Test {
               AppConfigurator.GL_CFGS.version.toString(), "mock_version");
 
         // handlerProgram is required, but not part of this test
-        String property = AppConfigurator.createEPPropertiesName(
+        String property = AppConfigurator.createEPdotPropertyName(
               epName, AppConfigurator.EP_CFGS.handlerProgram);
         props.setProperty(property, EXECUTABLE_FILE_FOR_TEST);
 
@@ -104,7 +103,8 @@ public class AppConfigurator_getters_Test {
         Properties props = createInitialTestProperties(endpointName);
         AppConfigurator appCfg = new AppConfigurator();
 
-        String property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
+        String property = AppConfigurator.createEPdotPropertyName(endpointName,
+              EP_CFGS.formatTypes);
 
         String textMediaType = "text/plain";
         String jsonMediaType = "application/json";
@@ -152,7 +152,7 @@ public class AppConfigurator_getters_Test {
         AppConfigurator appCfg = new AppConfigurator();
     
         // set a property that is not being tested to cause a build of an endpoint
-        String property = AppConfigurator.createEPPropertiesName(
+        String property = AppConfigurator.createEPdotPropertyName(
               endpointName, AppConfigurator.EP_CFGS.usageLog);
         props.setProperty(property, "true");
         try {
@@ -179,7 +179,8 @@ public class AppConfigurator_getters_Test {
         String jsonMediaType = "application/json";
         String xmlMediaType = "application/xml";
 
-        property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
+        property = AppConfigurator.createEPdotPropertyName(endpointName,
+              EP_CFGS.formatTypes);
         props.setProperty(property, "text: " + textMediaType + ", "
               + "json: " + jsonMediaType + ", "
               + "IAGA2002: text/plain, xml: " + xmlMediaType + "");
@@ -216,7 +217,8 @@ public class AppConfigurator_getters_Test {
         // setup up proxy resourse for JSON and text
         
         // first the respective class name
-        String property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.endpointClassName);
+        String property = AppConfigurator.createEPdotPropertyName(endpointName,
+              EP_CFGS.endpointClassName);
         props.setProperty(property, edu.iris.wss.endpoints.ProxyResource.class.getName());
 
         try {
@@ -228,7 +230,7 @@ public class AppConfigurator_getters_Test {
         }
         
         // add the proxyURL property
-        property = AppConfigurator.createEPPropertiesName(
+        property = AppConfigurator.createEPdotPropertyName(
               endpointName, AppConfigurator.EP_CFGS.proxyURL);
         props.setProperty(property, "file:///someURL");
         
@@ -260,7 +262,8 @@ public class AppConfigurator_getters_Test {
         // the default media type should be explicitly set
         // update output types property
         String jsonMediaType = "application/json";
-        property = AppConfigurator.createEPPropertiesName(endpointName, AppConfigurator.EP_CFGS.formatTypes);
+        property = AppConfigurator.createEPdotPropertyName(endpointName,
+              EP_CFGS.formatTypes);
         props.setProperty(property, "json: " + jsonMediaType
               + ", "+ "text: text/plain");
         
