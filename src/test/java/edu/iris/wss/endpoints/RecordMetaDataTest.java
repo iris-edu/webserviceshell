@@ -20,6 +20,7 @@
 package edu.iris.wss.endpoints;
 
 import edu.iris.wss.endpoints.RecordMetaData;
+import edu.iris.wss.framework.Util;
 import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -40,7 +41,6 @@ import org.junit.Test;
  */
 public class RecordMetaDataTest {
     public static final Logger logger = Logger.getLogger(RecordMetaDataTest.class);
-    public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
     
     public RecordMetaDataTest() {
     }
@@ -141,7 +141,7 @@ public class RecordMetaDataTest {
         assertEquals(instance.getStart(), null);
                 
         //start = "2011,036,17:24:50.9999";
-        Calendar start = Calendar.getInstance(UTC);
+        Calendar start = Calendar.getInstance(Util.UTZ_TZ);
         start.set(Calendar.YEAR, 2011);
         start.set(Calendar.DAY_OF_YEAR, 36);
         start.set(Calendar.HOUR_OF_DAY, 17);
@@ -157,7 +157,7 @@ public class RecordMetaDataTest {
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
-        fmt.setTimeZone(UTC);
+        fmt.setTimeZone(Util.UTZ_TZ);
         String startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
         // using the same formatter, I should get the same string from date
         // less the microsecond part
@@ -196,7 +196,7 @@ public class RecordMetaDataTest {
         assertEquals(instance.getEnd(), null);
         
         //end = "2011,036,17:24:50.9999";
-        Calendar end = Calendar.getInstance(UTC);
+        Calendar end = Calendar.getInstance(Util.UTZ_TZ);
         end.set(Calendar.YEAR, 2011);
         end.set(Calendar.DAY_OF_YEAR, 36);
         end.set(Calendar.HOUR_OF_DAY, 17);
@@ -210,7 +210,7 @@ public class RecordMetaDataTest {
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
-        fmt.setTimeZone(UTC);
+        fmt.setTimeZone(Util.UTZ_TZ);
         String endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
         assertTrue(endResult.equals(endExpected));
         

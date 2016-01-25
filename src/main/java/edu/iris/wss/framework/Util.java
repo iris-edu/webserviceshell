@@ -41,11 +41,8 @@ public class Util {
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
     private static final String LOG4J_CFG_NAME_SUFFIX = "-log4j.properties";
 
-    private static final SimpleDateFormat ISO_8601_ZULU_FORMAT =
-          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    static {
-        ISO_8601_ZULU_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    public static final String ISO_8601_ZULU_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final TimeZone UTZ_TZ = TimeZone.getTimeZone("UTC");
 
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
@@ -58,13 +55,13 @@ public class Util {
     }
 
     public static String getCurrentUTCTimeISO8601() {
-        return ISO_8601_ZULU_FORMAT.format((new GregorianCalendar()).getTime());
+        SimpleDateFormat sdf = new SimpleDateFormat(ISO_8601_ZULU_FORMAT);
+        sdf.setTimeZone(UTZ_TZ);
+        return sdf.format((new GregorianCalendar()).getTime());
     }
 
     public static void myNewInitLog4j(String configBase) {
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String now = fmt.format((new GregorianCalendar()).getTime());
+        String now = getCurrentUTCTimeISO8601();
 
         String configDirName = System.getProperty(WSS_OS_CONFIG_DIR);
         System.out.println(now + " Info, myNewInitLog4j, property "

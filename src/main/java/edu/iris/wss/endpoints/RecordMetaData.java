@@ -19,6 +19,7 @@
 
 package edu.iris.wss.endpoints;
 
+import edu.iris.wss.framework.Util;
 import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
 
@@ -92,6 +93,7 @@ public class RecordMetaData {
             // creating format everytime because SimpleDataFormat is not
             // thread safe
             SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
+            fmt.setTimeZone(Util.UTZ_TZ);
             System.out.println("*** input: " + input + "  as Date obj, start: "
                     + fmt.format(rmd.getStart().convertToCalendar().getTime()));
 

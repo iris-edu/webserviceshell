@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.AppConfigurator.LoggingMethod;
+import edu.iris.wss.framework.Util;
 import edu.iris.wss.framework.WssSingleton;
 
 public class LoggerUtils {
@@ -204,7 +205,8 @@ public class LoggerUtils {
 
 	public static String makeUsageLogString(WebUsageItem wui) {
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat(Util.ISO_8601_ZULU_FORMAT);
+        sdf.setTimeZone(Util.UTZ_TZ);
 
 		StringBuffer sb = new StringBuffer();
 		

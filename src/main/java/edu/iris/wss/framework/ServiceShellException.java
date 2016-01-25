@@ -75,41 +75,6 @@ public class ServiceShellException extends WebApplicationException {
         LoggerUtils.logWssUsageError(ri, null, 0L, 0L, briefMsg,
               status.getStatusCode(), ri.getEndpointNameForThisRequest());
 
-////    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
-////    	StringBuilder sb = new StringBuilder();
-////        sb.append("Error ").append(status.getStatusCode());
-////
-////        int index = message.indexOf(usageDetailsSignature);
-////        if (index == -1) {
-////            sb.append(": ").append(message);
-////        } else {
-////            sb.append(": ").append(message.substring(0, index));
-////        }
-////
-////        if (e != null) {
-////            sb.append("\n").append(getErrorString(e));
-////        }
-////
-////        sb.append("\n\n")
-////              .append("Request:\n")
-////              .append(ri.request.getRequestURL());
-////
-////        String qs = ri.request.getQueryString();
-////
-////        if ((qs != null) && (!qs.equals(""))) {
-////            sb.append("?" + qs);
-////        }
-////
-////        sb.append("\n\n")
-////              .append("Request Submitted:\n")
-////              .append(sdf.format(new Date()));
-////
-////        sb.append("\n\n")
-////              .append("Service version:\n")
-////              .append(ri.appConfig.getAppName())
-////              .append(": v ")
-////              .append(ri.appConfig.getAppVersion())
-////              .append("\n");
         String errMsg = createFdsnErrorMsg(status, briefMsg, detailedMsg,
           ri.request.getRequestURL().toString(), ri.request.getQueryString(),
           ri.appConfig.getAppName(), ri.appConfig.getAppVersion());
@@ -129,6 +94,7 @@ public class ServiceShellException extends WebApplicationException {
           String detailMsg, String requestURL, String requestQueryString,
           String appName, String appVersion) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
+        sdf.setTimeZone(Util.UTZ_TZ);
         StringBuilder sb = new StringBuilder();
         sb.append("Error ").append(status.getStatusCode());
 

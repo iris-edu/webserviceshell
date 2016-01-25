@@ -49,7 +49,8 @@ public class StatsKeeper {
 	
 	public String toHtmlString() {
 		StringBuilder sb = new StringBuilder();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat(Util.ISO_8601_ZULU_FORMAT);
+        sdf.setTimeZone(Util.UTZ_TZ);
 
 		sb.append("<TABLE border=2 style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
