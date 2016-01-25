@@ -25,8 +25,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 
 public  class RequestInfo {

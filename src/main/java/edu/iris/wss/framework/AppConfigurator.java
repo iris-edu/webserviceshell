@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
 
 
 import org.apache.log4j.Logger;
@@ -341,11 +339,6 @@ public class AppConfigurator {
                 // returning null is okay, there is no dispostion configured for
                 // this format
             } else {
-////                // replace recognized ${...} values
-////                disposition = disposition.replaceAll("\\$\\{"
-////                      + GL_CFGS.appName.toString() + "\\}", getAppName());
-////                disposition = disposition.replaceAll("\\$\\{"
-////                      + "UTC" + "\\}", Util.getUTCISO8601());
                 disposition = replaceWellKnownNames(disposition);
             }
             return disposition;
@@ -421,33 +414,6 @@ public class AppConfigurator {
               "WebServiceShell getDefaultFormatTypeKey, there is no endpoint"
                     + " configured for endpoint name: " + epName);
 	}
-
-////    // ---------------------------------
-////	public void setFormatTypes(Map<String, String> outTypes, String s)
-////          throws Exception {
-////        if (!isOkString(s)) {
-////			throw new Exception("WebServiceShell setFormatTypes, formatTypes"
-////                  + " pair values are null or empty string.");
-////        }
-////
-////        String[] pairs = s.split(java.util.regex.Pattern.quote(","));
-////
-////        for (String pair : pairs) {
-////            String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
-////            if (oneKV.length != 2) {
-////                throw new Exception(
-////                        "WebserviceShell setFormatTypes is expecting 2 items in"
-////                        + " a comma separated list of pairs of output type"
-////                        + " and HTTP Content-Type,"
-////                        + " instead item count: " + oneKV.length
-////                        + (oneKV.length == 1 ? "  first item: " + oneKV[0] : "")
-////                        + "  input: " + s);
-////            }
-////
-////            String key = oneKV[0].trim().toUpperCase();
-////            outTypes.put(key, oneKV[1].trim());
-////        }
-////    }
 
     /**
      *

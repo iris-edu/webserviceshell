@@ -437,22 +437,17 @@ public class IrisDynamicProvider {
 
         Util.setResponseHeaders(builder, headersMap);
 
-            for (String key : headersMap.keySet()) {
-                System.out.println("^^^^^^^^^^^^^^^^^^ key: " + key + "  val: " + headersMap.get(key));
-            }
+////        // manual test code
+////        Response response = builder.build();
+////        MultivaluedMap<String, Object> mm = response.getHeaders();
+////        Set<String> mmKeys = mm.keySet();
+////        for (String mmKey : mmKeys) {
+////            System.out.println("******************** www output headers mmKey: " + mmKey
+////                  + "         value: " + mm.get(mmKey));
+////        }
+////        System.out.println("------ return response");
+////        return response;
 
-
-        // manual test code
-        Response response = builder.build();
-        MultivaluedMap<String, Object> mm = response.getHeaders();
-        Set<String> mmKeys = mm.keySet();
-        for (String mmKey : mmKeys) {
-            System.out.println("******************** www output headers mmKey: " + mmKey
-                  + "         value: " + mm.get(mmKey));
-        }
-        System.out.println("------ return response");
-        return response;
-
-////		return builder.build();
+		return builder.build();
     }
 }
