@@ -98,7 +98,7 @@ public class AppConfigurator {
         ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
         ep_defaults.put(EP_CFGS.logMiniseedExtents, false);
         ep_defaults.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
-        ep_defaults.put(EP_CFGS.addHeaders, null);
+        ep_defaults.put(EP_CFGS.addHeaders, createCfgHeaders(""));
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -160,12 +160,12 @@ public class AppConfigurator {
 
         // set newTypes first so as to preserve order from configuration file
         if (isOkString(newTypes)) {
-            setKeyValueMap(types, newTypes, EP_CFGS.formatTypes.toString());
+            setKeyValueMap(types, newTypes, EP_CFGS.formatTypes.toString(), true);
         }
 
         // set default last
         setKeyValueMap(types, "BINARY: application/octet-stream",
-              EP_CFGS.formatTypes.toString());
+              EP_CFGS.formatTypes.toString(), true);
 
         return types;
     }
@@ -188,10 +188,35 @@ public class AppConfigurator {
 
         if (isOkString(newDispositions)) {
             setKeyValueMap(dispositions, newDispositions,
-                 EP_CFGS.formatDispositions.toString());
+                 EP_CFGS.formatDispositions.toString(), true);
         }
 
         return dispositions;
+    }
+
+    /**
+     * Create map for HTTP headers where the key is the desired HTTP header,
+     * (i.e. header field) and the value is the value for that header.
+     *
+     * The headers map can be empty.
+     *
+     * @param newHeaders
+     * @return
+     * @throws Exception
+     */
+    public Map<String, String> createCfgHeaders(String newHeaders)
+          throws Exception
+    {
+        // I may not needed a linked version, but for now, implementing
+        // the same way as formatTypes
+        Map<String, String> headers = new LinkedHashMap<>();
+
+        if (isOkString(newHeaders)) {
+            setKeyValueMap(headers, newHeaders, EP_CFGS.addHeaders.toString(),
+                  false);
+        }
+
+        return headers;
     }
 
     public static String getConfigFileNamed() {
@@ -316,15 +341,51 @@ public class AppConfigurator {
                 // returning null is okay, there is no dispostion configured for
                 // this format
             } else {
-                // replace recognized ${...} values
-                disposition = disposition.replaceAll("\\$\\{"
-                      + GL_CFGS.appName.toString() + "\\}", getAppName());
-                disposition = disposition.replaceAll("\\$\\{"
-                      + "UTC" + "\\}", Util.getUTCISO8601());
+////                // replace recognized ${...} values
+////                disposition = disposition.replaceAll("\\$\\{"
+////                      + GL_CFGS.appName.toString() + "\\}", getAppName());
+////                disposition = disposition.replaceAll("\\$\\{"
+////                      + "UTC" + "\\}", Util.getUTCISO8601());
+                disposition = replaceWellKnownNames(disposition);
             }
             return disposition;
         }
-        throw new Exception("WebServiceShell getDisposition, there is no endpoint"
+        throw new Exception("getDisposition, there is no endpoint"
+                      + " configured for endpoint name: " + epName);
+	}
+
+    public String replaceWellKnownNames(String input) {
+        String output = input.replaceAll("\\$\\{"
+              + GL_CFGS.appName.toString() + "\\}", getAppName());
+        output = output.replaceAll("\\$\\{"
+              + "UTC" + "\\}", Util.getCurrentUTCTimeISO8601());
+
+        return output;
+    }
+
+    /**
+     * Theses are headers per endpoint from a cfg file. They apply to any
+     * format type on the respective endpoint.
+     *
+     * @param epName
+     * @return
+     * @throws Exception
+     */
+    public Map<String, String> getEndpointHeaders(String epName)
+          throws Exception {
+        if (endpoints.containsKey(epName)) {
+            Map<String, String> headers = (Map<String, String>)endpoints
+                  .get(epName).get(EP_CFGS.addHeaders);
+
+            Map<String, String> copy = createCfgHeaders("");
+            copy.putAll(headers);
+            for (String key : copy.keySet()) {
+                String newVal = replaceWellKnownNames(copy.get(key));
+                copy.put(key, newVal);
+            }
+            return copy;
+        }
+        throw new Exception("getCfgHeaders, there is no endpoint"
                       + " configured for endpoint name: " + epName);
 	}
 
@@ -387,8 +448,21 @@ public class AppConfigurator {
 ////            outTypes.put(key, oneKV[1].trim());
 ////        }
 ////    }
+
+    /**
+     *
+     * @param outTypes
+     * @param s
+     * @param paramName
+     * @param setToUpper - Invented this parameter so that this method can be
+     *        shared. Only addHeaders should be false. In the case of
+     *        addHeaders, the header name file is defined by the user in the
+     *        .cfg file, so the idea is to keep the case the same as the user definition.
+     *
+     * @throws Exception
+     */
 	public void setKeyValueMap(Map<String, String> outTypes, String s,
-          String paramName)
+          String paramName, boolean setToUpper)
           throws Exception {
         if (!isOkString(s)) {
 			throw new Exception("setKeyValueMap, cfg parameter: "
@@ -409,7 +483,12 @@ public class AppConfigurator {
                       + "  input string in question: " + s);
             }
 
-            String key = oneKV[0].trim().toUpperCase();
+            String key;
+            if (setToUpper) {
+                key = oneKV[0].trim().toUpperCase();
+            } else {
+                key = oneKV[0].trim();
+            }
             outTypes.put(key, oneKV[1].trim());
         }
     }
@@ -696,8 +775,8 @@ public class AppConfigurator {
                     try {
                         endPt.put(epParm, Integer.valueOf(newVal));
                     } catch (NumberFormatException ex) {
-                        throw new Exception("Unrecognized Integer for paramater: " + propName
-                              + "  value found: " + newVal
+                        throw new Exception("Unrecognized Integer for paramater: "
+                              + propName + "  value found: " + newVal
                               + "  it should be an integer");
                     }
                 } else if(defaultz instanceof IrisProcessMarker) {
@@ -714,14 +793,18 @@ public class AppConfigurator {
                     if (epParm.equals(EP_CFGS.formatTypes)) {
                         // note: Don't use the map from from the default object,
                         //       create a new one.
-                        Map<String, String> new_formatTypes = createFormatTypes(newVal);
-                        endPt.put(EP_CFGS.formatTypes, new_formatTypes);
+                        Map<String, String> newmap = createFormatTypes(newVal);
+                        endPt.put(EP_CFGS.formatTypes, newmap);
                     } else if (epParm.equals(EP_CFGS.formatDispositions)) {
                         // note: Don't use the map from from the default object,
                         //       create a new one.
-                        Map<String, String> new_formatDispositions =
-                              createFormatDispositions(newVal);
-                        endPt.put(EP_CFGS.formatDispositions, new_formatDispositions);
+                        Map<String, String> newmap = createFormatDispositions(newVal);
+                        endPt.put(EP_CFGS.formatDispositions, newmap);
+                    } else if (epParm.equals(EP_CFGS.addHeaders)) {
+                        // note: Don't use the map from from the default object,
+                        //       create a new one.
+                        Map<String, String> newmap = createCfgHeaders(newVal);
+                        endPt.put(EP_CFGS.addHeaders, newmap);
                     } else {
                         String msg = "Unexpected Map type for paramater: "
                               + propName + "  value found: " + newVal
@@ -770,18 +853,20 @@ public class AppConfigurator {
         }
 	}
 
-    private static String toStringMapStringTypes(Map<String, String> stringMaps,
-          EP_CFGS paramName) {
+    private static String toStringMapStringTypes(Map<String, String> stringMaps) {
         StringBuilder s = new StringBuilder();
-        //??s.append(paramName.toString() + " = ");
         
-        if (null == stringMaps) {
-            Iterator<String> keyIt = stringMaps.keySet().iterator();
-            while(keyIt.hasNext()) {
-                String key = keyIt.next();
-                s.append(key).append(": ").append(stringMaps.get(key));
-                if (keyIt.hasNext()) {
-                    s.append(", ");
+        if (null != stringMaps) {
+            if (stringMaps.isEmpty()) {
+                s.append("\"\"");
+            } else {
+                Iterator<String> keyIt = stringMaps.keySet().iterator();
+                while(keyIt.hasNext()) {
+                    String key = keyIt.next();
+                    s.append(key).append(": ").append(stringMaps.get(key));
+                    if (keyIt.hasNext()) {
+                        s.append(", ");
+                    }
                 }
             }
         } else {
@@ -993,11 +1078,12 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && (cfgName.equals(
-                      EP_CFGS.formatTypes.toString()) || cfgName.equals(
-                      EP_CFGS.formatDispositions.toString()))) {
-                    value = toStringMapStringTypes((Map<String, String>)value,
-                          cfgName);
+                } else if (value instanceof Map &&
+                      (cfgName.toString().equals(EP_CFGS.formatTypes.toString())
+                      || cfgName.toString().equals(EP_CFGS.formatDispositions.toString())
+                      || cfgName.toString().equals(EP_CFGS.addHeaders.toString())
+                      )) {
+                    value = toStringMapStringTypes((Map<String, String>)value);
                 }
                 
                 sb.append(strAppend(createEPdotPropertyName(epName, cfgName)))
@@ -1070,11 +1156,12 @@ public class AppConfigurator {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
-                } else if (value instanceof Map && (cfgName.equals(
-                      EP_CFGS.formatTypes.toString()) || cfgName.equals(
-                      EP_CFGS.formatDispositions.toString()))) {
-                    value = toStringMapStringTypes((Map<String, String>)value,
-                          cfgName);
+                } else if (value instanceof Map &&
+                      (cfgName.toString().equals(EP_CFGS.formatTypes.toString())
+                      || cfgName.toString().equals(EP_CFGS.formatDispositions.toString())
+                      || cfgName.toString().equals(EP_CFGS.addHeaders.toString())
+                      )) {
+                    value = toStringMapStringTypes((Map<String, String>)value);
                 }
 
                 sb.append("<TR><TD>")

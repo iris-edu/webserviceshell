@@ -26,7 +26,10 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
@@ -56,7 +59,7 @@ public class Util {
               .replaceAll(Pattern.quote("/"), ".");
     }
 
-    public static String getUTCISO8601() {
+    public static String getCurrentUTCTimeISO8601() {
         return ISO_8601_ZULU_FORMAT.format((new GregorianCalendar()).getTime());
     }
 
@@ -101,6 +104,23 @@ public class Util {
         PropertyConfigurator.configure(file.getAbsolutePath());
     }
 
+    public static Map<String, String> createDefaultContentDisposition(
+          RequestInfo ri, String epName) throws Exception {
+        Map<String, String> headersMap = new HashMap<>();
+        try {
+            // createContentDisposition is from earlier version of WSS
+            // keep it as a default
+            String value = ri.createDefaultContentDisposition(epName);
+            headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
+        } catch (Exception ex) {
+            Util.logAndThrowException(ri, FdsnStatus.Status.INTERNAL_SERVER_ERROR,
+                  "Error creating Content-Disposition header value,"
+                        + " endpoint: " + epName,
+                  "Error, " + ServiceShellException.getErrorString(ex));
+        }
+        return headersMap;
+    }
+
     public static void updateWithCORSHeadersIfConfigured(RequestInfo ri, Map<String,
           String> headers) {
         if (ri.appConfig.isCorsEnabled()) {
@@ -122,7 +142,70 @@ public class Util {
 //                  "X-mycustomheader1, X-mycustomheader2");
 		}
     }
-    
+
+    /**
+     * Use Configured values to update response headers.
+     *
+     * @param ri
+     * @param headers - headers to be updated
+     * @param epName - endpoint name
+     * @throws java.lang.Exception
+     */
+    public static void updateWithEndpointHeaders(RequestInfo ri, Map<String,
+          String> headers, String epName) throws Exception {
+        Map<String, String> epHeaders = ri.appConfig.getEndpointHeaders(epName);
+
+        updateWithNewHeaders(headers, epHeaders);
+    }
+
+    /**
+     * Do case insensitive key match to update old with new.
+     *
+     * @param headers
+     * @param newHeaders
+     */
+    public static void updateWithNewHeaders(Map<String, String> headers,
+          Map<String, String> newHeaders) {
+
+        Map<String, String> upperToOriginal = new HashMap();
+        for (String key : headers.keySet()) {
+            upperToOriginal.put(key.toUpperCase(), key);
+        }
+
+        String updateKey;
+        for (String key : newHeaders.keySet()) {
+            if (upperToOriginal.containsKey(key.toUpperCase())) {
+                // key matches one in exsting headers, but use original key
+                updateKey = upperToOriginal.get(key.toUpperCase());
+            } else {
+                // key is new
+                updateKey = key;
+            }
+            headers.put(updateKey, newHeaders.get(key));
+        }
+    }
+
+    public static void updateDispositionPerFormatType(RequestInfo ri, Map<String,
+          String> headers, String epName, String formatTypeKey) throws Exception {
+
+        String value = ri.appConfig.getDisposition(epName, formatTypeKey);
+
+        if (null != value) {
+            Map<String, String> newMap = new HashMap();
+            newMap.put(CONTENT_DISPOSITION.toString(), value);
+            updateWithNewHeaders(headers, newMap);
+        }
+        // null is ok, i.e. no update
+    }
+
+    public static void updateWithApplicationHeaders(Map<String, String> headers,
+          Map<String, String> appHeaders) {
+
+        if (null != appHeaders) {
+           updateWithNewHeaders(headers, appHeaders);
+        }
+    }
+
     public static void setResponseHeaders(Response.ResponseBuilder rb,
           Map<String, String> headersIn) {
         if (headersIn != null) {

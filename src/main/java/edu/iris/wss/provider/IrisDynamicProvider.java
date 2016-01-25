@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -362,8 +363,12 @@ public class IrisDynamicProvider {
             Response.ResponseBuilder builder = Response.status(Status.OK)
                   .type("text/plain");
 
-            Map<String, String> headersMap = new HashMap<>();
+            Map<String, String> headersMap = Util.createDefaultContentDisposition(
+              ri, requestedEpName);
             Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+            Util.updateWithEndpointHeaders(ri, headersMap, requestedEpName);
+            Util.updateDispositionPerFormatType(ri, headersMap, requestedEpName,
+                  formatTypeKey);
             Util.setResponseHeaders(builder, headersMap);
 
             return builder.build();
@@ -374,11 +379,11 @@ public class IrisDynamicProvider {
         // provide incoming media type to isdo in case the it is needed for
         // processing, the isdo can return the same value or possible a new
         // value.
-		IrisProcessingResult irr = isdo.getProcessingResults(ri, wssMediaType);
+		IrisProcessingResult ipr = isdo.getProcessingResults(ri, wssMediaType);
 
         // check for programming error
-        boolean isStatusNull = irr.fdsnSS == null;
-        boolean isMediaTypeNull = irr.wssMediaType == null;
+        boolean isStatusNull = ipr.fdsnSS == null;
+        boolean isMediaTypeNull = ipr.wssMediaType == null;
         if (isStatusNull || isMediaTypeNull) {
             String phrase = "";
             if (isStatusNull && isMediaTypeNull) {
@@ -391,17 +396,17 @@ public class IrisDynamicProvider {
 
             String briefMsg = isdo.getClass().getName()
                   + " class programming error, " + phrase + " null";
-            String detailedMsg = "Reported brief message: " + irr.briefErrMessage
-                  + "  detailed message: " + irr.detailedErrMessage;
+            String detailedMsg = "Reported brief message: " + ipr.briefErrMessage
+                  + "  detailed message: " + ipr.detailedErrMessage;
 
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   briefMsg, detailedMsg);
         }
 
-        Status status = Util.adjustByCfg(irr.fdsnSS, ri);
+        Status status = Util.adjustByCfg(ipr.fdsnSS, ri);
         if (status != Status.OK) {
-            Util.logAndThrowException(ri, status, irr.briefErrMessage,
-                  irr.detailedErrMessage);
+            Util.logAndThrowException(ri, status, ipr.briefErrMessage,
+                  ipr.detailedErrMessage);
 		}
 
         // TBD - look for an occurrances of irr.wssMediaType in formatTypes
@@ -411,40 +416,31 @@ public class IrisDynamicProvider {
 //            + "...");
 
         Response.ResponseBuilder builder = Response.status(status)
-              .type(irr.wssMediaType)
-              .entity(irr.entity);
+              .type(ipr.wssMediaType)
+              .entity(ipr.entity);
 
-        // establish default headers for this request, update map in order of
-        // of precedence
-        Map<String, String> headersMap = new HashMap<>();
-        try {
-            // createContentDisposition is from earlier version of WSS
-            // keep it as a default
-            String value = ri.createDefaultContentDisposition(requestedEpName);
-            headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
-        } catch (Exception ex) {
-            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Error creating Content-Disposition header value,"
-                        + " endpoint: " + requestedEpName,
-                  "Error, " + ServiceShellException.getErrorString(ex));
-        }
-
+        // establish headers for this request, update map in order of
+        // of precedence, starting with defaults.
+        //
+        // default CONTENT_DISPOSITION
+        Map<String, String> headersMap = Util.createDefaultContentDisposition(
+              ri, requestedEpName);
         Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
 
-        // TBD add new feature, content-distribution from config by endpoint
+        // update headers in order
+        Util.updateWithEndpointHeaders(ri, headersMap, requestedEpName);
+        Util.updateDispositionPerFormatType(ri, headersMap, requestedEpName,
+              formatTypeKey);
+        // highest priority, use any headers from user processes
+        Util.updateWithApplicationHeaders(headersMap, ipr.headers);
 
-        // content-distribution from config by format type per endpoint
-        String value = ri.appConfig.getDisposition(requestedEpName, formatTypeKey);
-        if (null != value) {
-            headersMap.put(CONTENT_DISPOSITION.toLowerCase(), value);
-        }
-        
-        // highest priority, add any headers from user processes
-        if (null != irr.headers) {
-            headersMap.putAll(irr.headers);
-        }
 
         Util.setResponseHeaders(builder, headersMap);
+
+            for (String key : headersMap.keySet()) {
+                System.out.println("^^^^^^^^^^^^^^^^^^ key: " + key + "  val: " + headersMap.get(key));
+            }
+
 
         // manual test code
         Response response = builder.build();

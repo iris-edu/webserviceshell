@@ -205,6 +205,8 @@ public class LoggerUtils {
 	public static String makeUsageLogString(WebUsageItem wui) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        System.out.println("---------------------------------- timezone: " + sdf.getTimeZone());
+        System.out.println("---------------------------------- sys props user.timezone: " + System.getProperty("user.timezone"));
 
 		StringBuffer sb = new StringBuffer();
 		

@@ -224,7 +224,7 @@ public  class RequestInfo {
         sb.append("; filename=");
         sb.append(appConfig.getAppName());
         sb.append("_");
-        sb.append(Util.getUTCISO8601());
+        sb.append(Util.getCurrentUTCTimeISO8601());
                 
         if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             // put suffix when not binary

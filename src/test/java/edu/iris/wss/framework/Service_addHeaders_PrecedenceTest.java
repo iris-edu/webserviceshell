@@ -53,23 +53,23 @@ import static org.junit.Assert.assertTrue;
  *
  * @author mike
  */
-public class Service_ContentDisposition_PrecedenceTest  {
+public class Service_addHeaders_PrecedenceTest  {
 
-    public static final Logger logger = Logger.getLogger(Service_ContentDisposition_PrecedenceTest.class);
+    public static final Logger logger = Logger.getLogger(Service_addHeaders_PrecedenceTest.class);
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
 
     // set notional webapp name
 //    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
-    private static final String SOME_CONTEXT = "/tstcm2";
+    private static final String SOME_CONTEXT = "/tstbasepath3";
 
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
 
     private static HttpServer server;
 
-    public Service_ContentDisposition_PrecedenceTest() {
+    public Service_addHeaders_PrecedenceTest() {
     }
 
     @BeforeClass
@@ -100,7 +100,7 @@ public class Service_ContentDisposition_PrecedenceTest  {
       
         server.start();
         System.out.println("********** started GrizzlyWebServer, class: "
-            + Service_ContentDisposition_PrecedenceTest.class.getName());
+            + Service_addHeaders_PrecedenceTest.class.getName());
         System.out.println("********** started GrizzlyWebServer, config: "
             + server.getServerConfiguration());
 
@@ -113,7 +113,7 @@ public class Service_ContentDisposition_PrecedenceTest  {
     @AfterClass
     public static void tearDownClass() {
         System.out.println("********** stopping grizzlyWebServer, class: "
-            + Service_ContentDisposition_PrecedenceTest.class.getName());
+            + Service_addHeaders_PrecedenceTest.class.getName());
         logger.info("*********** stopping grizzlyWebServer");
         server.shutdownNow();
     }
@@ -149,11 +149,11 @@ public class Service_ContentDisposition_PrecedenceTest  {
     /**
      * Test for default settings of Content-Disposition
      * - WSS sets default
-     * - no override in config addHeaders
+     * - override in config addHeaders
      * - no override in config formatDispostions
      * - no override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_default_ContentDisp() throws Exception {
@@ -166,7 +166,11 @@ public class Service_ContentDisposition_PrecedenceTest  {
 
         assertEquals(200, response.getStatus());
         assertEquals("text/plain", response.getMediaType().toString());
-        assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
+
+        // with addHeaders configured with Content-Disposition, that value
+        // should override the default
+        //assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
+        assertTrue(response.getHeaderString("Content-Disposition").equals("some-addHeaders-CD-hdr"));
 
         webTarget = c.target(BASE_URI)
               .path("/test_CD3")
@@ -176,17 +180,24 @@ public class Service_ContentDisposition_PrecedenceTest  {
 
         assertEquals(200, response.getStatus());
         assertEquals("application/vnd.fdsn.mseed", response.getMediaType().toString());
-        assertTrue(response.getHeaderString("Content-Disposition").contains("attachment; filename="));
+//        assertTrue(response.getHeaderString("Content-Disposition").contains("attachment; filename="));
+        assertTrue(response.getHeaderString("Content-Disposition").equals("some-addHeaders-CD-hdr"));
+
+        // other addHeader header should be present if not overridden
+        assertTrue(response.getHeaderString("dummyhdr4").equals("dummyhdr4-for-dummyhdr4"));
     }
+
+    // for the remaining tests, they should override the addHeaders version
+    // of Content-Disposition
 
     /**
      * Test for default settings of Content-Disposition
      * - WSS sets default
-     * - no override in config addHeaders
+     * - override in config addHeaders
      * - override in config formatDispostions
      * - no override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_formatDispositions() throws Exception {
@@ -210,16 +221,19 @@ public class Service_ContentDisposition_PrecedenceTest  {
         assertEquals(200, response.getStatus());
         assertEquals("application/octet-stream", response.getMediaType().toString());
         assertTrue(response.getHeaderString("Content-Disposition").equals("some-contentdisp-for-binary"));
+
+        // other addHeader header should be present if not overridden
+        assertTrue(response.getHeaderString("dummyhdr4").equals("dummyhdr4-for-dummyhdr4"));
     }
 
     /**
      * Test for default settings of Content-Disposition
      * - WSS sets default
-     * - no override in config addHeaders
+     * - override in config addHeaders
      * - override in config formatDispostions
      * - override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_handler_Dispositions() throws Exception {
@@ -250,6 +264,9 @@ public class Service_ContentDisposition_PrecedenceTest  {
         assertEquals("application/json", response.getMediaType().toString());
         assertTrue(response.getHeaderString("Content-Disposition").equals("override-json-settings"));
         assertTrue(response.getHeaderString("dummy-header").equals("dummy-value"));
+
+        // other addHeader header should be present if not overridden
+        assertTrue(response.getHeaderString("dummyhdr4").equals("dummyhdr4-for-dummyhdr4"));
     }
 
     // create a config file to test against on a target test path
@@ -307,6 +324,10 @@ public class Service_ContentDisposition_PrecedenceTest  {
         sb.append("    binary: some-contentdisp-for-binary,\\").append("\n");
         sb.append("    json: some-contentdisp-for-json, \\").append("\n");
         sb.append("    geocsv: some-contentdisp-for-geocsv").append("\n");
+        sb.append("\n");
+        sb.append("test_CD3.addHeaders = \\").append("\n");
+        sb.append("    Content-Disposition: some-addHeaders-CD-hdr,\\").append("\n");
+        sb.append("    dummyhdr4: dummyhdr4-for-dummyhdr4").append("\n");
         sb.append("\n");
         sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
         sb.append("##test_CD3.usageLog=false").append("\n");

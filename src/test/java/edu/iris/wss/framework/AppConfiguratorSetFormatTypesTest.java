@@ -25,7 +25,8 @@ public class AppConfiguratorSetFormatTypesTest {
     public void testForMSeExceptionInFormatTypesSetter() throws Exception {
         try {
             Map<String, String> map = thisAppCfg.createFormatTypes("");
-            thisAppCfg.setKeyValueMap(map, "miniseed", EP_CFGS.formatTypes.name());
+            thisAppCfg.setKeyValueMap(map, "miniseed", EP_CFGS.formatTypes.name(),
+                  true);
             fail("no colon try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -37,7 +38,7 @@ public class AppConfiguratorSetFormatTypesTest {
     public void testForZeroLengthExceptionInFormatTypesSetter() throws Exception {
         try {
             Map<String, String> map = thisAppCfg.createFormatTypes("");
-            thisAppCfg.setKeyValueMap(map, "", EP_CFGS.formatTypes.name());
+            thisAppCfg.setKeyValueMap(map, "", EP_CFGS.formatTypes.name(), true);
             fail("zero length try succeeded unexpectedly,"
                     + " should have had an Exception");
         } catch (Exception ex) {
@@ -49,8 +50,8 @@ public class AppConfiguratorSetFormatTypesTest {
     public void testForNullExceptionInFormatTypesSetter() throws Exception {
         try {
             Map<String, String> map = thisAppCfg.createFormatTypes("");
-            thisAppCfg.setKeyValueMap(map, null, EP_CFGS.formatTypes.name()
-            );
+            thisAppCfg.setKeyValueMap(map, null, EP_CFGS.formatTypes.name(),
+                  true);
             fail("null try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -65,7 +66,8 @@ public class AppConfiguratorSetFormatTypesTest {
                 + " TEXT: text/plain";
         try {
             Map<String, String> map = thisAppCfg.createFormatTypes("");
-            thisAppCfg.setKeyValueMap(map, formatTypes, EP_CFGS.formatTypes.name());
+            thisAppCfg.setKeyValueMap(map, formatTypes, EP_CFGS.formatTypes.name(),
+                  true);
             fail("comma try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
@@ -80,7 +82,8 @@ public class AppConfiguratorSetFormatTypesTest {
                 + " TEXT: text/plain";
         try {
             Map<String, String> map = thisAppCfg.createFormatTypes("");
-            thisAppCfg.setKeyValueMap(map, formatTypes, EP_CFGS.formatTypes.name());
+            thisAppCfg.setKeyValueMap(map, formatTypes, EP_CFGS.formatTypes.name(),
+                  true);
             fail("colon try succeeded unexpectedly, should have had an Exception");
         } catch (Exception ex) {
             // noop - this is expected result
