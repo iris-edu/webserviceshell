@@ -144,6 +144,7 @@ public class Wss {
     @GET
     public Response rootpath() {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        ri.statsKeeper.logGet();
 
     	String docUrl = ri.appConfig.getRootServiceDoc();
     	
@@ -222,6 +223,7 @@ public class Wss {
 	@GET @Produces("text/plain")
 	public Response getWssVersion() throws IOException {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        ri.statsKeeper.logGet();
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
@@ -238,6 +240,7 @@ public class Wss {
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
     	RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        ri.statsKeeper.logGet();
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)
@@ -254,6 +257,7 @@ public class Wss {
 	@GET @Produces("text/plain")
 	public Response getwho() {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
+        ri.statsKeeper.logGet();
 
         ResponseBuilder builder = Response.status(Status.OK)
               .type(MediaType.TEXT_PLAIN)

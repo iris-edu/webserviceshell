@@ -118,9 +118,9 @@ public class CmdProcessor extends IrisProcessor {
 	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
         processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
         processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
-        if (WebUtils.getAuthenticatedUsername(ri.requestHeaders) != null) {
-            processBuilder.environment().put("AUTHENTICATEDUSERNAME",
-                    WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
+		if (AppConfigurator.isOkString(username)) {
+            processBuilder.environment().put("AUTHENTICATEDUSERNAME", username);
         }
 
 		if (processBuilder == null) {
