@@ -82,7 +82,7 @@ public class IncomingHeaders extends IrisProcessor {
             }
         }
 
-        IrisProcessingResult ipr = IrisProcessingResult.createSuccessfulResult(
+        IrisProcessingResult ipr = IrisProcessingResult.processString(
               sb.toString());
 
         return ipr;

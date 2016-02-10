@@ -22,6 +22,7 @@ package edu.iris.wss.provider;
 
 import edu.iris.wss.framework.FdsnStatus;
 import java.util.Map;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
 /**
@@ -60,30 +61,53 @@ public class IrisProcessingResult {
 ////        this.headers = headers;
 ////    }
 
-    public static IrisProcessingResult createSuccessfulResult(
-          StreamingOutput so, String wssMediaType, Map<String, String> headers) {
-
+    /**
+     * Method for standard FDSN error messages.
+     *
+     * @param fdsnStatus - Error status
+     * @param message - A relatively short, user oriented  error message.
+     * @return
+     */
+    public static IrisProcessingResult processError(FdsnStatus.Status fdsnStatus,
+          String message) {
         IrisProcessingResult ipr = new IrisProcessingResult();
-        ipr.fdsnSS = FdsnStatus.Status.OK;
 
-        ipr.entity = so;
-        ipr.wssMediaType = wssMediaType;
-        ipr.headers = headers;
+        ipr.fdsnSS = fdsnStatus;
+
+        // keep entity type consistent with media type, don't need to set
+        // entity content as WSS build new message in standard FDSN form.
+        ipr.entity = "";
+        ipr.wssMediaType = MediaType.TEXT_PLAIN;
+        ipr.headers = null;
+
+        ipr.briefErrMessage = message;
+        ipr.detailedErrMessage = null;
 
         return ipr;
     }
 
-    public static IrisProcessingResult createErrorResult(
-          FdsnStatus.Status fdsnSS, String wssMediaType,
-          Map<String, String> headers, String briefMessage,
-          String detailedMessage) {
+    /**
+     * Method for standard FDSN error message.
+     *
+     * @param fdsnStatus
+     * @param headers - may be null
+     * @param briefMessage - A relatively short, user oriented  error message.
+     * @param detailedMessage - More detailed information, more system oriented
+     *                          for identifying error location or WSS status.
+     * @return
+     */
+    public static IrisProcessingResult processError(FdsnStatus.Status fdsnStatus,
+          String briefMessage, String detailedMessage) {
 
         IrisProcessingResult ipr = new IrisProcessingResult();
 
-        ipr.fdsnSS = fdsnSS;
+        ipr.fdsnSS = fdsnStatus;
+
+        // keep entity type consistent with media type, don't need to set
+        // entity content as WSS build new message in standard FDSN form.
         ipr.entity = "";
-        ipr.wssMediaType = wssMediaType;
-        ipr.headers = headers;
+        ipr.wssMediaType = MediaType.TEXT_PLAIN;
+        ipr.headers = null;
 
         ipr.briefErrMessage = briefMessage;
         ipr.detailedErrMessage = detailedMessage;
@@ -91,14 +115,71 @@ public class IrisProcessingResult {
         return ipr;
     }
 
-    public static IrisProcessingResult createSuccessfulResult(String str) {
-
+    /**
+     * Create result success result object for a streaming object.
+     *
+     * @param so - streaming object for data to be written to client
+     * @param wssMediaType - corresponding media type for this streaming object
+     * @return
+     */
+    public static IrisProcessingResult processStream(StreamingOutput so,
+          String wssMediaType) {
         IrisProcessingResult ipr = new IrisProcessingResult();
 
         ipr.fdsnSS = FdsnStatus.Status.OK;
-        ipr.entity = str;
-        ipr.wssMediaType = "text/plain";
+
+        ipr.entity = so;
+        ipr.wssMediaType = wssMediaType;
         ipr.headers = null;
+
+        ipr.briefErrMessage = null;
+        ipr.detailedErrMessage = null;
+
+        return ipr;
+    }
+
+    /**
+     * Create result success result object for a streaming object.
+     *
+     * @param so - streaming object for data to be written to client
+     * @param wssMediaType - corresponding media type for this streaming object
+     * @param headers - corresponding headers that may override headers created
+     *                  by WSS.
+     * @return
+     */
+    public static IrisProcessingResult processStream(StreamingOutput so,
+          String wssMediaType, Map<String, String> headers) {
+        IrisProcessingResult ipr = new IrisProcessingResult();
+
+        ipr.fdsnSS = FdsnStatus.Status.OK;
+
+        ipr.entity = so;
+        ipr.wssMediaType = wssMediaType;
+        ipr.headers = headers;
+
+        ipr.briefErrMessage = null;
+        ipr.detailedErrMessage = null;
+
+        return ipr;
+    }
+
+    /**
+     * Create result success result object for a string object.
+     *
+     * @param str
+     * @return
+     */
+    public static IrisProcessingResult processString(String str) {
+        IrisProcessingResult ipr = new IrisProcessingResult();
+
+        ipr.fdsnSS = FdsnStatus.Status.OK;
+
+        ipr.entity = str;
+        ipr.wssMediaType = MediaType.TEXT_PLAIN;
+        ipr.headers = null;
+
+        ipr.briefErrMessage = null;
+        ipr.detailedErrMessage = null;
 
         return ipr;
     }

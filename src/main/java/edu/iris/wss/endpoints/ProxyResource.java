@@ -68,9 +68,8 @@ public class ProxyResource extends IrisProcessor {
                       + ".getProcessingResults -  exception: " + ex;
 
                 IrisProcessingResult ipr =
-                      IrisProcessingResult.createErrorResult(
-                            FdsnStatus.Status.NO_CONTENT, MediaType.TEXT_PLAIN,
-                            null, briefMsg, detailedMsg);
+                      IrisProcessingResult.processError(
+                            FdsnStatus.Status.NO_CONTENT, briefMsg, detailedMsg);
 				return ipr;
         	}
         	
@@ -93,9 +92,8 @@ public class ProxyResource extends IrisProcessor {
     			}
         	};
             
-            IrisProcessingResult ipr =
-                  IrisProcessingResult.createSuccessfulResult(
-                        so, wssMediaType, null);
+            IrisProcessingResult ipr = IrisProcessingResult.processStream(so,
+                  wssMediaType, null);
 
     		return ipr;
     	}
@@ -110,9 +108,8 @@ public class ProxyResource extends IrisProcessor {
               + AppConfigurator.EP_CFGS.proxyURL.toString()
               + " in -service.cfg file";
         
-        IrisProcessingResult ipr = IrisProcessingResult.createErrorResult(
-              FdsnStatus.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_PLAIN,
-              null, briefMsg, detailedMsg);
+        IrisProcessingResult ipr = IrisProcessingResult.processError(
+              FdsnStatus.Status.INTERNAL_SERVER_ERROR, briefMsg, detailedMsg);
 
         return ipr;
     }

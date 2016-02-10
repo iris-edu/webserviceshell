@@ -264,8 +264,8 @@ public class CmdProcessor extends IrisProcessor {
                             }
                         };
                         IrisProcessingResult ipr =
-                              IrisProcessingResult.createSuccessfulResult(
-                                    so, wssMediaType, hdrMap);
+                              IrisProcessingResult.processStream(so,
+                                    wssMediaType, hdrMap);
 
                         return ipr;
                     } else {
@@ -302,8 +302,8 @@ public class CmdProcessor extends IrisProcessor {
                       + "  exitDetailedMsg: " + exitDetailedMsg);
 
                 IrisProcessingResult ipr =
-                      IrisProcessingResult.createErrorResult(exitStatus,
-                            wssMediaType, null, briefMessage, exitDetailedMsg);
+                      IrisProcessingResult.processError(exitStatus,
+                            briefMessage, exitDetailedMsg);
                 return ipr;
             }
 
