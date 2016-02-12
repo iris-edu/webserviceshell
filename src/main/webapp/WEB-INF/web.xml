@@ -3,42 +3,28 @@
 	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	id="WebApp_ID" version="3.0">
+
 	<display-name>webserviceshell</display-name>
-  <!-- 20140918 - deactivated activation here in the web.xml file in favor of
-       using WebServlet annotaion in Log4jInit.java, 
-       groupId edu.iris.wss  artifactId IrisWSSLog4jInit must be in the pom
-       and loaded into the war file so that log4j gets initialized correctly -->
-	<!--servlet>
-		<servlet-name>log4j-init</servlet-name>
-		<servlet-class>edu.iris.wss.framework.Log4jInit</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet-->
+
 	<servlet>
-		<servlet-name>Jersey REST Service</servlet-name>
-		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 
 		<init-param>
-			<param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+            <param-name>jersey.config.server.wadl.disableWadl</param-name>
 			<param-value>true</param-value>
 		</init-param>
 
-		<init-param>
-			<param-name>com.sun.jersey.config.feature.Redirect</param-name>
-			<param-value>true</param-value>
-		</init-param>
-
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>edu.iris.wss</param-value>
-		</init-param>
-
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>1</load-on-startup>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>Jersey REST Service</servlet-name>
+		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
+
+    <session-config>
+        <tracking-mode>URL</tracking-mode>
+    </session-config>
 
 	<filter>
 		<filter-name>Remote Address Filter</filter-name>
@@ -50,7 +36,7 @@
 	</filter>
 	<filter-mapping>
 		<filter-name>Remote Address Filter</filter-name>
-		<url-pattern>/status</url-pattern>
+		<url-pattern>/wssstatus</url-pattern>
 	</filter-mapping>
 
 	<security-role>
@@ -75,6 +61,7 @@
 	</login-config>
 
 	<listener>
+        <!-- used to shutdown JMS when it is used for logging -->
 		<listener-class>edu.iris.wss.framework.AppContextListener</listener-class>
 	</listener>
 </web-app>

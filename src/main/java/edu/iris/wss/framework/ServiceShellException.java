@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -19,99 +19,120 @@
 
 package edu.iris.wss.framework;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-
-import edu.iris.wss.IrisStreamingOutput.ProcessStreamingOutput;
 import edu.iris.wss.framework.FdsnStatus.Status;
-
 import org.apache.log4j.Logger;
-
 import edu.iris.wss.utils.LoggerUtils;
 
 public class ServiceShellException extends WebApplicationException {
-	
+
 	private static final long serialVersionUID = 1L;
 	public static final Logger logger = Logger.getLogger(ServiceShellException.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
+    public static final String usageDetailsSignature = "Usage Details ...";
 
 	public ServiceShellException(final Status status) {
         // need this constructor for 204, otherwise, if entity or type is
         // used in builder, Jersey appears to convert the status to 200
 		super(Response.status(status).build());
 	}
-	
+
     public ServiceShellException(final Status status, final String message) {
+        // Note: when running in junit with Grizzley server, the content in
+        //       message is not passed threw to the end reponse shown externally
         super(new Throwable("throwable - " + message), Response.status(status).
            entity(message + "\n").type("text/plain").build());
     }
-    
+
     public static void logAndThrowException(RequestInfo ri, Status status, String message) {
     	if (message != null)
     		logAndThrowException(ri, status, message, null);
         else {
-            // This should not happen, it means WSS is inconsistent about setting
-            // values for message earlier in the call stack
+            // This probably should not happen, it implies a programmer error
+            // either in the a WSS call sequence or the from external code
+            // via endpoint the public interfaces.
+            //
+            // make a new message and explain the problem
             Thread.dumpStack();
-            String newMsg = "*** note, WSS warning, received unexpected null message";
+            String newMsg = "*** note, WSS warning, a possible programing error"
+                  + " has occurred - a null error message was received, along"
+                  +  "with Status: " + status;
             logAndThrowException(ri, status, newMsg, null);
         }
     }
 
-    public static final String usageDetailsSignature = "Usage Details ...";
-    
-    public static void logAndThrowException(RequestInfo ri, Status status, String message, Exception e) {
-    	
-    	if (ri.workingSubdirectory != null) {
-    		ProcessStreamingOutput.deleteTempDirectory(new File(ri.workingSubdirectory));
-    	}
-    	
+    public static void logAndThrowException(RequestInfo ri, Status status,
+          String briefMsg, String detailedMsg) {
+
     	ri.statsKeeper.logError();
-    	
-    	logger.error(message + getErrorString(e));
-    	
-   		LoggerUtils.logWssUsageError(ri, null, 0L, 0L, message, status.getStatusCode(), null);
-		
-    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("Error " + status.getStatusCode());
-    	
-    	int index = message.indexOf(usageDetailsSignature);
-    	if (index == -1)
-   			sb.append(": " + message);
-    	else 
-    		sb.append(": " + message.substring(0, index));
-    	
-    	if (e != null) sb.append("\n" + getErrorString(e));
-    	
-    	sb.append("\n\n" + "Request:\n");
-    	sb.append(ri.request.getRequestURL());
-    	String qs = ri.request.getQueryString();
-    	if ((qs != null) && (!qs.equals("")))
-    		sb.append("?" + qs);
-    	
-    	sb.append("\n\n" + "Request Submitted:\n");
-    	sb.append(sdf.format(new Date()));
-    	
-   	
-    	sb.append("\n\nService version:\n");
-    	sb.append(ri.appConfig.getAppName() + ": v " + ri.appConfig.getVersion() + "\n");
-    	
+
+////    	logger.error(briefMsg + getErrorString(e));
+        logger.error(briefMsg + "  detailed: " + detailedMsg);
+
+        LoggerUtils.logWssUsageError(ri, null, 0L, 0L, briefMsg,
+              status.getStatusCode(), ri.getEndpointNameForThisRequest());
+
+        String errMsg = createFdsnErrorMsg(status, briefMsg, detailedMsg,
+          ri.request.getRequestURL().toString(), ri.request.getQueryString(),
+          ri.appConfig.getAppName(), ri.appConfig.getAppVersion());
+
 //    	sb.append(WebUtils.getCrazyHostPort(ri.request));
 //    	logger.error(sb.toString());
-        if (status == status.NO_CONTENT) {
+        if (status == Status.NO_CONTENT) {
             // for 204, need different constructor with no message
             // otherwise Jersey changes 204 to 200
             throw new ServiceShellException(status);
         } else {
-            throw new ServiceShellException(status, sb.toString());
+            throw new ServiceShellException(status, errMsg);
         }
     }
-    
+
+    public static String createFdsnErrorMsg(Status status, String briefMsg,
+          String detailMsg, String requestURL, String requestQueryString,
+          String appName, String appVersion) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd kk:mm:ss z");
+        sdf.setTimeZone(Util.UTZ_TZ);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Error ").append(status.getStatusCode());
+
+        int index = briefMsg.indexOf(usageDetailsSignature);
+        if (index == -1) {
+            sb.append(": ").append(briefMsg);
+        } else {
+            sb.append(": ").append(briefMsg.substring(0, index));
+        }
+
+        if (Util.isOkString(detailMsg)) {
+        sb.append("\n\n")
+              .append("More Details:\n")
+              .append(detailMsg);
+        }
+
+        sb.append("\n\n")
+              .append("Request:\n")
+              .append(requestURL);
+        if (Util.isOkString(requestQueryString)) {
+            sb.append("?" + requestQueryString);
+        }
+
+        sb.append("\n\n")
+              .append("Request Submitted:\n")
+              .append(sdf.format(new Date()));
+
+        sb.append("\n\n")
+              .append("Service version:\n")
+              .append("Service: ")
+              .append(appName)
+              .append("  version: ")
+              .append(appVersion)
+              .append("\n");
+
+        return sb.toString();
+    }
+
     public static String getErrorString(Throwable e) {
         StringBuilder sb = new StringBuilder();
 
@@ -120,8 +141,9 @@ public class ServiceShellException extends WebApplicationException {
         }
 
         if (e.getMessage() != null) {
-            sb.append("  exception: ");
-            sb.append(e.getMessage() + "\n");
+            sb.append("  exception: ")
+                  .append(e.getMessage())
+                  .append("\n");
         }
 
         if (e.getCause() != null) {

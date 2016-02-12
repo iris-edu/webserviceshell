@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -23,10 +23,6 @@ import java.io.StringReader;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import javax.xml.bind.DatatypeConverter;
@@ -47,44 +43,7 @@ public class WebUtils {
 		}
 		return hostname;
 	}
-	
-	public static String getContextPath(HttpServletRequest request) {
-		return request.getContextPath();
-	}
-	
-//	// Returns only the last part after the '/' character of the context path
-//	// which may include slash characters, etc.
-//	public static String getWebAppName(HttpServletRequest request) {
-//		String cp = getContextPath(request);
-//		int index = cp.lastIndexOf('/');
-//		return cp.substring(index + 1);
-//	}
-	
-	public static String getConfigFileBase(ServletContext context) {
-		String base = context.getContextPath();
-		String version = null;
-		// Looking for a 'Version' part of the context path. We're going to remove it if it exists
-		// and use it later in constructing the  'base' of the config file names.
-		
-		// Look for final '/' a number and end of line.  If found, store the number as version
-		// and remove the entire match to get the full context path, minus version.
-		Pattern pat = Pattern.compile("/([0-9])$");
-		Matcher mat = pat.matcher(base);
-		if (mat.find()) {
-			version = mat.group(1);
-			base = base.substring(0, mat.start());
-		}
-				
-		// Get everything at the end up to the last '/' character. I.e. the 'base'
-		base = base.substring(base.lastIndexOf('/') + 1);
-	
-		
-		if (version != null) {
-			base += "-" + version;
-		} 
-		return base;
-	}
-	
+
 	public static String getUserAgent(HttpServletRequest request) {
 		return request.getHeader("user-agent");
 	}
@@ -139,7 +98,7 @@ public class WebUtils {
 			return null;
 		}
 		
-	   	if ((entries == null) || (entries.size() == 0))
+        if ((entries == null) || (entries.isEmpty()))
 	   		return null;
 
 	   	String entry = entries.get(0);
@@ -165,7 +124,7 @@ public class WebUtils {
 		   		String ps[] =  props.split(",");
 		   		
 	   			StringBuilder sb = new StringBuilder();
-		   		for (String s: ps) sb.append(s + "\n");
+                for (String s: ps) sb.append(s).append("\n");
 		   		
 		   		Properties p = new Properties();
 		   		p.load(new StringReader(sb.toString()));

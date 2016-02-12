@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -25,24 +25,20 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import javax.servlet.http.HttpServletRequest;
 
 public  class RequestInfo {
 
 	public UriInfo uriInfo;
 	public javax.servlet.http.HttpServletRequest request;
 	public HttpHeaders requestHeaders;
-	
-	public static enum CallType { NORMAL, CATALOGS, CONTRIBUTORS, COUNTS };
-	public CallType callType = CallType.NORMAL;
-	
+
 	public boolean perRequestUse404for204 = false;
     
     // Note: The setter should be validating this string, trim it
     //       and set to uppercase. This should enable any gets of
     //       this value to not need to trim, validate, etc.
-	public String perRequestOutputTypeKey = null;
+	public String perRequestFormatTypeKey = null;
 	
 	public String postBody = null;
 	
@@ -50,42 +46,99 @@ public  class RequestInfo {
 	public ParamConfigurator paramConfig;
 	public StatsKeeper statsKeeper;
 	
-	public SingletonWrapper sw;
-	
-	// Used (set) by ProcessStreamingOutput class on ZIP output
-	public String workingSubdirectory = null;
-    
+	public WssSingleton sw;
+
+    private boolean isWriteToMiniseed = false;
+
+    public byte[] HEADER_START_IDENTIFIER_BYTES;
+    public byte[] HEADER_END_IDENTIFIER_BYTES;
+
     // as per StackOverflow, make sure the object is fully created before
     // passing it to another constructor, use createInstance factory to create.
     private RequestInfo() {
-        // noop
     }
     
-    public static RequestInfo createInstance(SingletonWrapper sw,
+    public static RequestInfo createInstance(WssSingleton sw,
 			UriInfo uriInfo, 
 			javax.servlet.http.HttpServletRequest request,
 			HttpHeaders requestHeaders) {
+        
         RequestInfo ri = new RequestInfo();
+        
         ri.sw = sw;
+        ri.HEADER_START_IDENTIFIER_BYTES = sw.HEADER_START_IDENTIFIER_BYTES;
+        ri.HEADER_END_IDENTIFIER_BYTES = sw.HEADER_END_IDENTIFIER_BYTES;
         ri.uriInfo = uriInfo;
         ri.request = request;
 		ri.requestHeaders = requestHeaders;
 		ri.appConfig = sw.appConfig;
 		ri.paramConfig = sw.paramConfig;
 		ri.statsKeeper = sw.statsKeeper;
-		
-        // TBD since this is configurartion, look at doing this once at startup.
-		if ((ri.appConfig.getHandlerProgram() == null) && 
-				(ri.appConfig.getStreamingOutputClassName() == null)) {
-			ServiceShellException.logAndThrowException(ri,
-                    Status.INTERNAL_SERVER_ERROR, 
-					"Service configuration problem,"
-                    + " handler program and StreamingOutputClassName not defined");
-		}
+        
+        String trialEndpoint = getEndpointNameForThisRequest(ri.request);
+
+        // need this to avoid checking for endpoint information when global
+        // (i.e. non-endpoint) request are being handled
+        if (isThisEndpointConfigured(request, sw.appConfig)) {
+            try {
+                if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
+                      || ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
+                    if (ri.appConfig.isLogMiniseedExtents(trialEndpoint)) {
+                        ri.isWriteToMiniseed = true;
+                    } else {
+                        ri.isWriteToMiniseed = false;
+                    }
+                }
+            } catch (Exception ex) {
+                String msg = "Service configuration problem, possibly missing"
+                      + " type definition for MINISEED for endpointName: "
+                      + trialEndpoint;
+                System.out.println("^^^^^ msg: " + msg);
+                System.out.println("^^^^^ msg ex: " + ex);
+                Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR, msg,
+                      "Exception: " + ex.getMessage());
+            }
+        }
         
         return ri;
     }
+
+    public boolean isWriteToMiniseed() {
+        return isWriteToMiniseed;
+    }
+    /**
+     * This method returns zero length string when the request is at root
+     * on the base URL or or base URL minus a trailing /
+     * 
+     * @return 
+     */
+    public String getEndpointNameForThisRequest() {
+        return getEndpointNameForThisRequest(request);
+    }
+
+    public static String getEndpointNameForThisRequest(HttpServletRequest req) {
+        String contextPath = req.getSession().getServletContext().getContextPath();
+        String requestURI = req.getRequestURI();
     
+        // remove any leading /
+        String epName = requestURI.substring(contextPath.length())
+              .replaceFirst(java.util.regex.Pattern.quote("/"), "");
+        
+        return epName;
+    }
+
+    public boolean isThisEndpointConfigured() {
+        return isThisEndpointConfigured(request, appConfig);
+    }
+
+    public static boolean isThisEndpointConfigured(HttpServletRequest req,
+          AppConfigurator appCfg) {
+        String trialEpName = getEndpointNameForThisRequest(req);
+        
+        return trialEpName.length() > 0
+              && appCfg.isThisEndpointConfigured(trialEpName);
+    }
+
     // For testing only
     protected RequestInfo(AppConfigurator appConfig) {
         this.appConfig = appConfig;
@@ -94,21 +147,27 @@ public  class RequestInfo {
     /**
      * Validate and store the value from format parameter in query
      * 
+     * @param epName
      * @param trialKey
      * @throws Exception 
      */
-	public void setPerRequestOutputType(String trialKey) throws Exception {
+	public void setPerRequestFormatType(String epName, String trialKey) throws Exception {
         if (trialKey == null) {
-            throw new Exception("format value is null");
+            throw new Exception("format type requested is null");
         }
         // Validate of the value in query &format parameter
         String key = trialKey.trim().toUpperCase();
-        
-        if (appConfig.isConfiguredForTypeKey(key)) {
-            this.perRequestOutputTypeKey = key;
+
+        if (appConfig.isConfiguredForTypeKey(epName, key)) {
+            this.perRequestFormatTypeKey = key;
         } else {
-            throw new Exception("Unrecognized format value: " + trialKey);
+            throw new Exception("Unrecognized format type requested: " + trialKey);
         }
+        
+        isWriteToMiniseed = 
+              (perRequestFormatTypeKey.equals(InternalTypes.MSEED.toString())
+              || perRequestFormatTypeKey.equals(InternalTypes.MINISEED.toString()))
+              && appConfig.isLogMiniseedExtents(epName);
 	}
 	
     /**
@@ -117,29 +176,30 @@ public  class RequestInfo {
      * 
      * @return 
      */
-	public String getPerRequestOutputTypeKey() {
+	public String getPerRequestFormatTypeKey(String epName) throws Exception {
         // Note: Callers should expect the return value to be
         //       validated, trimmed, and uppercase
-        String key = perRequestOutputTypeKey;
+        String key = perRequestFormatTypeKey;
         if (key == null) {
-            key = appConfig.defaultOutputTypeKey();
+            key = appConfig.getDefaultFormatTypeKey(epName);
 		}
         return key;
 	}
     
-    public boolean isCurrentTypeKey(InternalTypes typeKey) {
-        return getPerRequestOutputTypeKey().equals(typeKey.toString());
+    private boolean isCurrentTypeKey(String epName, InternalTypes typeKey)
+          throws Exception {
+        return getPerRequestFormatTypeKey(epName).equals(typeKey.toString());
     }
     
     /**
-     * Override configuration outputType with request outputType if the
+     * Override configuration formatType with request formatType if the
      * request included &format.
      * 
      * @return 
      * @throws java.lang.Exception 
      */
-    public String getPerRequestMediaType() throws Exception {
-        return appConfig.getMediaType(getPerRequestOutputTypeKey());
+    public String getPerRequestMediaType(String epName) throws Exception {
+        return appConfig.getMediaType(epName, getPerRequestFormatTypeKey(epName));
     }
 
     /**
@@ -148,13 +208,12 @@ public  class RequestInfo {
      * 
      * @return 
      */
-    public String createContentDisposition() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public String createDefaultContentDisposition(String epName) throws Exception {
         StringBuilder sb = new StringBuilder();
         
-        if (isCurrentTypeKey(InternalTypes.MSEED)
-                || isCurrentTypeKey(InternalTypes.MINISEED)
-                || isCurrentTypeKey(InternalTypes.BINARY)) {
+        if (isCurrentTypeKey(epName, InternalTypes.MSEED)
+                || isCurrentTypeKey(epName, InternalTypes.MINISEED)
+                || isCurrentTypeKey(epName, InternalTypes.BINARY)) {
             sb.append("attachment");
         } else {
             sb.append("inline");
@@ -163,11 +222,11 @@ public  class RequestInfo {
         sb.append("; filename=");
         sb.append(appConfig.getAppName());
         sb.append("_");
-        sb.append(sdf.format(new Date()));
+        sb.append(Util.getCurrentUTCTimeISO8601());
                 
-        if (! isCurrentTypeKey(InternalTypes.BINARY)) {
-            // no suffix for binary
-            sb.append(".").append(getPerRequestOutputTypeKey().toLowerCase());
+        if (! isCurrentTypeKey(epName, InternalTypes.BINARY)) {
+            // put suffix when not binary
+            sb.append(".").append(getPerRequestFormatTypeKey(epName).toLowerCase());
         }
                 
         return sb.toString();

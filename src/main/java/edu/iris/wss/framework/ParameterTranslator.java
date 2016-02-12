@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -29,6 +29,8 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam;
 import edu.iris.wss.utils.WebUtils;
 import java.io.UnsupportedEncodingException;
+import java.util.Set;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 public class ParameterTranslator {
 
@@ -49,41 +51,49 @@ public class ParameterTranslator {
 	public final static String outputControlSignature1 = "output";
 	public final static String outputControlSignature2 = "format";
 
-	public final static String nodataSignature = "nodata";
+	public final static String NODATA_QUERY_PARAMETER = "nodata";
 	public final static String usernameSignature = "username";
 	public final static String postSignature = "STDIN";
 
 	public static final Logger logger = Logger
 			.getLogger(ParameterTranslator.class);
 
-	public static void parseQueryParams(ArrayList<String> cmd, RequestInfo ri)
+	public static void parseQueryParams(ArrayList<String> cmd, RequestInfo ri,
+          String epName)
 			throws Exception {
 
-		List<String> keys = new ArrayList<String>();
-		List<String> keysWithNoValue = new ArrayList<String>();
+		List<String> keys = new ArrayList<>();
+		List<String> keysWithNoValue = new ArrayList<>();
 
-		MultivaluedMap<String, String> qps = ri.uriInfo.getQueryParameters();
+        // for Jersey 2.x, the structure returned from getQueryParameters()
+        // is now immutable, so make a local copy
+        MultivaluedMap<String, String> qps_immutable = ri.uriInfo.getQueryParameters();
+        MultivaluedMap<String, String> qps = new MultivaluedHashMap<>();
+        Set<String> mmKeys = qps_immutable.keySet();
+        for (String mmkey : mmKeys) {
+            qps.addAll(mmkey, qps_immutable.get(mmkey));
+        }
 
 		// Special 'username' cli argument will be added if present
 
 		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
-		if (isOkString(username)) {
+		if (AppConfigurator.isOkString(username)) {
 			cmd.add("--" + usernameSignature);
 			cmd.add(username);
 		}
 
 		// Check for the nodata query parameter and the app config setting
 		// appropriately.
-		String nodataVal = qps.getFirst(nodataSignature);
-		if (isOkString(nodataVal)) {
-			qps.remove(nodataSignature);
+		String nodataVal = qps.getFirst(NODATA_QUERY_PARAMETER);
+		if (AppConfigurator.isOkString(nodataVal)) {
+			qps.remove(NODATA_QUERY_PARAMETER);
 
 			if (nodataVal.equals("204")) {
 				ri.perRequestUse404for204 = false;
 			} else if (nodataVal.equals("404")) {
 				ri.perRequestUse404for204 = true;
 			} else {
-				throw new Exception("Invalid value for " + nodataSignature
+				throw new Exception("Invalid value for " + NODATA_QUERY_PARAMETER
 						+ ": " + nodataVal);
 			}
 		}
@@ -136,18 +146,25 @@ public class ParameterTranslator {
                       + queryKey);
             }
             
-            String typeKey;
-            if (ri.paramConfig.aliasesMap.containsKey(queryKey)) {
-                typeKey = ri.paramConfig.aliasesMap.get(queryKey);
-                if (qps.containsKey(typeKey)) {
-                    throw new Exception("Multiple query parameters for same type: "
-                          + queryKey + ", " + typeKey);
+            String nonAliasNameKey;
+            if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
+                nonAliasNameKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
+                if (nonAliasNameKey != null) {
+                    if (qps.containsKey(nonAliasNameKey)) {
+                        throw new Exception(
+                              "Multiple parameters found from alias parameter: "
+                              + queryKey + "  an alias for parameter: " + nonAliasNameKey
+                              + "  on endpoint: " + epName);
+                    }
+                } else {
+                    throw new Exception("undefined alias parameter: "
+                            + queryKey + "  on endpoint: "+ epName);
                 }
             } else {
-                typeKey = queryKey;
+                nonAliasNameKey = queryKey;
             }
 
-			ConfigParam cp = ri.paramConfig.paramMap.get(typeKey);
+			ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, nonAliasNameKey);
 			if (cp == null) {
 				throw new Exception("No type defined or unknown query parameter: "
                       + queryKey);
@@ -160,7 +177,7 @@ public class ParameterTranslator {
 			// Test if param type is OK. DATE, NUMBER, TEXT, BOOLEAN
 			switch (cp.type) {
 			case NONE:
-				if (isOkString(value)) {
+				if (AppConfigurator.isOkString(value)) {
 					throw new Exception("No value permitted for " + queryKey
 							+ " Found value: " + value);
 				}
@@ -188,7 +205,7 @@ public class ParameterTranslator {
 				break;
 
 			case TEXT:
-				if (!isOkString(value)) {
+				if (!AppConfigurator.isOkString(value)) {
 					throw new Exception("Invalid value for parameter: " + queryKey);
 				}
 				break;
@@ -198,15 +215,16 @@ public class ParameterTranslator {
 			// valid, change the config class's
 			// output mime type so that the overall service's output format will
 			// change.
-			if (queryKey.equalsIgnoreCase(outputControlSignature1)
-					|| queryKey.equalsIgnoreCase(outputControlSignature2)) {
+			if (nonAliasNameKey.equalsIgnoreCase(outputControlSignature1)
+					|| nonAliasNameKey.equalsIgnoreCase(outputControlSignature2)) {
                 
-				ri.setPerRequestOutputType(value);
+				ri.setPerRequestFormatType(epName, value);
 			}
 
 			// Add key and also value if valid.
-			cmd.add("--" + queryKey);
-			if (isOkString(value)) {
+			cmd.add("--" + nonAliasNameKey);
+			if (AppConfigurator.isOkString(value)) {
+                // remove any control characters
 				cmd.add(value.replaceAll("\\p{Cntrl}", ""));
 			}
 		}
@@ -299,9 +317,5 @@ public class ParameterTranslator {
 			return true;
 
 		return false;
-	}
-
-	private static boolean isOkString(String s) {
-		return ((s != null) && !s.isEmpty());
 	}
 }

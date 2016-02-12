@@ -18,17 +18,28 @@
  ******************************************************************************/
 
 package edu.iris.wss.framework;
-
+/*
 import com.sun.grizzly.http.embed.GrizzlyWebServer;
 import com.sun.grizzly.http.servlet.ServletAdapter;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
+import com.sun.jersey.spi.container.servlet.ServletContainer;*/
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -40,21 +51,20 @@ import org.junit.Test;
  * @author mike
  */
 public class ServiceConfigTest  {
+
     public static final Logger logger = Logger.getLogger(ServiceConfigTest.class);
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
     
-    // set webapp name for this test service.
-    // This is used in WebUtils.getConfigFileBase to build the config file name,
-    // that is, in this case dataselect-1 is prepended to -service.cfg
-    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
+    // set notional webapp name
+//    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
+    private static final String SOME_CONTEXT = "/tstsegment";
     
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
 
-    // see pom for version, was 1.9.x 
-    private static GrizzlyWebServer grizzlyWebServer;
+    private static HttpServer server;
     
     public ServiceConfigTest() {
     }
@@ -62,26 +72,30 @@ public class ServiceConfigTest  {
     @BeforeClass
     public static void setUpClass() throws IOException {
         // setup config dir for test environment
-        System.setProperty(AppConfigurator.wssConfigDirSignature,
-            "target/test-classes/ServiceConfigTest");
-        
-        grizzlyWebServer = new GrizzlyWebServer(BASE_PORT);
-        ServletAdapter jerseyAdapter = new ServletAdapter();        
-        
-        // specify the package where resources or prodcuers are located
-        jerseyAdapter.addInitParameter("com.sun.jersey.config.property.packages",
-            "edu.iris.wss");
-        jerseyAdapter.addInitParameter("com.sun.jersey.config.feature.DisableWADL",
-            Boolean.TRUE.toString());
-              
-        jerseyAdapter.setContextPath(SOME_CONTEXT);
-        jerseyAdapter.setServletInstance(new ServletContainer());
-
-        grizzlyWebServer.addGrizzlyAdapter(jerseyAdapter, new String[] { "/" });
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
+            "src"
+              + File.separator + "test"
+              + File.separator + "resources"
+              + File.separator + "ServiceConfigTest");
 
         logger.info("*********** starting grizzlyWebServer, BASE_URI: "
             + BASE_URI);
-        grizzlyWebServer.start();
+        
+        Map<String, String> initParams = new HashMap<>();
+        initParams.put(
+            ServletProperties.JAXRS_APPLICATION_CLASS,
+            MyApplication.class.getName());
+
+        logger.info("*** starting grizzly container with parameters: " + initParams);
+        System.out.println("********** start GrizzlyWebContainerFactory");
+
+        server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
+      
+        server.start();
+        System.out.println("********** started GrizzlyWebServer, class: "
+            + ServiceConfigTest.class.getName());
+        System.out.println("********** started GrizzlyWebServer, config: "
+            + server.getServerConfiguration());
 
         // for manual test of server, uncomment this code then mvn clean install
 //        System.out.println("***** Application started, try: " + BASE_URI);
@@ -91,8 +105,10 @@ public class ServiceConfigTest  {
     
     @AfterClass
     public static void tearDownClass() {
+        System.out.println("********** stopping grizzlyWebServer, class: "
+            + ServiceConfigTest.class.getName());
         logger.info("*********** stopping grizzlyWebServer");
-        grizzlyWebServer.stop();
+        server.shutdownNow();
     }
     
     @Before
@@ -105,54 +121,29 @@ public class ServiceConfigTest  {
 
     @Test
     public void testGet_wssversion() throws Exception {
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("wssversion").get(String.class);
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        System.out.println("************** wT: " + webTarget);
+        Response response = webTarget.path("wssversion").request().get();
 
-        // start with a basic test, that the URL exists and returns something
-        assertNotNull(responseMsg);
+        assertNotNull(response);        
+        String testMsg = response.readEntity(String.class);
+        assertEquals(200, response.getStatus());
+        assertTrue(testMsg.equals(AppConfigurator.wssVersion));
     }
 
     @Test
     public void testGet_status() throws Exception {
-        
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("status").get(String.class);
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("wssstatus").request().get();
 
-        // test that the URL exists and returns something
-        assertNotNull(responseMsg);
-        
+        String testMsg = response.readEntity(String.class);
+        assertEquals(200, response.getStatus());
+
         // test for some basic known content
-        assertTrue(
-            responseMsg.indexOf("<TD>URL</TD><TD>" + SOME_CONTEXT + "/status</TD>") > -1);
-        assertTrue(
-            responseMsg.indexOf("<TD>Port</TD><TD>" + BASE_PORT + "</TD>") > -1);
-    }
-
-    @Test
-    public void testGet_wadl() throws Exception {
-        // Note: this test can fail if the folder in which this test is being
-        //       run is different than what is hardcoded in
-        //       src/test/resources/ServiceConfigTest/dataselect-1-service.cfg
-        //
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("application.wadl").get(String.class);
-
-        assertTrue(responseMsg.contains("dummy wadl file"));
-    }
-
-    @Test
-    public void testGet_swagger_JSON() throws Exception {
-        // Note: this test can fail if the folder in which this test is being
-        //       run is different than what is hardcoded in
-        //       src/test/resources/ServiceConfigTest/dataselect-1-service.cfg
-        //
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("v2/swagger").get(String.class);
-
-        assertTrue(responseMsg.contains("data from specified test file"));
+//        System.out.println("* -------------------------------------------- testMsg: " + testMsg);
+        assertTrue(testMsg.contains("<TD>URL</TD><TD>" + SOME_CONTEXT + "/wssstatus</TD>"));
+        assertTrue(testMsg.contains("<TD>Port</TD><TD>" + BASE_PORT + "</TD>"));
     }
 }

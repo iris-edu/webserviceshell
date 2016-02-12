@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
  *  
  * This file is part of the Web Service Shell (WSS).
  *  
@@ -29,8 +29,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.AppConfigurator.LoggingType;
-import edu.iris.wss.framework.SingletonWrapper;
+import edu.iris.wss.framework.AppConfigurator.LoggingMethod;
+import edu.iris.wss.framework.Util;
+import edu.iris.wss.framework.WssSingleton;
 
 public class LoggerUtils {
 
@@ -140,9 +141,9 @@ public class LoggerUtils {
 	}
 	
 	public static void logWssUsageMessage(Level level, WebUsageItem wui, RequestInfo ri) {
-		AppConfigurator.LoggingType loggingType = ri.appConfig.getLoggingType();
+		AppConfigurator.LoggingMethod loggingType = ri.appConfig.getLoggingType();
         
-		if (loggingType == LoggingType.LOG4J) {
+		if (loggingType == LoggingMethod.LOG4J) {
             String msg = makeUsageLogString(wui);
             
 			switch (level.toInt()) {
@@ -156,15 +157,16 @@ public class LoggerUtils {
 				usageLogger.debug(msg);
 				break;	
 			}
-		} else if (loggingType == LoggingType.JMS) {
-            // for now, webLogService startup is here as in the original code
-            // rather than in AppContextListener, if placed in AppContextListener, 
-            // startup timing between components needs to be checked
+		} else if (loggingType == LoggingMethod.JMS) {
+            // for now, webLogService startup is here as in the original code.
+            // It could be placed in AppContextListener, or possibly
+            // MyApplication. If placed in AppContextListener, the
+            // startup timing between components needs to be checked.
             try {
-                if (SingletonWrapper.webLogService == null) {
-                    SingletonWrapper.webLogService = new WebLogService();
+                if (WssSingleton.webLogService == null) {
+                    WssSingleton.webLogService = new WebLogService();
                     try {
-                        SingletonWrapper.webLogService.init();
+                        WssSingleton.webLogService.init();
                         logger.info("webLogService init succeeded");
                     } catch (Exception ex) {
                         System.out.println("webLogService init exception: "
@@ -179,7 +181,7 @@ public class LoggerUtils {
 //                    + makeUsageLogString(wui)
 //                );
                 
-                SingletonWrapper.webLogService.send(wui);
+                WssSingleton.webLogService.send(wui);
 
 			} catch (Exception ex) {
 				logger.error("Error while logging via JMS ex: " + ex
@@ -203,7 +205,8 @@ public class LoggerUtils {
 
 	public static String makeUsageLogString(WebUsageItem wui) {
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat(Util.ISO_8601_ZULU_FORMAT);
+        sdf.setTimeZone(Util.UTZ_TZ);
 
 		StringBuffer sb = new StringBuffer();
 		
@@ -232,7 +235,7 @@ public class LoggerUtils {
 		append(sb, wui.getQuality());
 		if (wui.getStartTime() != null) {
 			append(sb, sdf.format(wui.getStartTime()));
-        }  else {
+        } else {
             sb.append("|");
         }
 		if (wui.getEndTime() != null) {
@@ -276,7 +279,7 @@ public class LoggerUtils {
 	}
 	
 	private static void append(StringBuffer sb, String s) {
-		if ((s != null) && !s.isEmpty()) 
+		if (AppConfigurator.isOkString(s)) 
 			sb.append(s);
 		sb.append("|");
 	}

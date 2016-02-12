@@ -19,17 +19,25 @@
 
 package edu.iris.wss;
 
-import com.sun.grizzly.http.SelectorThread;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
+import edu.iris.wss.framework.AppConfigurator;
+import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
+import edu.iris.wss.framework.MyApplication;
+import edu.iris.wss.framework.Util;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -43,22 +51,42 @@ import org.junit.Test;
 public class WssTest  {
     public static final Logger logger = Logger.getLogger(WssTest.class);
     private static final String BASE_PORT = "8093";
+    
+    // set notional webapp name
+    // grizzley only seems to recognize the first path element
+//    private static final String SOME_CONTEXT = "/wsstest/wsstservice/1";
+    private static final String SOME_CONTEXT = "/";
+
     private static final URI BASE_URI = URI.create("http://localhost:"
-        + BASE_PORT + "/");
-    private static SelectorThread threadSelector;
+        + BASE_PORT + SOME_CONTEXT);
+
+    private static HttpServer server;
     
     public WssTest() {
     }
     
     @BeforeClass
-    public static void setUpClass() throws IOException {
+    public static void setUpClass() throws IOException {;
         Map<String, String> initParams = new HashMap<>();
+        // Note: by default, SingletonWrapper, when created and called
+        //       in MyApplication, will get configuration information
+        //       from META-INF cfg files.
         initParams.put(
-            "com.sun.jersey.config.property.packages",
-            Wss.class.getPackage().getName());
+            ServletProperties.JAXRS_APPLICATION_CLASS,
+            MyApplication.class.getName());
 
         logger.info("*** starting grizzly container with parameters: " + initParams);
-        threadSelector = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
+        System.out.println("********** start GrizzlyWebContainerFactory in class: "
+            + WssTest.class.getName());
+        
+        server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
+
+        // setup config dir for log4j
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
+            "target/test-classes");
+        server.start();
+        System.out.println("********** started GrizzlyWebContainerFactory in class: "
+              + WssTest.class.getName());
 
         // uncomment this code for manual test of server, e.g. mvn clean install
 //        System.out.println("***** Application started, try: " + BASE_URI);
@@ -69,7 +97,9 @@ public class WssTest  {
     @AfterClass
     public static void tearDownClass() {
         logger.info("*** stopping grizzly container");
-        threadSelector.stopEndpoint();
+        System.out.println("***************** stopping grizzly container");
+        //threadSelector.stopEndpoint();
+        server.shutdownNow();
     }
     
     @Before
@@ -82,30 +112,104 @@ public class WssTest  {
 
     @Test
     public void testGet_wssversion() throws Exception {
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("wssversion").get(String.class);
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("wssversion").request().get();
 
-        // start with a basic test, that the URL exists and returns something
-        assertNotNull(responseMsg);
+        assertNotNull(response);        
+        String testMsg = response.readEntity(String.class);
+        assertEquals(200, response.getStatus());
+        assertTrue(testMsg.equals(AppConfigurator.wssVersion));
     }
-
 
     @Test
     public void testGet_status() throws Exception {
         
-        Client c = Client.create();
-        WebResource webResource = c.resource(BASE_URI);
-        String responseMsg = webResource.path("status").get(String.class);
-
-        // test that the URL exists and returns something
-        assertNotNull(responseMsg);
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("wssstatus").request().get();
+        String responseMsg = response.readEntity(String.class);
         
-        // test for some basic known content
+        assertEquals(200, response.getStatus());
+        // test some content, this can break if the format of the status html changes
         assertTrue(
-            responseMsg.indexOf("<TD>URL</TD><TD>/status</TD>") > -1);
+            responseMsg.toString().indexOf("<TD>URL</TD><TD>/wssstatus</TD>") > -1);
         assertTrue(
-            responseMsg.indexOf("<TD>Port</TD><TD>" + BASE_PORT + "</TD>") > -1);
+            responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
+             + "</TD>") > -1);
     }
 
+    @Test
+    public void testdummy() throws Exception {
+        
+    }
+    // run test again to see if Singleton Configure does not run again
+    @Test
+    public void testGet_status2() throws Exception {
+        
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("wssstatus").request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        // test some content, this can break if the format of the status html changes
+        assertTrue(
+            responseMsg.toString().indexOf("<TD>URL</TD><TD>/wssstatus</TD>") > -1);
+        assertTrue(
+            responseMsg.toString().indexOf("<TD>Port</TD><TD>" + BASE_PORT
+             + "</TD>") > -1);
+    }
+    
+    @Test
+    public void testGet_status3() throws Exception {
+        
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("").request().get();
+
+        // lightweigh test, just check status, it should return default doc page
+        assertEquals(200, response.getStatus());
+    }
+
+////    @Test
+////    public void testPost1() throws Exception {
+////        Client c = ClientBuilder.newClient();
+////        WebTarget webTarget = c.target(BASE_URI);
+////        final String TEST_STR = "some-post-data-text";
+////        // Note: the dummyEP part of the string comes from default service.cfg file
+////        Response response = webTarget.path("dummyEPpostecho").request()
+////              .post(Entity.text(TEST_STR));
+////        String responseMsg = response.readEntity(String.class);
+////
+////        assertEquals(200, response.getStatus());
+////        assertTrue(responseMsg.equals(TEST_STR));
+////    }
+
+    @Test
+    public void testPost2() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        final String TEST_STR = "some-post-data2-text";
+        Response response = webTarget.path("swag").request()
+              .post(Entity.text(TEST_STR));
+        String responseMsg = response.readEntity(String.class);
+
+        System.out.println("*** ------------- testPost2 responseMsg: " + responseMsg);
+//        assertEquals(200, response.getStatus());
+//        assertTrue(responseMsg.equals(TEST_STR));
+    }
+
+    @Test
+    public void testGet_swag() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("swag").request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        // in progress
+    //    System.out.println("*** ------------- swag: " + responseMsg);
+//        assertEquals(200, response.getStatus());
+//        assertTrue(responseMsg.equals(TEST_STR));
+    }
 }
