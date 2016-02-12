@@ -191,25 +191,33 @@ public class AppConfig_2x_1Test {
         }
     }
 
+    // changed 2016-02-11 when V1CmdProcessor was removed, may reinstate
+    // if config load is changed to know when and endpoint does not
+    // require a command line handler
     @Test
     public void testHandlerFileExistException() throws Exception {
         // when an endpoint defines the IRIS class for command processing
         // the loader expects to find a valid handler file
         java.util.Properties props = new java.util.Properties();
         props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
-              "edu.iris.wss.endpoints.V1CmdProcessor");
+              "edu.iris.wss.endpoints.CmdProcessor");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               "randomname123abc");
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
             appCfg.loadConfigurationParameters(props);
-            fail();
+            // changed 2016-02-11, too restrictive - fail();
         } catch (Exception ex) {
+            ex.printStackTrace();
+            fail();
             //  noop - should throw exception
         }
     }
 
+    // changed 2016-02-11 when V1CmdProcessor was removed, may reinstate
+    // if config load is changed to know when and endpoint does not
+    // require a command line handler
     @Test
     public void testHandlerFileExistsAndExecuteException() throws Exception {
         // setup files
@@ -222,16 +230,18 @@ public class AppConfig_2x_1Test {
 
        java.util.Properties props = new java.util.Properties();
         props.put("testEP." + AppConfigurator.EP_CFGS.endpointClassName.toString(),
-              "edu.iris.wss.endpoints.V1CmdProcessor");
+              "edu.iris.wss.endpoints.CmdProcessor");
         props.put("testEP." + AppConfigurator.EP_CFGS.handlerProgram.toString(),
               file1.getPath());
 
         AppConfigurator appCfg = new AppConfigurator();
         try {
             appCfg.loadConfigurationParameters(props);
-            fail();
+            // changed 2016-02-11, too restrictive - fail();
         } catch (Exception ex) {
             assert(ex.toString().contains("is not executable"));
+            ex.printStackTrace();
+            fail();
             //  noop - should throw exception
         }
 

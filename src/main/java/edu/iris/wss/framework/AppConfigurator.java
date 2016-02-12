@@ -22,7 +22,6 @@ package edu.iris.wss.framework;
 import edu.iris.wss.provider.IrisProcessMarker;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
-import edu.iris.wss.provider.IrisStreamingOutput;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -614,26 +613,26 @@ public class AppConfigurator {
 
         for (String epName : endpoints.keySet()) {
             IrisProcessMarker iso = getIrisEndpointClass(epName);
-            if (iso instanceof edu.iris.wss.endpoints.V1CmdProcessor
-//                  cannot do this because it forces an endpoint to always
-//                  point to a runnable file, even the endpoint does not
-//                  use a handler.
-//                  || iso instanceof edu.iris.wss.endpoints.CmdProcessor
-                  ) {
-                String handlerName = getHandlerProgram(epName);
-                try {
-                    if (isOkString(handlerName)) {
-                        if (isExecutableAndExists(handlerName)) {
-                            continue;
-                        }
-                    }
-                } catch(Exception ex) {
-                    String msg = "Error getting handlerProgram for endpoint: "
-                          + epName + "  ex: " + ex.toString();
-                    logger.error(msg);
-                    throw new Exception(msg, ex);
-                }
-            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
+
+//          cannot do this (for now) because it forces an endpoint to always
+//          point to a runnable file, even if the endpoint does not
+//          use a handler.
+////            if (iso instanceof edu.iris.wss.endpoints.CmdProcessor) {
+////                String handlerName = getHandlerProgram(epName);
+////                try {
+////                    if (isOkString(handlerName)) {
+////                        if (isExecutableAndExists(handlerName)) {
+////                            continue;
+////                        }
+////                    }
+////                } catch(Exception ex) {
+////                    String msg = "Error getting handlerProgram for endpoint: "
+////                          + epName + "  ex: " + ex.toString();
+////                    logger.error(msg);
+////                    throw new Exception(msg, ex);
+////                }
+////            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
+            if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
                 String resoureToProxyURL = getProxyUrl(epName);
                 try {
                     if (isOkString(resoureToProxyURL)) {
@@ -907,36 +906,6 @@ public class AppConfigurator {
             throw new RuntimeException(msg, exObj);
         }
 
-        return iso;
-    }
-
-    public static IrisProcessMarker getIrisStreamingOutputInstance(String className) {
-        Class<?> irisClass = null;
-        IrisStreamingOutput iso = null;
-        try {
-            irisClass = Class.forName(className);
-            iso = (IrisStreamingOutput) irisClass.newInstance();
-        } catch (ClassNotFoundException ex) {
-            String msg = "getIrisStreamingOutputInstance could not find "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (InstantiationException ex) {
-            String msg = "getIrisStreamingOutputInstance could not instantiate "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (IllegalAccessException ex) {
-            String msg = "getIrisStreamingOutputInstance illegal access while instantiating "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (ClassCastException ex) {
-            String msg = "getIrisStreamingOutputInstance ClassCastException while instantiating "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        }
         return iso;
     }
 
