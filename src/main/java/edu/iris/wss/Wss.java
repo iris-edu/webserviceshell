@@ -51,9 +51,7 @@ public class Wss {
 	
 	public Wss()  {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-	}	
-	
-    glitch for test
+	}
 
 	@Path("wssstatus")
 	@GET
