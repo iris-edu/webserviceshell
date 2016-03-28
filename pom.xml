@@ -266,6 +266,62 @@
     <pluginRepositories>
     </pluginRepositories>
 
+    <profiles>
+      <profile>
+        <id>metrics</id>
+        <build>
+          <plugins>
+              <!-- to run manually, look at target/site/checkstyle.html
+                mvn -P metrics clean checkstyle:checkstyle
+              -->
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.9.1</version>
+              </plugin>
+
+              <!-- to run manually, look at target/site/index.html
+                mvn clean package cobertura:cobertura
+              -->
+              <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
+              </plugin>
+
+              <!-- to run manually, look at target/site/pmd.html
+                mvn clean pmd:pmd
+              -->
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.6</version>
+              </plugin>
+
+              <!-- to run manually, look at target/site/javancss.html
+                mvn clean package javancss:report
+              -->
+              <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>javancss-maven-plugin</artifactId>
+                <version>2.1</version>
+              </plugin>
+
+              <!-- to run manually
+                mvn clean package findbugs:findbugs
+                mvn findbugs:gui
+              -->
+              <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.1</version>
+              </plugin>
+
+          </plugins>
+        </build>
+      </profile>
+    </profiles>
+
     <!-- Distribution Management -->
     <distributionManagement>
         <repository>
