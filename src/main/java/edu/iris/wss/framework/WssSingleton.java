@@ -21,6 +21,8 @@ package edu.iris.wss.framework;
 
 // Reference to support JMS logging option.
 import edu.iris.dmc.jms.service.WebLogService;
+import edu.iris.dmc.logging.rabbitmq.IrisRabbitAsyncPublisher;
+import edu.iris.dmc.logging.rabbitmq.IrisRabbitPublisherFactory;
 
 import org.apache.log4j.Logger;
 
@@ -50,6 +52,7 @@ public class WssSingleton {
 	public IrisSingleton singleton = null;
         
     public static WebLogService webLogService = null;
+    public static IrisRabbitAsyncPublisher rabbitAsyncPublisher = null;
 
     public static final String HEADER_START_IDENTIFIER = "HTTP_HEADERS_START";
     public byte[] HEADER_START_IDENTIFIER_BYTES;
@@ -113,6 +116,14 @@ public class WssSingleton {
             singleton = appConfig.getIrisSingletonInstance(
                   appConfig.getSingletonClassName());
         }
+
+        if (appConfig.getLoggingType().equals(
+              AppConfigurator.LoggingMethod.RABBIT_ASYNC)) {
+            setupRabbitLogging();
+        } else if (appConfig.getLoggingType().equals(
+              AppConfigurator.LoggingMethod.JMS)) {
+            setupJMSLogging();
+        }
 	}
 
     private ParamConfigurator getParamConfig(AppConfigurator appCfg,
@@ -130,5 +141,42 @@ public class WssSingleton {
     	}
 
         return paramConfig;
+    }
+
+    private void setupRabbitLogging() {
+        try {
+            rabbitAsyncPublisher =
+                  IrisRabbitPublisherFactory.createAsyncPublisher(appConfig.getAppName());
+        } catch (Exception ex) {
+            String msg = "Error creating rabbitAsyncPublisher ex: " + ex
+                    + "  msg: " + ex.getMessage();
+            System.out.println(msg);
+            logger.error(msg);
+            logger.error("Error creating rabbitAsyncPublisher stack:", ex);
+        }
+
+        try {
+            rabbitAsyncPublisher.activate();
+        } catch (Exception ex) {
+            String msg = "Error activating rabbitAsyncPublisher ex: " + ex
+                    + "  msg: " + ex.getMessage();
+            System.out.println(msg);
+            logger.error(msg);
+            logger.error("Error creating rabbitAsyncPublisher stack:", ex);
+        }
+
+        logger.info("Rabbit Async activate finished");
+    }
+
+    private void setupJMSLogging() {
+        webLogService = new WebLogService();
+        try {
+            webLogService.init();
+            logger.info("JMS webLogService init finished");
+        } catch (Exception ex) {
+            System.out.println("JMS webLogService init exception: "
+                    + ex + "  msg: " + ex.getMessage());
+            logger.error("JMS webLogService init exception: ", ex);
+        }
     }
 }

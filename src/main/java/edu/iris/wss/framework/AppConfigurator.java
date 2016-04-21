@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.0";
+	public static final String wssVersion = "2.1-SNAPSHOT";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
@@ -137,7 +137,7 @@ public class AppConfigurator {
     private final Map<EP_CFGS, Object> ep_defaults = new HashMap();
 
 	public static enum LoggingMethod {
-		LOG4J, JMS
+		LOG4J, JMS, RABBIT_ASYNC
 	};
 
     /**

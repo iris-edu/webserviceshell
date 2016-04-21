@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.log4j.Level;
 import org.apache.log4j.PropertyConfigurator;
 
 /**
@@ -39,6 +40,8 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public class Util {
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
+    public static final String CONFIG_FILE_SYSTEM_PROPERTY_NAME =
+          "edu.iris.rabbitmq.publisher.properties.file";
     private static final String LOG4J_CFG_NAME_SUFFIX = "-log4j.properties";
 
     public static final String ISO_8601_ZULU_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
@@ -215,12 +218,6 @@ public class Util {
 		ServiceShellException.logAndThrowException(ri, status, message);       
 	}
 	
-////	public static void newerShellException(FdsnStatus.Status status, RequestInfo ri,
-////            IrisStreamingOutput iso) {
-////		ServiceShellException.logAndThrowException(ri, status,
-////                status.toString() + ". " + iso.getErrorString());
-////	}
-
     public static FdsnStatus.Status adjustByCfg(FdsnStatus.Status trialStatus,
           RequestInfo ri) {
         if (trialStatus == FdsnStatus.Status.NO_CONTENT) {
@@ -232,11 +229,6 @@ public class Util {
         return trialStatus;
     }    
 
-////	public static void newerShellException(FdsnStatus.Status status,
-////          RequestInfo ri, IrisProcessor iso) {
-////		ServiceShellException.logAndThrowException(ri, status,
-////                status.toString() + ". " + iso.getErrorString());
-////	}
 	public static void logAndThrowException(RequestInfo ri,
           FdsnStatus.Status httpStatus, String briefMsg, String detailedMsg) {
 		ServiceShellException.logAndThrowException(ri, httpStatus, briefMsg,
@@ -259,7 +251,8 @@ public class Util {
 			Long dataSize, Long processTime,
 			String errorType, FdsnStatus.Status httpStatus, String extraText) {
 
-		LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
-			errorType, httpStatus.getStatusCode(), extraText);
+        LoggerUtils.logWssUsageShorterMessage(ri, appSuffix, dataSize,
+              processTime, errorType, httpStatus.getStatusCode(), extraText,
+              Level.INFO);
 	}
 }

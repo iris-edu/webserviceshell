@@ -12,7 +12,7 @@
     <name>WebServiceShell</name>
     <groupId>edu.iris</groupId>
     <artifactId>webserviceshell</artifactId>
-    <version>2.0</version>
+    <version>2.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>http://iris.edu</url>
@@ -127,6 +127,7 @@
 		<servlet.version>3.0.1</servlet.version>
 		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
         <dmc.usage.log.version>1.0.1</dmc.usage.log.version>
+        <dmc_logging.version>1.0.5</dmc_logging.version>
         <wsslog4jinit.version>0.95</wsslog4jinit.version>
         <grizzly2.version>2.11</grizzly2.version>
         <hk2.version>2.4.0-b31</hk2.version>
@@ -157,6 +158,12 @@
             <groupId>edu.iris.dmc</groupId>
             <artifactId>dmc-usage-log</artifactId>
             <version>${dmc.usage.log.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>edu.iris</groupId>
+          <artifactId>dmc_logging</artifactId>
+          <version>${dmc_logging.version}</version>
         </dependency>
 
         <!--dependency>

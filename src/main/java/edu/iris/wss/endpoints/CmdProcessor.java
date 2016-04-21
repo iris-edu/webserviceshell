@@ -689,17 +689,23 @@ public class CmdProcessor extends IrisProcessor {
                                 processingTime, null, Status.OK, null);
                     }
                 } catch (Exception ex) {
-                    logger.error("Error logging MiniSEED response, ex: " + ex);
+                    logger.error("Error logging MiniSEED response summary , ex: "
+                          + ex, ex);
                 }
 
-                for (String key : logHash.keySet()) {
-                    RecordMetaData rmd = logHash.get(key);
-                    Util.logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
-                            Status.OK, null, LogKey.getNetwork(key).trim(),
-                            LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
-                            LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
-                            rmd.getStart().convertToCalendar().getTime(),
-                            rmd.getEnd().convertToCalendar().getTime(), epName);
+                try {
+                    for (String key : logHash.keySet()) {
+                        RecordMetaData rmd = logHash.get(key);
+                        Util.logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
+                                Status.OK, null, LogKey.getNetwork(key).trim(),
+                                LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
+                                LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
+                                rmd.getStart().convertToCalendar().getTime(),
+                                rmd.getEnd().convertToCalendar().getTime(), epName);
+                    }
+                } catch (Exception ex) {
+                    logger.error("Error logging MiniSEED response for record count: "
+                          + logHash.size() + "  ex: " + ex, ex);
                 }
             }
             
@@ -860,15 +866,20 @@ public class CmdProcessor extends IrisProcessor {
             ri.statsKeeper.logShippedBytes(totalBytesTransmitted);
 
             if (ri.appConfig.isUsageLogEnabled(epName)) {
-                if (isKillingProcess.get()) {
-                    Util.logUsageMessage(ri, "_KillitInWriteNormal", 0L,
-                          processingTime,
-                          "killit was called, possible timeout waiting for"
-                          + " data after intial data flow started",
-                          Status.INTERNAL_SERVER_ERROR, epName);
-                } else {
-                    Util.logUsageMessage(ri, null, totalBytesTransmitted,
-                            processingTime, null, Status.OK, epName);
+                try {
+                    if (isKillingProcess.get()) {
+                        Util.logUsageMessage(ri, "_KillitInWriteNormal", 0L,
+                              processingTime,
+                              "killit was called, possible timeout waiting for"
+                              + " data after intial data flow started",
+                              Status.INTERNAL_SERVER_ERROR, epName);
+                    } else {
+                        Util.logUsageMessage(ri, null, totalBytesTransmitted,
+                                processingTime, null, Status.OK, epName);
+                    }
+                } catch (Exception ex) {
+                    logger.error("Error logging writeNormal response, ex: "
+                          + ex, ex);
                 }
             }
 

@@ -20,7 +20,7 @@
 package edu.iris.wss.utils;
 
 import edu.iris.dmc.jms.WebUsageItem;
-import edu.iris.dmc.jms.service.WebLogService;
+import edu.iris.dmc.logging.usage.WSUsageItem;
 import edu.iris.wss.framework.AppConfigurator;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -38,47 +38,19 @@ public class LoggerUtils {
 
 	public static final Logger logger = Logger.getLogger(LoggerUtils.class);
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
-	
-    /**
-     * ERROR usage logging
-     * 
-     */
-	public static void logWssUsageError(RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Integer httpStatusCode, String extraText) {
 
-        WebUsageItem wui = new WebUsageItem();
-
-        wui.setApplication(makeFullAppName(ri, appSuffix));
-        wui.setHost(WebUtils.getHostname());
-        wui.setAccessDate(new Date());
-        wui.setClientName(WebUtils.getClientName(ri.request));
-        wui.setClientIP(WebUtils.getClientIp(ri.request));
-        wui.setDataSize(dataSize);
-        wui.setProcessTime(processTime);
-        wui.setNetwork(null);
-        wui.setStation(null);
-        wui.setChannel(null);
-        wui.setLocation(null);
-        wui.setQuality(null);
-        wui.setStartTime(null);
-        wui.setEndTime(null);
-        wui.setErrorType(errorType);
-        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
-        wui.setHttpStatus(httpStatusCode);
-        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-        wui.setExtra(extraText);
-
-		logWssUsageMessage(Level.ERROR, wui, ri);
-	}
-	
 	/**
-     * INFO usage summary logging
-     * 
+     * Used for both Miniseed summary and error messages, one key distinction
+     * is the level passed in, e.g. ERROR for error messages and INFO for
+     * summary messages
+     *
+     * For values set to null, expecting the logging system to leave those
+     * respective fields out of the delivered message
      */
-	public static void logWssUsageMessage(RequestInfo ri, String appSuffix,
-			Long dataSize, Long processTime,
-			String errorType, Integer httpStatusCode, String extraText) {
+    public static void logWssUsageShorterMessage(RequestInfo ri, String appSuffix,
+            Long dataSize, Long processTime,
+            String errorType, Integer httpStatusCode, String extraText,
+            Level level) {
 
         WebUsageItem wui = new WebUsageItem();
 
@@ -101,12 +73,12 @@ public class LoggerUtils {
         wui.setHttpStatus(httpStatusCode);
         wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
         wui.setExtra(extraText);
-        
-		logWssUsageMessage(Level.INFO, wui, ri);
+
+		logWssUsageMessage(level, wui, ri);
 	}
 	
     /**
-     * INFO usage detail logging
+     * INFO message for full, detailed usage message
      *
      */
 	public static void logWssUsageMessage(RequestInfo ri, 
@@ -140,7 +112,8 @@ public class LoggerUtils {
 		logWssUsageMessage(Level.INFO, wui, ri);
 	}
 	
-	public static void logWssUsageMessage(Level level, WebUsageItem wui, RequestInfo ri) {
+	public static void logWssUsageMessage(Level level, WebUsageItem wui,
+          RequestInfo ri) {
 		AppConfigurator.LoggingMethod loggingType = ri.appConfig.getLoggingType();
         
 		if (loggingType == LoggingMethod.LOG4J) {
@@ -157,39 +130,56 @@ public class LoggerUtils {
 				usageLogger.debug(msg);
 				break;	
 			}
-		} else if (loggingType == LoggingMethod.JMS) {
-            // for now, webLogService startup is here as in the original code.
-            // It could be placed in AppContextListener, or possibly
-            // MyApplication. If placed in AppContextListener, the
-            // startup timing between components needs to be checked.
-            try {
-                if (WssSingleton.webLogService == null) {
-                    WssSingleton.webLogService = new WebLogService();
-                    try {
-                        WssSingleton.webLogService.init();
-                        logger.info("webLogService init succeeded");
-                    } catch (Exception ex) {
-                        System.out.println("webLogService init exception: "
-                                + ex + "  msg: " + ex.getMessage());
-                        logger.error("webLogService init exception: ", ex);
-                    }
-                }
-                
-//                // check output
-//                System.out.println("*** logWssUsageMessage \n"
-//                    + getUsageLogHeader() + "\n"
-//                    + makeUsageLogString(wui)
-//                );
-                
-                WssSingleton.webLogService.send(wui);
 
+		} else if (loggingType == LoggingMethod.JMS) {
+            try {
+                WssSingleton.webLogService.send(wui);
 			} catch (Exception ex) {
 				logger.error("Error while logging via JMS ex: " + ex
-                        + "  msg: " + ex.getMessage());
+                      + "  msg: " + ex.getMessage()
+                      + "  application: " + wui.getApplication()
+                      + "  host: " + wui.getHost()
+                      + "  client IP: " + wui.getClientIP());
                 logger.error("Error while logging via JMS stack:", ex);
 			}
+
+		} else if (loggingType == LoggingMethod.RABBIT_ASYNC) {
+            WSUsageItem wuiRabbit = new WSUsageItem();
+
+            wuiRabbit.setApplication(    wui.getApplication());
+            wuiRabbit.setHost(           wui.getHost());
+            wuiRabbit.setAccessDate(     wui.getAccessDate());
+            wuiRabbit.setClientName(     wui.getClientName());
+            wuiRabbit.setClientIp(       wui.getClientIP());
+            wuiRabbit.setDataSize(       wui.getDataSize());
+            wuiRabbit.setProcessTimeMsec(wui.getProcessTime());
+            wuiRabbit.setNetwork(        wui.getNetwork());
+            wuiRabbit.setStation(        wui.getStation());
+            wuiRabbit.setChannel(        wui.getChannel());
+            wuiRabbit.setLocation(       wui.getLocation());
+            wuiRabbit.setQuality(        wui.getQuality());
+            wuiRabbit.setStartTime(      wui.getStartTime());
+            wuiRabbit.setEndTime(        wui.getEndTime());
+            wuiRabbit.setErrorType(      wui.getErrorType());
+            wuiRabbit.setUserAgent(      wui.getUserAgent());
+            wuiRabbit.setHttpCode(       wui.getHttpStatus());
+            wuiRabbit.setUserName(       wui.getUserName());
+            wuiRabbit.setExtra(          wui.getExtra());
+
+            try {
+                WssSingleton.rabbitAsyncPublisher.publish(wuiRabbit);
+            } catch (Exception ex) {
+                logger.error("Error while logging via RABBIT_ASYNC ex: " + ex
+                      + "  msg: " + ex.getMessage()
+                      + "  application: " + wui.getApplication()
+                      + "  host: " + wui.getHost()
+                      + "  client IP: " + wui.getClientIP());
+
+                logger.error("Error while logging via RABBIT_ASYNC stack:", ex);
+            }
+
 		} else {
-            logger.error("Error, unexpected loggingType configuration value: "
+            logger.error("Error, unexpected loggingMethod configuration value: "
                     + loggingType + "  msg: " + makeUsageLogString(wui));
         }
 	}

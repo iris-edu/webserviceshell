@@ -34,16 +34,30 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
 //        System.out.println("**************************** AppContextListener contextDestroyedcalled, arg0: " + arg0);
-        logger.info("AppContextListener contextDestroyed called, web app is being shutdown");
+        logger.info("contextDestroyed called, web app is being shutdown");
         if (WssSingleton.webLogService != null) {
             try {
                 // for JMS
                 WssSingleton.webLogService.cleanUp();
+                logger.info("contextDestroyed called, JMS cleanUp finished");
             } catch (Exception ex) {
-                System.out.println("*** AppContextListener, WsStatsWriter"
+                System.out.println("*** AppContextListener, webLogService"
                         + " cleanup exception: " + ex
                         + "  msg: " + ex.getMessage());
                 logger.info("*** AppContextListener, webLogService cleanup"
+                        + " exception: ", ex);
+            }
+        }
+        if (WssSingleton.rabbitAsyncPublisher != null) {
+            try {
+                // for RabbitMQ logging
+                WssSingleton.rabbitAsyncPublisher.shutdown(30000);
+                logger.info("contextDestroyed called, RABBIT_ASYNC shutdown(30000) finished");
+            } catch (Exception ex) {
+                System.out.println("*** AppContextListener, rabbitAsyncPublisher"
+                        + " cleanup exception: " + ex
+                        + "  msg: " + ex.getMessage());
+                logger.info("*** AppContextListener, rabbitAsyncPublisher cleanup"
                         + " exception: ", ex);
             }
         }

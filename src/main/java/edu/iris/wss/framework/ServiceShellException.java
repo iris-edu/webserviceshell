@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import org.apache.log4j.Logger;
 import edu.iris.wss.utils.LoggerUtils;
+import org.apache.log4j.Level;
 
 public class ServiceShellException extends WebApplicationException {
 
@@ -72,8 +73,9 @@ public class ServiceShellException extends WebApplicationException {
 ////    	logger.error(briefMsg + getErrorString(e));
         logger.error(briefMsg + "  detailed: " + detailedMsg);
 
-        LoggerUtils.logWssUsageError(ri, null, 0L, 0L, briefMsg,
-              status.getStatusCode(), ri.getEndpointNameForThisRequest());
+        LoggerUtils.logWssUsageShorterMessage(ri, null, 0L, 0L, briefMsg,
+              status.getStatusCode(), ri.getEndpointNameForThisRequest(),
+              Level.ERROR);
 
         String errMsg = createFdsnErrorMsg(status, briefMsg, detailedMsg,
           ri.request.getRequestURL().toString(), ri.request.getQueryString(),
