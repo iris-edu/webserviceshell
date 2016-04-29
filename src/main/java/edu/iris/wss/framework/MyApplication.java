@@ -54,6 +54,9 @@ public class MyApplication extends ResourceConfig {
     WssSingleton sw = new WssSingleton();
     sw.configure(configBase);
 
+    MyContainerLifecycleListener mCLL = new MyContainerLifecycleListener();
+    this.registerInstances(mCLL);
+
     // bind classes as needed to make other objects be available to the
     // framework via a CONTEXT annotation
     DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);

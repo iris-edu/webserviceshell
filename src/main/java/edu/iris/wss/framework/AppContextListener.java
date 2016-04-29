@@ -48,19 +48,6 @@ public class AppContextListener implements ServletContextListener {
                         + " exception: ", ex);
             }
         }
-        if (WssSingleton.rabbitAsyncPublisher != null) {
-            try {
-                // for RabbitMQ logging
-                WssSingleton.rabbitAsyncPublisher.shutdown(30000);
-                logger.info("contextDestroyed called, RABBIT_ASYNC shutdown(30000) finished");
-            } catch (Exception ex) {
-                System.out.println("*** AppContextListener, rabbitAsyncPublisher"
-                        + " cleanup exception: " + ex
-                        + "  msg: " + ex.getMessage());
-                logger.info("*** AppContextListener, rabbitAsyncPublisher cleanup"
-                        + " exception: ", ex);
-            }
-        }
     }
 
     @Override
