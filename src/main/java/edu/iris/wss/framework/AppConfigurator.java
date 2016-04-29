@@ -48,7 +48,7 @@ public class AppConfigurator {
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
 	private static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
-	private static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
+	public static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
     public static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
     
     // this particular string is purposely matched is an error indicator

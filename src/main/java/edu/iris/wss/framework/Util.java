@@ -32,6 +32,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 /**
@@ -39,10 +40,14 @@ import org.apache.log4j.PropertyConfigurator;
  * @author mike
  */
 public class Util {
+    public static final Logger LOGGER = Logger.getLogger(Util.class);
+
     public static final String WSS_OS_CONFIG_DIR = "wssConfigDir";
     public static final String CONFIG_FILE_SYSTEM_PROPERTY_NAME =
           "edu.iris.rabbitmq.publisher.properties.file";
     private static final String LOG4J_CFG_NAME_SUFFIX = "-log4j.properties";
+    public static final String RABBITMQ_CFG_NAME_SUFFIX
+          = "-rabbitconfig-publisher.properties";
 
     public static final String ISO_8601_ZULU_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final TimeZone UTZ_TZ = TimeZone.getTimeZone("UTC");
@@ -100,6 +105,32 @@ public class Util {
             + "  log4j file: " + file.getAbsolutePath());
 
         PropertyConfigurator.configure(file.getAbsolutePath());
+    }
+
+    public static String createCfgFileName(String configBase, String cfgNameSuffix) {
+        String wssConfigDir = System.getProperty(Util.WSS_OS_CONFIG_DIR);
+
+        String warnMsg1 = "***** check for system property "
+              + Util.WSS_OS_CONFIG_DIR
+              + ", value found: " + wssConfigDir;
+        String warnMsg2 = "***** or check webapp name on cfg files, value found: "
+            + configBase;
+
+        String configFileName = "not initialized";
+        if (isOkString(wssConfigDir) && isOkString(configBase)) {
+            if (!wssConfigDir.endsWith("/")) {
+                wssConfigDir += "/";
+            }
+
+            configFileName = wssConfigDir + configBase
+                + cfgNameSuffix;
+            LOGGER.info("Generated configuration file name: "+ configFileName);
+        } else {
+            LOGGER.warn("***** unexpected inputs for cfg file: " + cfgNameSuffix);
+            LOGGER.warn(warnMsg1);
+            LOGGER.warn(warnMsg2);
+        }
+        return configFileName;
     }
 
     public static Map<String, String> createDefaultContentDisposition(

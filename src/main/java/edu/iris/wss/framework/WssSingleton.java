@@ -119,7 +119,9 @@ public class WssSingleton {
 
         if (appConfig.getLoggingType().equals(
               AppConfigurator.LoggingMethod.RABBIT_ASYNC)) {
-            setupRabbitLogging();
+            String fileName = Util.createCfgFileName(configFileBase,
+                  Util.RABBITMQ_CFG_NAME_SUFFIX);
+            setupRabbitLogging(fileName);
         } else if (appConfig.getLoggingType().equals(
               AppConfigurator.LoggingMethod.JMS)) {
             setupJMSLogging();
@@ -143,29 +145,33 @@ public class WssSingleton {
         return paramConfig;
     }
 
-    private void setupRabbitLogging() {
+    private void setupRabbitLogging(String rabbitCfgFile) {
+        boolean isCreated = false;
         try {
             rabbitAsyncPublisher =
-                  IrisRabbitPublisherFactory.createAsyncPublisher(appConfig.getAppName());
+                  IrisRabbitPublisherFactory.createAsyncPublisher(rabbitCfgFile,
+                        appConfig.getAppName());
+            isCreated = true;
+
         } catch (Exception ex) {
-            String msg = "Error creating rabbitAsyncPublisher ex: " + ex
-                    + "  msg: " + ex.getMessage();
+            String msg = "Error creating rabbitAsyncPublisher ex: " + ex;
             System.out.println(msg);
             logger.error(msg);
             logger.error("Error creating rabbitAsyncPublisher stack:", ex);
         }
 
-        try {
-            rabbitAsyncPublisher.activate();
-        } catch (Exception ex) {
-            String msg = "Error activating rabbitAsyncPublisher ex: " + ex
-                    + "  msg: " + ex.getMessage();
-            System.out.println(msg);
-            logger.error(msg);
-            logger.error("Error creating rabbitAsyncPublisher stack:", ex);
-        }
+        if (isCreated) {
+            try {
+                rabbitAsyncPublisher.activate();
+                logger.info("Rabbit Async activate finished");
 
-        logger.info("Rabbit Async activate finished");
+            } catch (Exception ex) {
+                String msg = "Error activating rabbitAsyncPublisher ex: " + ex;
+                System.out.println(msg);
+                logger.error(msg);
+                logger.error("Error creating rabbitAsyncPublisher stack:", ex);
+            }
+        }
     }
 
     private void setupJMSLogging() {
