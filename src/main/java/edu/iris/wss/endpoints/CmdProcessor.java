@@ -679,8 +679,8 @@ public class CmdProcessor extends IrisProcessor {
             if (ri.appConfig.isUsageLogEnabled(epName)) {
                 try {
                     if (isKillingProcess.get()) {
-                        Util.logUsageMessage(ri, "_KillitInWriteMiniSeed", 0L,
-                                processingTime,
+                        Util.logUsageMessage(ri, "_KillitInWriteMiniSeed",
+                                totalBytesTransmitted, processingTime,
                                 "killit was called, possible timeout waiting"
                                 + " for data after intial data flow started",
                                 Status.INTERNAL_SERVER_ERROR, epName);
@@ -868,8 +868,8 @@ public class CmdProcessor extends IrisProcessor {
             if (ri.appConfig.isUsageLogEnabled(epName)) {
                 try {
                     if (isKillingProcess.get()) {
-                        Util.logUsageMessage(ri, "_KillitInWriteNormal", 0L,
-                              processingTime,
+                        Util.logUsageMessage(ri, "_KillitInWriteNormal",
+                              totalBytesTransmitted, processingTime,
                               "killit was called, possible timeout waiting for"
                               + " data after intial data flow started",
                               Status.INTERNAL_SERVER_ERROR, epName);
