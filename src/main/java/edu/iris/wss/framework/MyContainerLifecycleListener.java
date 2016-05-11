@@ -36,9 +36,10 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         if (WssSingleton.rabbitAsyncPublisher != null) {
             try {
                 // RabbitMQ shutdown just before container goes away
-                LOGGER.info("RABBIT_ASYNC shutdown(30000) started");
-                WssSingleton.rabbitAsyncPublisher.shutdown(30000);
-                LOGGER.info("RABBIT_ASYNC shutdown(30000) returned");
+                LOGGER.info("RABBIT_ASYNC shutdown(10000) started");
+                Thread.sleep(250); // help prevent loss of message
+                WssSingleton.rabbitAsyncPublisher.shutdown(10000);
+                LOGGER.info("RABBIT_ASYNC shutdown(10000) returned");
             } catch (Exception ex) {
                 String msg = "*** MyContainerLifecycleListener, rabbitAsyncPublisher"
                         + " shutdown exception: " + ex
