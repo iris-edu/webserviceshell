@@ -169,8 +169,6 @@ public class IrisDynamicProvider {
             }
         }
 
-		ArrayList<String> cmd = null;
-
         IrisProcessor isdo = null;
         if (sw.appConfig.getIrisEndpointClass(requestedEpName) instanceof
               edu.iris.wss.provider.IrisProcessor) {
@@ -199,8 +197,10 @@ public class IrisDynamicProvider {
                   briefMsg, moreDetails);
         }
 
-        cmd = new ArrayList<>();
-
+        // check for parameter errors before trying to do any endpoint
+        // processing, endpoints may/will do this again, but tranlator
+        // errors should be determined here first.
+        ArrayList<String> cmd = new ArrayList<>();
 		try {
 			ParameterTranslator.parseQueryParams(cmd, ri, requestedEpName);
 		} catch (Exception e) {

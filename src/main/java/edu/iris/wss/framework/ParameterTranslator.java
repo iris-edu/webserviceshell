@@ -58,6 +58,17 @@ public class ParameterTranslator {
 	public static final Logger logger = Logger
 			.getLogger(ParameterTranslator.class);
 
+    /**
+     *
+     * @param cmd - The main output of this method other than exceptions. The given
+     *              list is updated with items parsed from the request object.
+     *              It was originally designed for command line processing, the
+     *              list is key, listObject pairs.
+     * @param ri
+     * @param epName - In general, use the value returned from a call to
+     *                 ri.getEndpointNameForThisRequest()
+     * @throws Exception
+     */
 	public static void parseQueryParams(ArrayList<String> cmd, RequestInfo ri,
           String epName)
 			throws Exception {
