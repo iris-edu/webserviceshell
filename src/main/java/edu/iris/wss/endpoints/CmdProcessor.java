@@ -696,7 +696,7 @@ public class CmdProcessor extends IrisProcessor {
                 try {
                     for (String key : logHash.keySet()) {
                         RecordMetaData rmd = logHash.get(key);
-                        Util.logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
+                        Util.logWfstatMessage(ri, null, rmd.getSize(), processingTime, null,
                                 Status.OK, epName, LogKey.getNetwork(key).trim(),
                                 LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
                                 LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),

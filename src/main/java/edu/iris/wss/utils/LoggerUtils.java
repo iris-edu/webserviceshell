@@ -40,84 +40,109 @@ public class LoggerUtils {
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
 
 	/**
-     * Used for both Miniseed summary and error messages, one key distinction
-     * is the level passed in, e.g. ERROR for error messages and INFO for
-     * summary messages
+     * Create and send usage message. The items with nulls are for
+     * Miniseed channel information and are not needed here.
+     *
+     * The level passed in, e.g. ERROR for error messages and INFO for
+     * messages is used by log4j.
      *
      * For values set to null, expecting the logging system to leave those
      * respective fields out of the delivered message
      */
-    public static void logWssUsageShorterMessage(RequestInfo ri, String appSuffix,
+    public static void logUsageMessage(RequestInfo ri, String appSuffix,
             Long dataSize, Long processTime,
             String errorType, Integer httpStatusCode, String extraText,
             Level level) {
 
-        WebUsageItem wui = new WebUsageItem();
+        WSUsageItem wsuRabbit = new WSUsageItem();
 
-        wui.setApplication(makeFullAppName(ri, appSuffix));
-        wui.setHost(WebUtils.getHostname());
-        wui.setAccessDate(new Date());
-        wui.setClientName(WebUtils.getClientName(ri.request));
-        wui.setClientIP(WebUtils.getClientIp(ri.request));
-        wui.setDataSize(dataSize);
-        wui.setProcessTime(processTime);
-        wui.setNetwork(null);
-        wui.setStation(null);
-        wui.setChannel(null);
-        wui.setLocation(null);
-        wui.setQuality(null);
-        wui.setStartTime(null);
-        wui.setEndTime(null);
-        wui.setErrorType(errorType);
-        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
-        wui.setHttpStatus(httpStatusCode);
-        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-        wui.setExtra(extraText);
+        wsuRabbit.setMessagetype("usage");
 
-		logWssUsageMessage(level, wui, ri);
+        // note: application is now a simple pass through, it no longer
+        //       appends a suffix, as in old code, e.g.
+        //       wui.setApplication(makeFullAppName(ri, appSuffix));
+        wsuRabbit.setApplication(    ri.appConfig.getAppName());
+        // however, until feature is not needed, make the old application
+        // name available (for JMS)
+        String olderJMSApplciationName = makeFullAppName(ri, appSuffix);
+
+        wsuRabbit.setHost(           WebUtils.getHostname());
+        wsuRabbit.setAccessDate(     new Date());
+        wsuRabbit.setClientName(     WebUtils.getClientName(ri.request));
+        wsuRabbit.setClientIp(       WebUtils.getClientIp(ri.request));
+        wsuRabbit.setDataSize(       dataSize);
+        wsuRabbit.setProcessTimeMsec(processTime);
+        wsuRabbit.setNetwork(        null);
+        wsuRabbit.setStation(        null);
+        wsuRabbit.setChannel(        null);
+        wsuRabbit.setLocation(       null);
+        wsuRabbit.setQuality(        null);
+        wsuRabbit.setStartTime(      null);
+        wsuRabbit.setEndTime(        null);
+        wsuRabbit.setErrorType(      errorType);
+        wsuRabbit.setUserAgent(      WebUtils.getUserAgent(ri.request));
+        wsuRabbit.setHttpCode(       httpStatusCode);
+        wsuRabbit.setUserName(       WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        wsuRabbit.setExtra(          extraText);
+
+		logWssUsageMessage(level, wsuRabbit, ri, olderJMSApplciationName);
 	}
 	
     /**
-     * INFO message for full, detailed usage message
+     * Create and send message for Miniseed channel information, it is
+     * determined by media type of a request or default configuration.
+     *
+     * sets message type to wfstat as defined for downstream consumers
+     *
+     * appSuffix ignored
      *
      */
-	public static void logWssUsageMessage(RequestInfo ri, 
+	public static void logWfstatMessage(RequestInfo ri, 
 			String appSuffix, Long dataSize, Long processTime,
 			String errorType, Integer httpStatusCode, String extraText,
 			String network, String station, String location, String channel, String quality,
 			Date startTime, Date endTime) {
 
-        WebUsageItem wui = new WebUsageItem();
+        WSUsageItem wsuRabbit = new WSUsageItem();
 
-        wui.setApplication(makeFullAppName(ri, appSuffix));
-        wui.setHost(WebUtils.getHostname());
-        wui.setAccessDate(new Date());
-        wui.setClientName(WebUtils.getClientName(ri.request));
-        wui.setClientIP(WebUtils.getClientIp(ri.request));
-        wui.setDataSize(dataSize);
-        wui.setProcessTime(processTime);
-        wui.setNetwork(network);
-        wui.setStation(station);
-        wui.setChannel(channel);
-        wui.setLocation(location);
-        wui.setQuality(quality);
-        wui.setStartTime(startTime);
-        wui.setEndTime(endTime);
-        wui.setErrorType(errorType);
-        wui.setUserAgent(WebUtils.getUserAgent(ri.request));
-        wui.setHttpStatus(httpStatusCode);
-        wui.setUserName(WebUtils.getAuthenticatedUsername(ri.requestHeaders));
-        wui.setExtra(extraText);
+        wsuRabbit.setMessagetype("wfstat");
+
+        // note: application is now a simple pass through, it no longer
+        //       appends a suffix, as in old code, e.g.
+        //       wui.setApplication(makeFullAppName(ri, appSuffix));
+        wsuRabbit.setApplication(    ri.appConfig.getAppName());
+        // however, until feature is not needed, make the old application
+        // name available (for JMS)
+        String olderJMSApplciationName = makeFullAppName(ri, appSuffix);
+
+        wsuRabbit.setHost(           WebUtils.getHostname());
+        wsuRabbit.setAccessDate(     new Date());
+        wsuRabbit.setClientName(     WebUtils.getClientName(ri.request));
+        wsuRabbit.setClientIp(       WebUtils.getClientIp(ri.request));
+        wsuRabbit.setDataSize(       dataSize);
+        wsuRabbit.setProcessTimeMsec(processTime);
+        wsuRabbit.setNetwork(        network);
+        wsuRabbit.setStation(        station);
+        wsuRabbit.setChannel(        channel);
+        wsuRabbit.setLocation(       location);
+        wsuRabbit.setQuality(        quality);
+        wsuRabbit.setStartTime(      startTime);
+        wsuRabbit.setEndTime(        endTime);
+        wsuRabbit.setErrorType(      errorType);
+        wsuRabbit.setUserAgent(      WebUtils.getUserAgent(ri.request));
+        wsuRabbit.setHttpCode(       httpStatusCode);
+        wsuRabbit.setUserName(       WebUtils.getAuthenticatedUsername(ri.requestHeaders));
+        wsuRabbit.setExtra(          extraText);
         
-		logWssUsageMessage(Level.INFO, wui, ri);
+		logWssUsageMessage(Level.INFO, wsuRabbit, ri, olderJMSApplciationName);
 	}
 	
-	public static void logWssUsageMessage(Level level, WebUsageItem wui,
-          RequestInfo ri) {
+	private static void logWssUsageMessage(Level level, WSUsageItem wsuRabbit,
+          RequestInfo ri, String olderJMSApplciationName) {
 		AppConfigurator.LoggingMethod loggingType = ri.appConfig.getLoggingType();
         
 		if (loggingType == LoggingMethod.LOG4J) {
-            String msg = makeUsageLogString(wui);
+            String msg = makeUsageLogString(wsuRabbit);
             
 			switch (level.toInt()) {
 			case Level.ERROR_INT:
@@ -132,6 +157,29 @@ public class LoggerUtils {
 			}
 
 		} else if (loggingType == LoggingMethod.JMS) {
+
+            WebUsageItem wui = new WebUsageItem();
+
+            wui.setApplication(  olderJMSApplciationName);
+            wui.setHost(         wsuRabbit.getHost());
+            wui.setAccessDate(   wsuRabbit.getAccessDate());
+            wui.setClientName(   wsuRabbit.getClientName());
+            wui.setClientIP(     wsuRabbit.getClientIp());
+            wui.setDataSize(     wsuRabbit.getDataSize());
+            wui.setProcessTime(  wsuRabbit.getProcessTimeMsec());
+            wui.setNetwork(      wsuRabbit.getNetwork());
+            wui.setStation(      wsuRabbit.getStation());
+            wui.setChannel(      wsuRabbit.getChannel());
+            wui.setLocation(     wsuRabbit.getLocation());
+            wui.setQuality(      wsuRabbit.getQuality());
+            wui.setStartTime(    wsuRabbit.getStartTime());
+            wui.setEndTime(      wsuRabbit.getEndTime());
+            wui.setErrorType(    wsuRabbit.getErrorType());
+            wui.setUserAgent(    wsuRabbit.getUserAgent());
+            wui.setHttpStatus(   wsuRabbit.getHttpCode());
+            wui.setUserName(     wsuRabbit.getUserName());
+            wui.setExtra(        wsuRabbit.getExtra());
+
             try {
                 WssSingleton.webLogService.send(wui);
 			} catch (Exception ex) {
@@ -144,43 +192,21 @@ public class LoggerUtils {
 			}
 
 		} else if (loggingType == LoggingMethod.RABBIT_ASYNC) {
-            WSUsageItem wuiRabbit = new WSUsageItem();
-
-            wuiRabbit.setApplication(    wui.getApplication());
-            wuiRabbit.setHost(           wui.getHost());
-            wuiRabbit.setAccessDate(     wui.getAccessDate());
-            wuiRabbit.setClientName(     wui.getClientName());
-            wuiRabbit.setClientIp(       wui.getClientIP());
-            wuiRabbit.setDataSize(       wui.getDataSize());
-            wuiRabbit.setProcessTimeMsec(wui.getProcessTime());
-            wuiRabbit.setNetwork(        wui.getNetwork());
-            wuiRabbit.setStation(        wui.getStation());
-            wuiRabbit.setChannel(        wui.getChannel());
-            wuiRabbit.setLocation(       wui.getLocation());
-            wuiRabbit.setQuality(        wui.getQuality());
-            wuiRabbit.setStartTime(      wui.getStartTime());
-            wuiRabbit.setEndTime(        wui.getEndTime());
-            wuiRabbit.setErrorType(      wui.getErrorType());
-            wuiRabbit.setUserAgent(      wui.getUserAgent());
-            wuiRabbit.setHttpCode(       wui.getHttpStatus());
-            wuiRabbit.setUserName(       wui.getUserName());
-            wuiRabbit.setExtra(          wui.getExtra());
-
             try {
-                WssSingleton.rabbitAsyncPublisher.publish(wuiRabbit);
+                WssSingleton.rabbitAsyncPublisher.publish(wsuRabbit);
             } catch (Exception ex) {
                 logger.error("Error while logging via RABBIT_ASYNC ex: " + ex
                       + "  msg: " + ex.getMessage()
-                      + "  application: " + wui.getApplication()
-                      + "  host: " + wui.getHost()
-                      + "  client IP: " + wui.getClientIP());
+                      + "  application: " + wsuRabbit.getApplication()
+                      + "  host: " + wsuRabbit.getHost()
+                      + "  client IP: " + wsuRabbit.getClientIp());
 
                 logger.error("Error while logging via RABBIT_ASYNC stack:", ex);
             }
 
 		} else {
             logger.error("Error, unexpected loggingMethod configuration value: "
-                    + loggingType + "  msg: " + makeUsageLogString(wui));
+                    + loggingType + "  msg: " + makeUsageLogString(wsuRabbit));
         }
 	}
 	
@@ -193,7 +219,7 @@ public class LoggerUtils {
         return fullAppName;
     }
 
-	public static String makeUsageLogString(WebUsageItem wui) {
+	public static String makeUsageLogString(WSUsageItem wsu) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat(Util.ISO_8601_ZULU_FORMAT);
         sdf.setTimeZone(Util.UTZ_TZ);
@@ -201,39 +227,40 @@ public class LoggerUtils {
 		StringBuffer sb = new StringBuffer();
 		
         // note, keep in the same order as getUsageLogHeader
-		append(sb, wui.getApplication());
-		append(sb, wui.getHost());
-        if (wui.getAccessDate() != null) {
-            append(sb, sdf.format(wui.getAccessDate()));
+		append(sb, wsu.getApplication());
+		append(sb, wsu.getHost());
+        if (wsu.getAccessDate() != null) {
+            append(sb, sdf.format(wsu.getAccessDate()));
         } else {
             sb.append("|");
         }
-		append(sb, wui.getClientName());
-		append(sb, wui.getClientIP());
-		append(sb, wui.getDataSize().toString());
-		append(sb, wui.getProcessTime().toString());
+		append(sb, wsu.getClientName());
+		append(sb, wsu.getClientIp());
+		append(sb, wsu.getDataSize().toString());
+		append(sb, wsu.getProcessTimeMsec().toString());
 		
-		append(sb, wui.getErrorType());
-		append(sb, wui.getUserAgent());
-		append(sb, Integer.toString(wui.getHttpStatus()));
-		append(sb, wui.getUserName());
+		append(sb, wsu.getErrorType());
+		append(sb, wsu.getUserAgent());
+		append(sb, Integer.toString(wsu.getHttpCode()));
+		append(sb, wsu.getUserName());
 		
-		append(sb, wui.getNetwork());
-		append(sb, wui.getStation());
-		append(sb, wui.getChannel());
-		append(sb, wui.getLocation());
-		append(sb, wui.getQuality());
-		if (wui.getStartTime() != null) {
-			append(sb, sdf.format(wui.getStartTime()));
+		append(sb, wsu.getNetwork());
+		append(sb, wsu.getStation());
+		append(sb, wsu.getChannel());
+		append(sb, wsu.getLocation());
+		append(sb, wsu.getQuality());
+		if (wsu.getStartTime() != null) {
+			append(sb, sdf.format(wsu.getStartTime()));
         } else {
             sb.append("|");
         }
-		if (wui.getEndTime() != null) {
-			append(sb, sdf.format(wui.getEndTime()));
+		if (wsu.getEndTime() != null) {
+			append(sb, sdf.format(wsu.getEndTime()));
         } else {
             sb.append("|");
         }
-		append(sb, wui.getExtra());
+		append(sb, wsu.getExtra());
+        append(sb, wsu.getMessagetype());
 
 		return sb.toString();
 	}
@@ -264,6 +291,8 @@ public class LoggerUtils {
 		append(sb, "End Time");
 		
 		append(sb, "Extra");
+
+        append(sb, "Message Type");
 
 		return sb.toString();
 	}

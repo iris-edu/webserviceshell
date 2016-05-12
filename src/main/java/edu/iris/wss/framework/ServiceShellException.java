@@ -73,7 +73,7 @@ public class ServiceShellException extends WebApplicationException {
 ////    	logger.error(briefMsg + getErrorString(e));
         logger.error(briefMsg + "  detailed: " + detailedMsg);
 
-        LoggerUtils.logWssUsageShorterMessage(ri, null, 0L, 0L, briefMsg,
+        LoggerUtils.logUsageMessage(ri, null, 0L, 0L, briefMsg,
               status.getStatusCode(), ri.getEndpointNameForThisRequest(),
               Level.ERROR);
 

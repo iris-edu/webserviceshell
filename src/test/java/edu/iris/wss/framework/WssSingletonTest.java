@@ -5,18 +5,29 @@
  */
 package edu.iris.wss.framework;
 
-import edu.iris.dmc.jms.WebUsageItem;
-import edu.iris.wss.utils.LoggerUtils;
+import edu.iris.dmc.logging.usage.WSUsageItem;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
-import org.apache.log4j.Level;
+import java.util.HashMap;
+import java.util.Map;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import org.apache.log4j.Logger;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
+import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,8 +37,20 @@ import org.junit.Test;
  * @author mike
  */
 public class WssSingletonTest {
+    public static final Logger logger = Logger.getLogger(WssSingletonTest.class);
+
     private static final String SOME_CONTEXT = "/tstWssSinglton";
     private static String rabbitPropName = "setit";
+
+    private static final String BASE_HOST = "http://localhost";
+    private static final Integer BASE_PORT = 8093;
+
+    private static final URI BASE_URI = URI.create(BASE_HOST + ":"
+        + BASE_PORT + SOME_CONTEXT);
+
+    private static HttpServer server;
+
+    @Context	javax.servlet.http.HttpServletRequest request;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -38,21 +61,53 @@ public class WssSingletonTest {
               + File.separator + "test-classes"
               + File.separator + "WssSingletonTest");
 
-        createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
-              SOME_CONTEXT + "-service.cfg");
+        String targetPath = System.getProperty(Util.WSS_OS_CONFIG_DIR);
 
-        // setup IRIS Rabbit  config dir for test environment
+        String targetName = Util.createCfgFileName(SOME_CONTEXT,
+              AppConfigurator.SERVICE_CFG_NAME_SUFFIX);
+        createTestCfgFile(targetPath, targetName);
 
-        String filename = SOME_CONTEXT + "-rabbitconfig-publisher.properties";
-        rabbitPropName = getFileNameAndDoPrep(System.getProperty(Util.WSS_OS_CONFIG_DIR),
-              filename);
-        createIRISRabbitCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
-              filename);
+        targetName = Util.createCfgFileName(SOME_CONTEXT,
+              ParamConfigurator.PARAM_CFG_NAME_SUFFIX);
+        createParamCfgFile(targetPath, targetName);
+
+        // setup Rabbit config dir for test environment
+        rabbitPropName = Util.createCfgFileName(SOME_CONTEXT,
+              Util.RABBITMQ_CFG_NAME_SUFFIX);
+
+        createIRISRabbitCfgFile(targetPath, rabbitPropName);
+
+        logger.info("*********** starting grizzlyWebServer, BASE_URI: "
+            + BASE_URI);
+
+        Map<String, String> initParams = new HashMap<>();
+        initParams.put(
+            ServletProperties.JAXRS_APPLICATION_CLASS,
+            MyApplication.class.getName());
+
+        logger.info("*** starting grizzly container with parameters: " + initParams);
+        System.out.println("********** start GrizzlyWebContainerFactory");
+
+        server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
+
+        server.start();
+        System.out.println("********** started GrizzlyWebServer, class: "
+            + WssSingletonTest.class.getName());
+        System.out.println("********** started GrizzlyWebServer, config: "
+            + server.getServerConfiguration());
+
+        // for manual test of server, uncomment this code then mvn clean install
+//        System.out.println("***** Application started, try: " + BASE_URI);
+//        System.out.println("***** control-c to stop its...");
     }
 
     @AfterClass
     public static void tearDownClass() throws Exception {
-    }
+        System.out.println("********** stopping grizzlyWebServer, class: "
+            + Service_addHeaders_PrecedenceTest.class.getName());
+        logger.info("*********** stopping grizzlyWebServer");
+        server.shutdownNow();
+     }
 
     @Before
     public void setUp() throws Exception {
@@ -62,52 +117,71 @@ public class WssSingletonTest {
     public void tearDown() throws Exception {
     }
 
-    /**
-     * Test of configure method, of class WssSingleton.
-     */
-////    @Test
-////    public void testHolder() throws Exception {
-////        // place holder until test is activated or removed, depends on
-////        // having a rabbitmq instance available for unit test and Jenkins
-////    }
     @Test
-    public void testConfigure() throws Exception {
-        String configFileBase = SOME_CONTEXT;
-        System.setProperty(Util.CONFIG_FILE_SYSTEM_PROPERTY_NAME, rabbitPropName);
-        WssSingleton instance = new WssSingleton();
-        instance.configure(configFileBase);
+    public void test_log_usage() throws Exception {
+        Client c = ClientBuilder.newClient();
 
-        RequestInfo ri = new RequestInfo(instance.appConfig);
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "TEXT")
+              .queryParam("messageType", "usage");
 
-        WebUsageItem webUI = new WebUsageItem();
+        Response response = webTarget.request().get();
 
-        webUI.setApplication("app-WssSingletonTest-webUI");
-        webUI.setHost(       "mywebUIHost");
-        webUI.setAccessDate( new Date());
-        webUI.setClientIP(   "noipforwebUI");
-
-        webUI.setClientName( "webUI test1");
-        webUI.setStartTime(new Date());
-        webUI.setEndTime(new Date());
-
-        // not checking for errors for now
-        // should pass even if it does not work
-        // can look for message to real broker with
-        //usagelog.rabbitmq_noconfig  broker=broker1 virtualhost=test exchange=ws_logging routing=# user=zzz password=zzz
-        System.out.println("-------------- sleeping for 10 for RabbitMQ test start");
-        Thread.sleep(10000);
-        LoggerUtils.logWssUsageMessage(Level.INFO, webUI, ri);
-        System.out.println("-------------- sleeping for 10 for RabbitMQ test - doing destroy");
-        Thread.sleep(10000);
-
-        AppContextListener ctxLisenter = new AppContextListener();
-        ctxLisenter.contextDestroyed(null);
+        assertEquals(200, response.getStatus());
+        assertEquals("text/plain", response.getMediaType().toString());
     }
 
-    private static String getFileNameAndDoPrep(String filePath, String fileName)
-          throws FileNotFoundException, IOException {
+    @Test
+    public void test_log_wfstat() throws Exception {
+        Client c = ClientBuilder.newClient();
 
-        String targetName = filePath + File.separator + fileName;
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "TEXT")
+              .queryParam("messageType", "wfstat");
+
+        Response response = webTarget.request().get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("text/plain", response.getMediaType().toString());
+    }
+
+    @Test
+    public void test_log_error() throws Exception {
+        Client c = ClientBuilder.newClient();
+
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "TEXT")
+              .queryParam("messageType", "error");
+
+        Response response = webTarget.request().get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("text/plain", response.getMediaType().toString());
+    }
+
+    @Test
+    public void test_log_error_with_exception() throws Exception {
+        Client c = ClientBuilder.newClient();
+
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "TEXT")
+              .queryParam("messageType", "error_with_exception");
+
+        Response response = webTarget.request().get();
+
+        assertEquals(400, response.getStatus());
+        // can't pass this test because apparently exception handling with junit
+        // and grizzley server does not construct a WebApplicationException
+        // completely
+//        assertEquals("text/plain", response.getMediaType().toString());
+    }
+
+    private static void doFilePrep(String filePath, String targetName)
+          throws FileNotFoundException, IOException {
 
         File testFile = new File(targetName);
         if (testFile.exists()) {
@@ -118,15 +192,13 @@ public class WssSingletonTest {
         if(!dirs.exists()){
             dirs.mkdirs();
         }
-
-        return targetName;
     }
 
     // create a config file to test against on a target test path
-    private static void createTestCfgFile(String filePath, String fileName)
+    private static void createTestCfgFile(String filePath, String targetName)
           throws FileNotFoundException, IOException {
 
-        String targetName = getFileNameAndDoPrep(filePath, fileName);
+        doFilePrep(filePath, targetName);
 
         File testFile = new File(targetName);
         OutputStream os = new FileOutputStream(testFile);
@@ -141,18 +213,27 @@ public class WssSingletonTest {
         sb.append("# LOG4J or JMS").append("\n");
         sb.append("loggingMethod=RABBIT_ASYNC").append("\n");
         sb.append("\n");
+        sb.append("# If present, an instance of the singleton class will be created at application start").append("\n");
+        sb.append("singletonClassName=edu.iris.wss.framework.TestSingleton").append("\n");
         sb.append("# ----------------  endpoints").append("\n");
         sb.append("\n");
-        sb.append("wsssingletondummyEP.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
+        sb.append("test_logging.endpointClassName=edu.iris.wss.endpoints.LoggingEndpoint").append("\n");
+
+        sb.append("test_logging.formatTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    miniseed: application/vnd.fdsn.mseed, \\").append("\n");
+        sb.append("    geocsv: text/plain").append("\n");
+        sb.append("\n");
 
         os.write(sb.toString().getBytes());
     }
 
     // create a config file to test against on a target test path
-    private static void createIRISRabbitCfgFile(String filePath, String fileName)
+    private static void createIRISRabbitCfgFile(String filePath, String targetName)
           throws FileNotFoundException, IOException {
 
-        String targetName = getFileNameAndDoPrep(filePath, fileName);
+        doFilePrep(filePath, targetName);
 
         File testFile = new File(targetName);
         OutputStream os = new FileOutputStream(testFile);
@@ -183,6 +264,30 @@ public class WssSingletonTest {
         sb.append("\n");
         sb.append("# How often to wait between failed connection attempts in msec").append("\n");
         sb.append("retry_interval=4000").append("\n");
+
+        os.write(sb.toString().getBytes());
+    }
+
+    // create a config file to test against on a target test path
+    private static void createParamCfgFile(String filePath, String targetName)
+          throws FileNotFoundException, IOException {
+
+        doFilePrep(filePath, targetName);
+
+        File testFile = new File(targetName);
+        OutputStream os = new FileOutputStream(testFile);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ----------------  endpoints").append("\n");
+        sb.append("\n");
+
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("test_logging.messageType=TEXT").append("\n");
+
+        sb.append("test_logging.format=TEXT").append("\n");
+        sb.append("test_logging.overrideDisp=BOOLEAN").append("\n");
 
         os.write(sb.toString().getBytes());
     }

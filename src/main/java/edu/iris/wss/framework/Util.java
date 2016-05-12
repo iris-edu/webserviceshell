@@ -266,13 +266,13 @@ public class Util {
               detailedMsg);
 	}
 
-    public static void logUsageMessage(RequestInfo ri, String appSuffix,
+    public static void logWfstatMessage(RequestInfo ri, String appSuffix,
           Long dataSize, Long processTime,
           String errorType, FdsnStatus.Status httpStatus, String extraText,
           String network, String station, String location, String channel,
           String quality, Date startTime, Date endTime, String duration) {
 
-        LoggerUtils.logWssUsageMessage(ri, appSuffix, dataSize, processTime,
+        LoggerUtils.logWfstatMessage(ri, appSuffix, dataSize, processTime,
               errorType, httpStatus.getStatusCode(), extraText,
               network, station, location, channel, quality,
               startTime, endTime);
@@ -282,7 +282,7 @@ public class Util {
 			Long dataSize, Long processTime,
 			String errorType, FdsnStatus.Status httpStatus, String extraText) {
 
-        LoggerUtils.logWssUsageShorterMessage(ri, appSuffix, dataSize,
+        LoggerUtils.logUsageMessage(ri, appSuffix, dataSize,
               processTime, errorType, httpStatus.getStatusCode(), extraText,
               Level.INFO);
 	}
