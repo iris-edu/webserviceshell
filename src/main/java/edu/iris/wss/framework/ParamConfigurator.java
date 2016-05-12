@@ -34,7 +34,7 @@ public class ParamConfigurator {
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
 	
     private static final String DEFAULT_PARAM_FILE_NAME = "META-INF/param.cfg";
-    private static final String PARAM_CFG_NAME_SUFFIX = "-param.cfg";
+    public static final String PARAM_CFG_NAME_SUFFIX = "-param.cfg";
     private static final String ALIASES_KEY_NAME = "aliases";
 
 	public static class ConfigParam {

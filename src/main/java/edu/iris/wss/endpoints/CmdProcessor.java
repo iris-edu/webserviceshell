@@ -686,7 +686,7 @@ public class CmdProcessor extends IrisProcessor {
                                 Status.INTERNAL_SERVER_ERROR, epName);
                     } else {
                         Util.logUsageMessage(ri, "_summary", totalBytesTransmitted,
-                                processingTime, null, Status.OK, null);
+                                processingTime, null, Status.OK, epName);
                     }
                 } catch (Exception ex) {
                     logger.error("Error logging MiniSEED response summary , ex: "
@@ -697,7 +697,7 @@ public class CmdProcessor extends IrisProcessor {
                     for (String key : logHash.keySet()) {
                         RecordMetaData rmd = logHash.get(key);
                         Util.logUsageMessage(ri, null, rmd.getSize(), processingTime, null,
-                                Status.OK, null, LogKey.getNetwork(key).trim(),
+                                Status.OK, epName, LogKey.getNetwork(key).trim(),
                                 LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
                                 LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
                                 rmd.getStart().convertToCalendar().getTime(),
