@@ -119,9 +119,13 @@ public class Util {
         String configFileName = "not initialized";
         if (isOkString(wssConfigDir) && isOkString(configBase)) {
             if (!wssConfigDir.endsWith("/")) {
-                wssConfigDir += "/";
+                // something to handle difference between incoming value of
+                // wssConfigDir between starting a server and direct calls
+                // in test code
+                if (!configBase.startsWith("/")) {
+                    wssConfigDir += "/";
+                }
             }
-
             configFileName = wssConfigDir + configBase
                 + cfgNameSuffix;
             LOGGER.info("Generated configuration file name: "+ configFileName);
