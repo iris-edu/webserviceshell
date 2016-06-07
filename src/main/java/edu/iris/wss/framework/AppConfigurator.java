@@ -78,6 +78,8 @@ public class AppConfigurator {
         globals.put(GL_CFGS.corsEnabled.toString(), true);
         globals.put(GL_CFGS.rootServiceDoc.toString(), null);
         globals.put(GL_CFGS.loggingMethod.toString(), LoggingMethod.LOG4J);
+        globals.put(GL_CFGS.loggingConfig.toString(),
+              "logging_config_not_specified");
         globals.put(GL_CFGS.sigkillDelay.toString(), 60); // kill delay in seconds
         globals.put(GL_CFGS.singletonClassName.toString(), null);
 
@@ -116,7 +118,7 @@ public class AppConfigurator {
     // Make enum names the same as the names the user sees in the cfg file
     // global configuration parameter names
     public static enum GL_CFGS { appName, version, corsEnabled,
-        rootServiceDoc, loggingMethod, sigkillDelay,
+        rootServiceDoc, loggingMethod, loggingConfig, sigkillDelay,
         jndiUrl, singletonClassName};
     
     // endpoint configuration parameter names
@@ -238,6 +240,10 @@ public class AppConfigurator {
 
     public LoggingMethod getLoggingType() {
         return (LoggingMethod) globals.get(GL_CFGS.loggingMethod.toString());
+    }
+
+    public String getLoggingConfig() {
+        return (String) globals.get(GL_CFGS.loggingConfig.toString());
     }
 
     public int getSigkillDelay() {
@@ -558,6 +564,7 @@ public class AppConfigurator {
         loadGlobalParameter(inputProps, globals, GL_CFGS.corsEnabled);
         loadGlobalParameter(inputProps, globals, GL_CFGS.rootServiceDoc);
         loadGlobalParameter(inputProps, globals, GL_CFGS.loggingMethod);
+        loadGlobalParameter(inputProps, globals, GL_CFGS.loggingConfig);
         loadGlobalParameter(inputProps, globals, GL_CFGS.sigkillDelay);
         loadGlobalParameter(inputProps, globals, GL_CFGS.singletonClassName);
 
@@ -700,6 +707,17 @@ public class AppConfigurator {
                               + "  value found: " + newVal
                               + "  should be one of " + LoggingMethod.LOG4J.toString()
                               + " or " + LoggingMethod.JMS.toString(), ex);
+                    }
+                } else if(currentVal instanceof URL) {
+                    try {
+                        URL trial = new URL(newVal);
+                        System.out.println("------------------------000--- newVal: " + newVal);
+                        System.out.println("------------------------000--- trial: " + trial);
+                        cfgs.put(key, trial);
+                    } catch (Exception ex) {
+                        throw new Exception("Error for URL paramater: " + key
+                              + "  value found: " + newVal
+                              + "  it must be a well formed URL", ex);
                     }
                 } else {
                     // should be String type if here in else
@@ -996,6 +1014,7 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.corsEnabled.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
+        keyList.add(GL_CFGS.loggingConfig.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());
         keyList.add(GL_CFGS.singletonClassName.toString());
 
@@ -1069,6 +1088,7 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.corsEnabled.toString());
         keyList.add(GL_CFGS.rootServiceDoc.toString());
         keyList.add(GL_CFGS.loggingMethod.toString());
+        keyList.add(GL_CFGS.loggingConfig.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());
         keyList.add(GL_CFGS.singletonClassName.toString());
         

@@ -14,7 +14,6 @@ import edu.iris.wss.provider.IrisProcessor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ListIterator;
-import java.util.NoSuchElementException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 

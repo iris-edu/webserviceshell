@@ -119,8 +119,7 @@ public class WssSingleton {
 
         if (appConfig.getLoggingType().equals(
               AppConfigurator.LoggingMethod.RABBIT_ASYNC)) {
-            String fileName = Util.createCfgFileName(configFileBase,
-                  Util.RABBITMQ_CFG_NAME_SUFFIX);
+            String fileName = appConfig.getLoggingConfig().toString();
             setupRabbitLogging(fileName);
         } else if (appConfig.getLoggingType().equals(
               AppConfigurator.LoggingMethod.JMS)) {
@@ -135,10 +134,8 @@ public class WssSingleton {
     	try {
             paramConfig.loadConfigFile(cfgFileBase);
         } catch (Exception ex) {
-            String msg = "----------- Error loading param.cfg file, message: "
-                    + ex.getMessage();
-            System.out.println(msg);
-            logger.error(msg);
+            String msg = "----------- Error loading param.cfg file, ex: " ;
+            System.out.println(msg + ex);
             throw new Exception(msg, ex);
     	}
 
@@ -151,13 +148,24 @@ public class WssSingleton {
             rabbitAsyncPublisher =
                   IrisRabbitPublisherFactory.createAsyncPublisher(rabbitCfgFile,
                         appConfig.getAppName());
-            isCreated = true;
 
+            isCreated = true;
         } catch (Exception ex) {
-            String msg = "Error creating rabbitAsyncPublisher ex: " + ex;
-            System.out.println(msg);
-            logger.error(msg);
-            logger.error("Error creating rabbitAsyncPublisher stack:", ex);
+            String msg = "Error creating rabbitAsyncPublisher with file API," +
+                  " trying URL form, ex: ";
+            System.out.println(msg + ex);
+            logger.warn(msg, ex);
+            try {
+                int secondsToTry = 5;
+                rabbitAsyncPublisher =
+                      IrisRabbitPublisherFactory.createAsyncPublisherFromUrl(
+                            rabbitCfgFile, appConfig.getAppName(), secondsToTry);
+                isCreated = true;
+            } catch (Exception exUURL) {
+                msg = "Error creating rabbitAsyncPublisher with URL API  ex: ";
+                System.out.println(msg + exUURL);
+                logger.error(msg, exUURL);
+            }
         }
 
         if (isCreated) {
@@ -166,10 +174,9 @@ public class WssSingleton {
                 logger.info("Rabbit Async activate finished");
 
             } catch (Exception ex) {
-                String msg = "Error activating rabbitAsyncPublisher ex: " + ex;
-                System.out.println(msg);
-                logger.error(msg);
-                logger.error("Error creating rabbitAsyncPublisher stack:", ex);
+                String msg = "Error activating rabbitAsyncPublisher ex: ";
+                System.out.println(msg + ex);
+                logger.error(msg, ex);
             }
         }
     }
@@ -180,9 +187,9 @@ public class WssSingleton {
             webLogService.init();
             logger.info("JMS webLogService init finished");
         } catch (Exception ex) {
-            System.out.println("JMS webLogService init exception: "
-                    + ex + "  msg: " + ex.getMessage());
-            logger.error("JMS webLogService init exception: ", ex);
+            String msg = "JMS webLogService init ex: ";
+            System.out.println(msg + ex);
+            logger.error(msg, ex);
         }
     }
 }

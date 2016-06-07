@@ -183,25 +183,30 @@ public class LoggerUtils {
             try {
                 WssSingleton.webLogService.send(wui);
 			} catch (Exception ex) {
-				logger.error("Error while logging via JMS ex: " + ex
-                      + "  msg: " + ex.getMessage()
+				logger.error("Error while publishing via JMS ex: " + ex
+                      + "  webLogService: " + WssSingleton.webLogService
+                      + "  ex msg: " + ex.getMessage()
                       + "  application: " + wui.getApplication()
                       + "  host: " + wui.getHost()
-                      + "  client IP: " + wui.getClientIP());
-                logger.error("Error while logging via JMS stack:", ex);
+                      + "  client IP: " + wui.getClientIP()
+                      + "  ErrorType: " + wui.getErrorType());
+
+//                logger.error("Error while publishing via JMS stack:", ex);
 			}
 
 		} else if (loggingType == LoggingMethod.RABBIT_ASYNC) {
             try {
                 WssSingleton.rabbitAsyncPublisher.publish(wsuRabbit);
             } catch (Exception ex) {
-                logger.error("Error while logging via RABBIT_ASYNC ex: " + ex
+                logger.error("Error while publishing via RABBIT_ASYNC ex: " + ex
+                      + "  rabbitAsyncPublisher: " + WssSingleton.rabbitAsyncPublisher
                       + "  msg: " + ex.getMessage()
                       + "  application: " + wsuRabbit.getApplication()
                       + "  host: " + wsuRabbit.getHost()
-                      + "  client IP: " + wsuRabbit.getClientIp());
+                      + "  client IP: " + wsuRabbit.getClientIp()
+                      + "  ErrorType: " + wsuRabbit.getErrorType());
 
-                logger.error("Error while logging via RABBIT_ASYNC stack:", ex);
+//                logger.error("Error while publishing via RABBIT_ASYNC stack:", ex);
             }
 
 		} else {
