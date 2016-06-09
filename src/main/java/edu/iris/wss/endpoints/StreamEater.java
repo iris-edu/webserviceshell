@@ -25,15 +25,15 @@ import java.io.InputStream;
 import org.apache.log4j.Logger;
 
 public class StreamEater implements Runnable  {
-	public static final Logger logger = Logger.getLogger(StreamEater.class);
-	private static final int responseThreadDelayMsec = 50;
+	public static final Logger LOGGER = Logger.getLogger(StreamEater.class);
+	private static final int MONITOR_STREAM_PAUSE_TIME_MSEC = 50;
 
 	InputStream inputStream;
 
-	boolean     done    = false;
-	static final int stringSizeLimit = 20000;
+	boolean done = false;
 
-    // accumulate stderr output here
+    // accumulate stderr content here
+	static final int OUTPUT_SIZE_LIMIT = 20000;
 	StringBuilder output = new StringBuilder();
 
 	IOException ioExceptionWhileReading = null;
@@ -65,15 +65,15 @@ public class StreamEater implements Runnable  {
         if (!done) {
 			try {
 				wait();
-			} catch (InterruptedException e) {
-                String msg = "Error message output was interrupted while"
-                      + " waiting for stderr read to finish";
-                output.append(" -- ").append(msg);
-				logger.info(waitMsg);
+			} catch (InterruptedException ex) {
+                String msg = "Interrupted while waiting for stderr read, ex: ";
+                output.append(" -- ").append(msg).append(ex);
+				LOGGER.warn(waitMsg);
             }
 		}
 			
-		// Probably timed out if an IO exception has occurred
+		// addition information indicating stderr processing may not
+        // be working as expected.
 		if( ioExceptionWhileReading != null )  {
             output.append(" -- ")
                   .append("Exception while reading stderr, excep: ")
@@ -90,45 +90,64 @@ public class StreamEater implements Runnable  {
 		try {
             while (process.isAlive()) {
                 if (inputStream.available() > 0) {
-                    try {
-                        while ((nRead = inputStream.read(buffer, 0, buffer.length)) != -1) {
-                            if (output.length() + nRead <= stringSizeLimit) {
-                                output.append(new String(buffer, 0, nRead));
-                            } else {
-                                output.append(" -- ERROR, error message size limit exceeded");
-                                output.append(", sizeLimit: ").append(stringSizeLimit);
-                            }
-                        }
-                    } catch(IOException e ) {
-                        logger.info("Got IOException in stream eater, e: " + e.getMessage());
-                        ioExceptionWhileReading = e;
-                    } finally {
-                        synchronized (this) {
-                            // Set done and notify any waiting threads.
-                            //Typically, somebody calling getOutputString()
-                            done = true;
-                            notify();
-                        }
-                        try { inputStream.close(); } catch( Exception e) {;} // noop
-                    }
+                    readContents(nRead, buffer);
                 } else {
-                    try { Thread.sleep(responseThreadDelayMsec); } catch( Exception e) {;} // noop
+                    try { Thread.sleep(MONITOR_STREAM_PAUSE_TIME_MSEC); }
+                    catch( Exception ex) {;} // noop
                 }
             }
-        } catch (IOException e) {
-            logger.info("Got IOException in stream eater, e: " + e.getMessage());
-            ioExceptionWhileReading = e;
+
+            // There can be zero bytes available while process is alive, but
+            // after isalive goes false, bytes may become available.
+            if (inputStream.available() > 0) {
+                readContents(nRead, buffer);
+            }
+        } catch (IOException ex) {
+            LOGGER.warn("IOException while checking if stderr available, ex: "
+                  + ex.getMessage());
+            ioExceptionWhileReading = ex;
         } finally {
             synchronized (this) {
                 // Set done and notify any waiting threads.
-                //Typically, somebody calling getOutputString()
+                // Typically, somebody calling getOutputString()
                 done = true;
                 notify();
             }
             try {
                 inputStream.close();
-            } catch (Exception e) {;
-            } // noop
+            } catch (Exception ex) {
+                ; // noop
+            }
+        }
+    }
+
+    private void readContents(int byteCount, byte [] byteBuffer) {
+        try {
+            while ((byteCount =
+                  inputStream.read(byteBuffer, 0, byteBuffer.length)) != -1) {
+                // NOTE: output length is character count, read length is
+                //       byte count.
+                if ((output.length() + byteCount) <= OUTPUT_SIZE_LIMIT) {
+                    output.append(new String(byteBuffer, 0, byteCount));
+                } else {
+                    // let outside world know that not all the stderr content
+                    // was read
+                    output.append(" -- WARNING, error message length has");
+                    output.append(" exceeded this limit: ").append(OUTPUT_SIZE_LIMIT);
+                }
+            }
+        } catch(IOException ex) {
+            LOGGER.warn("IOException while reading stderr, ex: " + ex.getMessage());
+            ioExceptionWhileReading = ex;
+        } finally {
+            synchronized (this) {
+                // Set done and notify any waiting threads.
+                // Typically, somebody calling getOutputString()
+                done = true;
+                notify();
+            }
+            try { inputStream.close(); }
+            catch( Exception ex) {;} // noop
         }
     }
 }
