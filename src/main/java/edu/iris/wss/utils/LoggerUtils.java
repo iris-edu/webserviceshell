@@ -265,7 +265,10 @@ public class LoggerUtils {
             sb.append("|");
         }
 		append(sb, wsu.getExtra());
-        append(sb, wsu.getMessagetype());
+        //append(sb, wsu.getMessagetype());
+        // on last one, leave off the delimiter
+		if (AppConfigurator.isOkString(wsu.getMessagetype()))
+			sb.append(wsu.getMessagetype());
 
 		return sb.toString();
 	}
@@ -297,7 +300,10 @@ public class LoggerUtils {
 		
 		append(sb, "Extra");
 
-        append(sb, "Message Type");
+        //append(sb, "Message Type");
+        // on last one, leave off the delimiter
+		if (AppConfigurator.isOkString("Message Type"))
+			sb.append("Message Type");
 
 		return sb.toString();
 	}
