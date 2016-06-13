@@ -7,24 +7,29 @@ args="$@"
 
 # http://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 
+# Expecting key, value pairs, so process two arguments at a time,
+# the first argument $1 is "key" and its value is $2
+# process all arguments before continuing
+# $# is count of positional arguments, arguments
+# "shift" means decrement positional counter by 1
+#
 while [[ $# > 1 ]]
 do
-key="$1"
-
-case $key in
-    --format)
-    format_arg="$2"
-    shift # past argument
-    ;;
-    --overrideDisp)
-    overrideDisp_arg="$2"
-    shift # past argument
-    ;;
-    *)
+    key="$1"
+    case $key in
+        --format)
+            format_arg="$2"
+            shift
+        ;;
+        --overrideDisp)
+            overrideDisp_arg="$2"
+            shift
+        ;;
+        *)
             # unknown option
-    ;;
-esac
-shift # past argument or value
+        ;;
+    esac
+    shift
 done
 
 # 

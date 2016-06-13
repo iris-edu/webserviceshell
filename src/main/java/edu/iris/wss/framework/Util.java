@@ -107,6 +107,17 @@ public class Util {
         PropertyConfigurator.configure(file.getAbsolutePath());
     }
 
+    /**
+     * Create a file name in the WebServiceShell configuration folder.
+     * NOTE: Java System property Util.WSS_OS_CONFIG_DIR must be set before
+     *       calling this method
+     *
+     * @param configBase - must be not empty, within a running container this
+     *                     is normally derived from the web service context.
+     * @param cfgNameSuffix - may be empty string, within a running container
+     *                        this is normally a respective config file suffix.
+     * @return
+     */
     public static String createCfgFileName(String configBase, String cfgNameSuffix) {
         String wssConfigDir = System.getProperty(Util.WSS_OS_CONFIG_DIR);
 
