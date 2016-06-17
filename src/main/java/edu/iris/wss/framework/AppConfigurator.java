@@ -28,14 +28,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import javax.ws.rs.core.MediaType;
 
 
 import org.apache.log4j.Logger;
@@ -43,7 +46,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.3-SNAPSHOT";
+	public static final String wssVersion = "2.2.1";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
@@ -321,6 +324,33 @@ public class AppConfigurator {
                       + " configured for endpoint name: " + epName);
 	}
 
+    public Collection<MediaType> getMediaTypes(String epName)
+          throws Exception {
+        if (endpoints.containsKey(epName)) {
+            Map<String, String> formatTypes = (Map<String, String>)endpoints
+                  .get(epName).get(EP_CFGS.formatTypes);
+
+            Collection<String> mediaTypesStr = formatTypes.values();
+            Collection<MediaType> mediaTypes = new HashSet<>();
+            for (String mt : mediaTypesStr) {
+                String[] type = mt.split(java.util.regex.Pattern.quote("/"));
+                if (type.length != 2) {
+                    throw new Exception("getMediaTypes could not split parts"
+                      + " of MediaType input string: " + mt
+                      + "  endpoint name: " + epName
+                      + "  parameter: " + EP_CFGS.formatTypes
+                      + "  input format map: " + formatTypes);
+            }
+
+                mediaTypes.add(new MediaType(type[0], type[1]));
+            }
+
+            return mediaTypes;
+        }
+        throw new Exception("WebServiceShell getMediaTypes, there is no endpoint"
+                      + " configured for endpoint name: " + epName);
+	}
+
     /**
      * There does not have to be a disposition parameter for a given endpoint,
      * nor does there have to be a disposition for a respective format
@@ -422,13 +452,18 @@ public class AppConfigurator {
 
     /**
      *
-     * @param outTypes
-     * @param s
+     * @param outTypes - reference to container to hold output type
+     * @param s - format type specification from service.cfg file
+     *            e.g. for xml and text
+     *            query.formatTypes = \
+     *                xml: application/xml,\
+     *                text: text/plain
      * @param paramName
      * @param setToUpper - Invented this parameter so that this method can be
      *        shared. Only addHeaders should be false. In the case of
      *        addHeaders, the header name file is defined by the user in the
-     *        .cfg file, so the idea is to keep the case the same as the user definition.
+     *        .cfg file, so the idea is to keep the case the same as the user
+     *        definition.
      *
      * @throws Exception
      */

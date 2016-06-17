@@ -11,11 +11,14 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ListIterator;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.StreamingOutput;
 
 /**
  *
@@ -48,6 +51,27 @@ public class LoggingEndpoint extends IrisProcessor {
     public IrisProcessingResult getProcessingResults(RequestInfo ri, String wssMediaType) {
         IrisProcessingResult ipr = IrisProcessingResult.processString(
               "endpoint for testing logging");
+
+        if (wssMediaType.contains("application/json")) {
+            StreamingOutput so = new StreamingOutput() {
+                @Override
+                public void write(OutputStream output) {
+                    try {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("{\n")
+                              .append("  \"name\": \"LoggingEndpoint\",\n")
+                              .append("  \"testdata\": \"data from getProcessingResults\"\n")
+                              .append("}");
+                        output.write(sb.toString().getBytes());
+                    } catch (IOException ex) {
+                        throw new RuntimeException("LoggingEndpoint test code"
+                              + " failed to do streaming output, ex: " + ex);
+                    }
+                }
+            };
+
+            ipr = IrisProcessingResult.processStream(so, wssMediaType);
+        }
 
         MultivaluedMap<String, String> mvm = getParameters(ri);
 

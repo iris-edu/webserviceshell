@@ -130,6 +130,12 @@ public class AppConfigurator_getters_Test {
         assert(appCfg.getMediaType(endpointName, "xml").equals(xmlMediaType));
         assert(appCfg.getMediaType(endpointName, "json").equals(jsonMediaType));
 
+        String typeCollection = appCfg.getMediaTypes(endpointName).toString();
+        assert(typeCollection.contains(textMediaType)
+              && typeCollection.contains(xmlMediaType)
+              && typeCollection.contains(jsonMediaType)
+              && typeCollection.contains("application/octet-stream"));
+
         try {
             assert(appCfg.getMediaType("unknown_endpoint", "json").equals(jsonMediaType));
             fail("Unexpected successful try, this test should have thrown an exception.");

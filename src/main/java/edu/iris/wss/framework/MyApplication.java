@@ -20,6 +20,7 @@
  */
 package edu.iris.wss.framework;
 
+import java.util.Collection;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
@@ -81,13 +82,15 @@ public class MyApplication extends ResourceConfig {
             methodName = "doIrisProcessing";
         }
 
+        Collection<MediaType> mediaTypes = sw.appConfig.getMediaTypes(epName);
+
         // Note: HEAD seems to be allowed by default
         addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
-          methodName, "GET");
+              methodName, "GET", mediaTypes);
         
         if (sw.appConfig.isPostEnabled(epName)) {
             addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
-                  methodName, "POST");
+                  methodName, "POST", mediaTypes);
 
 ////            // saved for now for future post request testing, see
 ////            // echoPostString method in IrisDynamicProvider class
@@ -114,13 +117,13 @@ public class MyApplication extends ResourceConfig {
    * @param httpMethod - usually GET or POST
    */
   private void addEndpoint(String epName, Class epClass, String epMethodName,
-        String httpMethod) {
+        String httpMethod, Collection<MediaType> mediaTypes) {
     final Resource.Builder resourceBuilder = Resource.builder();
     resourceBuilder.path(epName);
 
     final ResourceMethod.Builder rmBuilder = resourceBuilder.addMethod(httpMethod);
     try {
-        rmBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
+        rmBuilder.produces(mediaTypes)
               .handledBy(epClass, epClass.getMethod(epMethodName, null));
 
     } catch (NoSuchMethodException ex) {
@@ -139,7 +142,8 @@ public class MyApplication extends ResourceConfig {
     registerResources(endpointRes);
     
     String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath()
-          + "  httpMethod: " + httpMethod + "  epMethodName: " + epMethodName;
+          + "  httpMethod: " + httpMethod + "  epMethodName: " + epMethodName
+          + "  mediaTypes: " + mediaTypes;
     System.out.println(msg);
     logger.info(msg);
   }

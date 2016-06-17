@@ -13,6 +13,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -111,6 +112,10 @@ public class WssSingletonTest {
         test_log_wfstat();
         test_log_error();
         test_log_error_with_exception();
+
+        // tag along to test media type acceptance
+        test_request_of_media_type_defined();
+        test_request_of_media_type_not_defined();
     }
 
     // The LoggingEndpoint helper code should generate the respective
@@ -178,5 +183,38 @@ public class WssSingletonTest {
         // and grizzley server does not construct a WebApplicationException
         // completely
 //        assertEquals("text/plain", response.getMediaType().toString());
+    }
+
+    public void test_request_of_media_type_defined() throws Exception {
+
+        Client c = ClientBuilder.newClient();
+
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "JSON")
+              .queryParam("messageType", "usage");
+
+        // json is defined in endpoint format type
+        Response response = webTarget.request(new MediaType("application", "json")).get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("application/json", response.getMediaType().toString());
+    }
+
+    public void test_request_of_media_type_not_defined() throws Exception {
+
+        Client c = ClientBuilder.newClient();
+
+        WebTarget webTarget = c.target(BASE_URI)
+              .path("/test_logging")
+              .queryParam("format", "JSON")
+              .queryParam("messageType", "usage");
+
+        // xml not defined in endpoint format type
+        Response response = webTarget.request(new MediaType("application", "xml")).get();
+
+        assertEquals(406, response.getStatus());
+        // error message returned in html page
+        assertEquals("text/html;charset=ISO-8859-1", response.getMediaType().toString());
     }
 }
