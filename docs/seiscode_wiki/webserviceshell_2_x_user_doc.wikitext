@@ -1,67 +1,85 @@
 h1. Webserviceshell 2.2 User Documentation
 
-14 Jun 2016
+16 Aug 2016
 
 {{toc}}
 
 h1. Introduction
 
-The Web Service Shell (WSS) is a web service that can be configured via simple properties files to utilize external resources (either command line programs or Java classes) to fulfill web service requests.
-
-New for 2.2
-- fix bug (issue 827) where error messages written to stderr were not detected after process ended
-
-New for 2.1
-- additional functionality (issue  813) for RabbitMQ configuration
+The Web Service Shell (WSS) is a web service that can be configured via simple properties files to utilize external resources (either command-line programs or Java classes) to fulfill web service requests.
 
 h2. WSS core features:
 
 * manage HTTP connection with the client
 * validate request parameters
 * log service requests, state, and errors
-* manage execution of command line programs or Java classes
+* route one or more endpoint queries to  execution of respective command-line programs or Java classes
 * handle, via the servlet container, HTTP authentication
 
+h2. WSS 2.x change overview, see the "Issues page":https://seiscode.iris.washington.edu/projects/webserviceshell/issues for more details:
+
+* Version 2.x
+** enable queries to multiple endpoints
+** add more flexibility for service naming convention
+** add selected new configuration options, standardize naming convention
+** generalize the ability to proxy additional content
+** add more flexibility in content handling from Java endpoints
+* Version 2.1
+** Add new RabbitMQ usage logging option
+* Version 2.2 to 2.2.2
+** Fix issues related to initial testing and production operations
 WSS is written in Java and is delivered as a deployable web application in the form of a .war file. When the war file is installed into a Tomcat or other servlet container, WSS reads its respective configuration files and is ready to handle client requests.  Java programming is not needed to configure and operate a web service using WSS.
 
 h1. WSS Concepts
 
-One of the primary objectives of WSS is to enable internet access to data that may only be  available through command-line processes. WSS takes care of the HTTP communication then executes task specific programs to retrieve the desired data, effectively separating the HTTP component of a web service from the data extraction work. While the WSS can be extended by writing Java code, two general use processors  are provided with WSS:
+The primary objectives of WSS is to enable internet access to data. WSS handles the HTTP communication with clients while executing task specific programs to retrieve the desired data, thus, effectively separating the HTTP component of a web service from the data extraction work.
+
+While the WSS can be extended by writing custom Java processor code, WSS is designed to bypass Java coding and, by configuration, use existing data access command-line scripts for data access. Two general use processors are provided with WSS to accomplish this:
 
 * edu.iris.wss.endpoints.CmdProcessor
 * edu.iris.wss.endpoints.ProxyResource
 
-The CmdProcessor executes command line programs and streams requested data back to a client. ProxyResource returns data to a client and only requires a simple URL configuration parameter and the respective output media type parameter.
+The CmdProcessor processor executes command-line programs and streams requested data back to a client. The ProxyResource processor returns data as defined by a couple of configuration parameters, one for the URL of a respective data source and another to designate the output media type.
 
 Both CmdProcessor and ProxyResource can be configured multiple times in one WSS installation to implement multiple endpoints and deliver a suite of data products to HTTP clients.
 
 h1. Conventions and Configuration Concepts
 
-A few conventions are used to relate configuration files to their respective web service and define the URL provided to a client. For installation, the war file name should be changed according to the conventions defined below.
+A few conventions are needed to deploy a WSS web service in a service container like Tomcat. These conventions control the name of the service, its respective URL as well as enable each WSS service to load its respective configuration information. 
 
-The following discussion is based on a URL of this form:
+h2. Terms
+
+For example, to create a service with a URL of this form:
 
 http://service.iris.edu/fdsnws/event/1/query?minmagnitude=8.5&format=geocsv
 
-where the parts of the URL may be referred to by these terms:
+we need to refer to specific part of this URL, so we will use the following names on the left, in bold, to refer to respective parts of a URL, in this case:
 
 * *protocol* - http
 * *host* - service.iris.edu
 * *service (or application)* - fdsnws/event/1
 * *endpoint* - query
-* *client interface parameters* - minmagnitude and format (i.e. the terms after the '?' character on the left side of the '=' characters)
+* *client interface (i.e. query) parameters* - minmagnitude and format (i.e. each term after the '?' or '&' character and to the left side of the '=' character)
 
-The general concept of administering WSS services is that for each desired service, a single instance of WSS needs to be installed, and for each desired "endpoint" in a service, a respective set of parameters need to be configured.
+The general concept, for configuring and deploying each WSS service, is to:
+* when deploying the WSS war file, change its name to reflect the desired *service* name
+* create configuration files whose names match the deployed WSS war file name
+* put the appropriate entries in the respective config files to get the desired *endpoint* name(s)
+* put the appropriate entries in the respective config file to get the desired *client interface parameter(s)* names
 
-Note: Some references external to this document define "endpoint" as the full URL up to the '?' character (e.g. http://service.iris.edu/fdsnws/event/1/query). However, in this document, “endpoint” refers only to the portion of the URL between the service ( i.e. "fdsnws/event/1") and the client interface parameters (i.e. “minmagnitude=8.5&format=geocsv”).
+Note: Some references external to this document define "endpoint" as the full URL up to the '?' character (e.g. http://service.iris.edu/fdsnws/event/1/query). However, in this document, “endpoint” refers only to the portion of the URL between the service ( i.e. "fdsnws/event/1") and the client interface parameters (i.e. “minmagnitude=8.5&format=geocsv”), so in this case, the endpoint is "query".
 
-The host and protocol are usually set for a given site and are not discussed further here. 
+The host and protocol are usually set for a given site and are not discussed further here.
 
-*service naming convention* -. The service name is derived from the installed WSS war file name. For example, the file *fdsnws#event#1.war* results in the following:
+h2. Service Name
+
+*service naming convention* -. The service name is derived from the deployed war file name. For example, to get a service name of " fdsnws/event/1", the WSS war file must be renamed to *fdsnws#event#1.war*, which when deployed, results in the following URL:
 
 http://service.iris.edu/fdsnws/event/1/
 
-where *fdsnws/event/1*, is determined by replacing any hash characters ‘#’ in the WSS war file name with slash characters ‘/’.
+where *fdsnws/event/1*, is determined by replacing any hash characters ‘#’ in the WSS war file name with slash characters ‘/’. Note: using '#" is not required if your naming conventions do not need a service name with '/' in it.
+
+h2. Endpoint Names
 
 *endpoints* - Endpoints are defined in a service.cfg file. An endpoint name may include slashes or dots. For example, endpoints named "query", "v2/swagger" and "application.wadl" result in these URLs, respectively:
 
@@ -69,53 +87,57 @@ http://service.iris.edu/fdsnws/event/1/query
 http://service.iris.edu/fdsnws/event/1/v2/swagger
 http://service.iris.edu/fdsnws/event/1/application.wadl
 
+h2. Client Interface Parameters
+
 *Interface parameter convention* - Client interface parameters for a given endpoint are defined in a param.cfg file (discussed in more detail below). For example, to define the parameters "minmagnitude" and "format" for the "query" endpoint, add the following lines to the param.cfg file:
 
 *query.minmagnitude=NUMBER*
 *query.format=TEXT*
 
-A client can now make a request using this URL:
+WSS will then be configured to accept a client request using this URL:
 
 http://service.iris.edu/fdsnws/event/1/query?minmagnitude=8.5&format=geocsv
 
 *In summary* -
-* A war file name may be chosen as needed, but respective configuration file names must reflect that war file name.
-* Endpoint names may be chosen as needed, but the contents of WSS configuration files must reflect that endpoint name.
+* A war file name may be chosen as needed to get a desired service name, but respective configuration file names must correspond to that war file name.
+* Endpoint names may be chosen as needed, but the contents of respective WSS configuration files must contain the respective parameters for that endpoint name.
 
 h1. WSS Configuration
 
-WSS uses configuration files to define endpoints and interface parameters, as well as manage operation of WSS. The following naming convention is used so that multiple web services can be deployed in the same container.
+Each WSS service uses a respective set of configuration files to define endpoints and interface parameters, as well as manage operation of WSS. The following naming convention is used so that multiple web services can be deployed in the same container.
 
-**configuration file name convention** - WSS tries to open these configuration files when starting. These file names are derived from the WSS .war file name and are determined by replacing any hash character ‘#’ with a dot character ‘.’ and appending the respective file type. For the fdsnws#event#1.war file, the required configuration files are:
+**configuration file name convention** - WSS tries to open these configuration files when starting. These file names are derived from the deployed .war file name and are determined by replacing any hash character ‘#’ with a dot character ‘.’ and appending the respective file type (e.g. -service.cfg, -param.cfg, -log4j.properties). For the fdsnws#event#1.war file, the required configuration files are:
 * **fdsnws.event.1-service.cfg** - contains operational and endpoint parameters
 * **fdsnws.event.1-param.cfg** - contains client interface parameters for each endpoint
 * **fdsnws.event.1-log4j.properties** - contains logging configuration
 
+*Note*: When deployed, WSS will try to startup even when there are errors in the configuration files, for new web services, the respective log files should be reviewed to see that the desired endpoints and client parameters are fully loaded.
+
 h2. Built in endpoints
 
-These endpoints are built in to WSS and are available to a client without configuration. The wssstatus endpoint is limited to clients on the local network only as the status may contain site sensitive information.
+These endpoints are built in to WSS and are available to a client without configuration. The wssstatus endpoint is only allowed to clients on the local network. It is assumed that the status may contain site sensitive information and there for should not be generally available on the internet.
 
 |_. Endpoint  |_. Default Value |_. Comments  |
 |=. / |Internally generated information page | Use parameter rootServiceDoc in service.cfg to specify a URL with this service's specific documentation.|
 | wssstatus | status information about this WSS and its configuration | Blocked to external request, it is only available on the local network. |
-| wssversion | version of the Web Service Shell code | The wssversion value is set in code when WSS is released. |
+| wssversion | current version of Web Service Shell | The wssversion value is set in code when WSS is released. |
 | whoami | remote address of requestor | The address returned may be affected by network topology. |
-| version | "notversioned" | Use parameter version in service.cfg to set a version number or identifier as needed for this service. |
+| version | "notversioned" | Use parameter "version" in service.cfg to set a number or other identifier as needed for this service. |
 
-h2. Service configuration file (servicename-service.cfg)
+h2. Service configuration file (_servicename_-service.cfg)
 
 The service.cfg file is composed of two types of parameters: global and endpoint parameters. Global parameters apply to the application as a whole while endpoint parameters can be configured multiple times.
 
 h2. Global Parameters
 
 |_. Parameter Name |_. Default Value |_. Description |
-| appName | "notnamed" | It can be different from the war file name - it can indicate this service or data application name - Note, this value is also used in output to log files as field "application". |
-| version | "notversioned" | Indicates the version of this web service. The value here is returned to a client from a "version" endpoint request. |
+| appName | "notnamed" | It can be different from the war file name - it can indicate this service or data application name - Note, this value is also used in output to "usage" log files as field "application". |
+| version | "notversioned" | Indicates the version of this web service. The response to a "version" endpoint request. |
 | corsEnabled | true | when true, the HTTP response header includes Access-Control-Allow-Origin: * |
 | rootServiceDoc | null | a URL providing information about the application, documentation on usage, etc., if a value is not provided, a generic html page will be generated. |
 | loggingMethod | "LOG4J" | choices are LOG4J or JMS or RABBIT_ASYNC. |
 | loggingConfig | null | a file name or URL referencing an IRIS RabbitMQ configuration file. Only required if loggingMethod is set to RABBIT_ASYNC |
-| sigkillDelay | 30 | time in seconds before a handler process is sent a SIGKILL, see section "Command Line Process Time Limits", time starts after handlerTimeout (see Endpoint Parameter table) |
+| sigkillDelay | 30 | time in seconds before a handler process is sent a SIGKILL, see section "Command-Line Process Time Limits", time starts after handlerTimeout (see Endpoint Parameter table) |
 | singletonClassName | null | optional - A user provided Java class that will be instantiated once when the service starts. A service can use this class to provide capability that may be needed by individual endpoints in the application. |
 
 h2. Setting up Endpoints
@@ -127,40 +149,40 @@ For example, to specify a "query" endpoint to execute programABC:
 *query*.handlerProgram=/usr/folder1/programABC
 *query*.handlerTimeout=45
 
-plus other endpoint parameters as needed.
+plus other endpoint parameters as needed (defined in the following table).
 
-Likewise, an endpoint "answer" could execute programDEF and be specified as:
+to add another endpoint "answer" which is to  execute programDEF, do the following:
 
 *answer*.handlerProgram=/usr/folder1/programDEF
 *answer*.handlerTimeout=160
 
-plus other endpoint parameters as needed.
+etc.
 
 h2. Endpoint Parameters
 
-The term "formatType" refers to the name of a media type provided by an endpoint. It is a case insensitive string defined in the formatTypes parameter. The formatType name is used when constructing the formatDispositions parameter and for the file type on downloaded files.
+The term "formatType" refers to the name of a media type that may be provided by an endpoint. Media type is a case insensitive string and one or more may be defined in the formatTypes parameter.
 
 The term "${UTC}" can be used where noted to insert a UTC time string in ISO 8601 format.
 
 The term "${appName}" can be used to insert the appName parameter string.
 
 |_. Parameter Name |_. Default Value |_. Description |
-| endpointClassName | edu.iris.wss.endpoints.CmdProcessor | a Java class that extends the IrisProcessor class. The class will be instantiated for each request on this endpoint. Two IrisProcessor classes are provided with Web Service shell, edu.iris.wss.endpoints.CmdProcessor and edu.iris.wss.endpoints.ProxyResource. ProxyResource provides the capability to deliver the contents specified in the proxyURL parameter. |
-| handlerProgram | "nonespecified" | a fully qualified executable file name. It must be specified when endpointClassName is set to edu.iris.wss.endpoints.CmdProcess |
-| handlerTimeout | 30 | time in seconds before a handler process is sent a SIGTERM. see section "Command Line Process Time Limits". |
-| handlerWorkingDirectory | /tmp | a valid folder with write access. It is required to start a process and if any command line process needs to write to the file system. |
-| usageLog | true | when true, log information is written to the usageLogger logger defined in the log4j.properties file or JMS, depends on the value of loggingMethod |
-| formatTypes | BINARY: application/octet-stream | a list of (formatType, media type) pairs that are provided by this endpoint. When provided, the first pair in the list becomes the new default. Note: User selection of a formatType is accomplished with the "format" interface parameter. |
-| formatDispositions | empty string | a list of (formatType, HTTP Content-Disposition value) pairs that will override the Content-Disposition header set by WSS default or addHeader parameter. ${UTC} and ${appName} may be used in the value field. |
+| endpointClassName | edu.iris.wss.endpoints.CmdProcessor | a Java class that extends the IrisProcessor class. The class will be instantiated for each request on this endpoint. Two IrisProcessor classes are provided with Web Service shell, edu.iris.wss.endpoints.CmdProcessor and edu.iris.wss.endpoints.ProxyResource. CmdProcessor executes a handlerProgram and ProxyResource provides the capability to deliver the contents specified in the proxyURL parameter. |
+| handlerProgram | "nonespecified" | a fully qualified executable file name. It must be specified when endpointClassName is set to edu.iris.wss.endpoints.CmdProcessor |
+| handlerTimeout | 30 | inactivity time in seconds before WSS sends a handlerProgram process a SIGTERM. see section "Command-Line Process Time Limits". |
+| handlerWorkingDirectory | /tmp | if specified, it must be a valid folder with write access. It is required to start a handlerProgram process and the handlerProgram may use the folder to write content into. |
+| usageLog | true | when true, log information is written to the usageLogger logger defined in the log4j.properties file, or JMS, or RabbitMQ, depending on the value of loggingMethod |
+| formatTypes | BINARY: application/octet-stream | a list of (formatType, media type) pairs that are provided by this endpoint. When provided, the first pair in the list becomes the default. The BINARY formatType pair is retained in the list and is alway available for selection. Note: A client selects a media type by using the "format" interface parameter and specifying one of the defined formatTypes. |
+| formatDispositions | empty string | a list of (formatType, HTTP Content-Disposition value) pairs that will override the Content-Disposition header set by WSS default or addHeader parameter. Any Content-Disposition value may have ${UTC} or ${appName} appended so as to avoid name conflicts when files are downloaded by a client. |
 | addHeaders | empty string | a list of HTTP headers that will add to or override any default headers.  ${UTC} and ${appName} may be used in the value field. |
-| postEnabled | false | when false, POST request are ignored, when true, the POST body is passed to the endpoint Java class or handler program. |
-| logMiniseedExtents | false | when true, additional Miniseed channel information is collected and logged, only applies to edu.iris.wss.endpoints.CmdProcess |
+| postEnabled | false | when false, POST request are ignored, when true, the POST body is passed to the respective handlerProgram or Java processor endpoint. |
+| logMiniseedExtents | false | when true, additional Miniseed channel information is collected and written to the usage log, only applies to edu.iris.wss.endpoints.CmdProcessor |
 | use404For204 | false | when true and a response has no data, return an HTTP code 404 instead of 204. |
 | proxyURL | "noproxyURL" | when used, it must point to a valid URL. It is required when the endpointClassName is set to edu.iris.wss.endpoints.ProxyResource |
 
 h2. Managing HTTP headers for a client response
 
-HTTP headers can be set both by endpoint parameter and by a command line handler. WSS sets headers in the following order:
+HTTP headers can be set both by endpoint parameter and by a command-line handler. WSS sets headers in the following order:
 # WSS default headers
 ** When corsEnabled is true, return this header 
            *access-control-allow-origin: **
@@ -170,9 +192,9 @@ HTTP headers can be set both by endpoint parameter and by a command line handler
            *content-disposition: inline; filename=service${UTC}.${formatType}*
 # *addHeaders* - adds new headers, or overrides default headers.
 # *formatDispositions* - overrides content-disposition header, but only for the respective formatType.
-# *command line handler* - can add to, or override previous headers - see section "Additional CmdProcessor Features".
+# *command-line handler* - can add to, or override previous headers - see section "Additional CmdProcessor Features".
 
-h1. Param configuration file (servicename-param.cfg)
+h1. Param configuration file (_servicename_-param.cfg)
 
 The contents of the param.cfg file specify the names and types of client interface parameters that a given endpoint supports. Web Service Shell will perform type checking of parameters from client requests before executing respective handlers or Java classes. This enables a quick response to a client for simple parameter format errors in a request URL.
 
@@ -192,13 +214,13 @@ WSS uses the "format" parameter to determine the response media type. The value 
 
 The "aliases" parameter can be used to specify one or more short names for interface parameters on a given endpoint. The aliases parameter itself is not accessible by a client, see a usage example below.
 
-"username" is added by WSS to a handler command line the a user has been successfully authenticated.
+"username" is added by WSS to a handlerProgram argument list when a user has been successfully authenticated.
 
-"stdin" is added by WSS to a handler command line when a post request has been made. It indicates to the handler that the handler should read stdin to get the post data.
+"stdin" is added by WSS to a handlerProgram argument list when a post request has been made. It indicates to the handler that the handler should read stdin to get the post data.
 
-"nodata" is predefined in WSS and can be used on any query to enable WSS to return an HTTP code 404 instead of 204. The accepted values are "204" or "404". When this parameter is used, it overrides the configuration parameter "use404For204"
+"nodata" is predefined in WSS and can be used on any query to indicate to WSS to return an HTTP code 404 instead of 204. The accepted values are "204" or "404". When this parameter is used, it overrides the configuration parameter "use404For204"
 
-"output" is a deprecated parameter and should not be used. 
+"output" is a deprecated parameter and should not be used.
 
 h2. param.cfg parameters
 
@@ -216,9 +238,9 @@ The "aliases" parameter can be used to define shorter names for a respective int
 minlongitude: (mnlg, minlong), \
 maxlongitude: mxlong*
 
-h1. Log4j properties file (servicename-log4j.properties)
+h1. Log4j properties file (_servicename_-log4j.properties)
 
-WSS uses log4j to log two types of messages: operation messages and data usage messages. Use the log4j properties file to specify the name and location of the respective log files. Note that if parameter loggingMethod is set to JMS, usage messages will go to a UsageStatsTopicDestination binding.
+WSS uses log4j to log two types of messages: operation messages and data usage messages. Use the log4j properties file to specify the name and location of the respective log files. Note: the usage log file is only used when loggingMethod is set to LOG4J, otherwise usage log messages are sent to their respective JMS or RabbitMQ destination.
 
 If a respective log4j properties files is not found when WSS starts, it will try to write log messages to files wss.log and wss_usage.log in the container log folder.
 
@@ -226,13 +248,13 @@ h1. Additional CmdProcessor Features
 
 The Java class, edu.iris.wss.endpoints.CmdProcessor, provided with WSS has additional features that may be useful when developing services.
 
-h2. Command Line Process Time Limits
+h2. Command-Line Process Time Limits
 
-Once a command line process starts, CmdProcessor will wait for handlerTimeout seconds for a process to return data or error messages. Once handlerTimeout is exceeded, CmdProcessor sends the process a SIGTERM. A process may catch the SIGTERM and do cleanup as needed, write messages to standard err, and terminate. If the process does not handle a SIGTERM, the process will be sent a SIGKILL sigkillDelay seconds later.
+Once a command-line process starts, CmdProcessor will wait for handlerTimeout seconds for a process to return data or error messages. Once handlerTimeout is exceeded, CmdProcessor sends the process a SIGTERM. A process may catch the SIGTERM and do cleanup as needed such as close databases, write messages to standard err, etc., and terminate. WSS will wait sigkillDelay seconds for the process to end, if the process does not end, WSS will send a SIGKILL.
 
-h2. CmdProcessor to Command Line Interface
+h2. CmdProcessor to Command-Line Interface
 
-CmdProcessor sends request parameters to the command line process's standard input. The interface parameters and values are written to the process in this form:
+CmdProcessor sends request parameters to the command-line process's standard input. The interface parameters and values are written to the process in this form:
 
 *--interfaceParameter value*
 
@@ -242,18 +264,18 @@ If an error occurs, CmdProcessor checks standard error and includes any informat
 
 Once CmdProcessor detects any data from the process on standard output, it returns an HTTP 200 to the client and hands off the data stream to the web service container, which then streams the data to the client.
 
-h2. Setting HTTP Headers From a Command Line Process
+h2. Setting HTTP Headers From a Command-Line Process
 
 CmdProcessor has the ability to set response HTTP headers. The CmdProcessor checks for header values when a process starts writing and then returns any headers found to WSS. WSS adds or overrides any previously set headers before returning an HTTP response, see section "Managing HTTP headers for a client response".
 
 The following restrictions apply:
 
-* A command line process that needs to set headers must write the header information before writing any other output
+* A command-line process that needs to set headers must write the header information before writing any other output
 * The header information must be text in the following form:
 ** starts with "HTTP_HEADERS_START"
 ** followed by each header in regular HTTP format, terminated with linefeed or carriage return linefeed
 ** ends with "HTTP_HEADERS_END"
-* The marker strings must not be followed by linefeed or carriage return linefeed.
+* The marker strings *must not* be followed by linefeed or carriage return linefeed.
 
 For example, to provide headers "Content-Disposition", "Access-Control-Allow-Origin", and "Test-Header", the output looks like this (\n indicates linefeed):
 
@@ -261,9 +283,9 @@ For example, to provide headers "Content-Disposition", "Access-Control-Allow-Ori
 HTTP_HEADERS_STARTContent-Disposition : inline\nAccess-Control-Allow-Origin : http://host.example\nTest-Header : value-for-test-hdr\nHTTP_HEADERS_END
 </pre>
 
-h2. Environmental Information for Command Line Processes
+h2. Environmental Information for Command-Line Processes
 
-When CmdProcessor starts a command line process, the following environmental values are set.
+When CmdProcessor starts a command-line process, the following environmental values are set.
 
 REQUESTURL - the client request URL
 USERAGENT - value from request HTTP header User-Agent
@@ -281,7 +303,7 @@ Web Service Shell has been upgraded to:
 * enable more flexibility in naming a WSS application
 * support more than one user defined endpoint per WSS application
 * generalize proxying capability 
-* enable setting HTTP headers from a command line process
+* enable setting HTTP headers from a command-line process
 * add detailed error description as needed
 
 Additionally, unused parameters have been removed and a few parameter names have been changed.
@@ -291,20 +313,20 @@ h2. Converting an existing Web Service Shell application to 2.x
 The general steps needed to change a Web Service Shell 1.x configuration to 2.x are:
 
 # service.cfg file
-** change web service part of name as needed
+** change web service part of config file name as needed
 ** create global parameters
 ** create endpoint for "query"
 ** create endpoints for "application.wadl" or "v2/swagger" as needed and set respective proxyURL
 # param.cfg file
-** change web service part of name as needed
+** change web service part of config file name as needed
 ** change parameter names by prepending endpoint name
 # log4j.properties
-** change web service part of name as needed
+** change web service part of config file name as needed
 ** change output log file names as needed
 
 h2. Changes for endpoints provided by Web Service Shell
 
-|_. Previous Parameter |_. New Parameter |_. Comment |
+|_. Previous Endpoint |_. New Endpoint |_. Comment |
 |=. / | same as 1.x | |
 | status | wssstatus | endpoint rename |
 | application.wadl | builtin implementation removed | A general solution is now provided. Add an endpoint configuration with endpointClassName set to edu.iris.wss.endpoints.ProxyResource, add proxyURL and set the proxy content, and add formatTypes and set the default media type. |
@@ -315,8 +337,7 @@ h2. Changes for endpoints provided by Web Service Shell
 | contributors | removed | same as catalogs |
 | counts | removed | same as catalogs |
 
-
-h2. Service related changes - global parameters
+h2. service.cfg related changes - global parameters
 
 |_. Previous Parameter |_. New Parameter |_. Comment |
 | appName | same as 1.x | |
@@ -333,7 +354,7 @@ h2. Service related changes - global parameters
 | topicDestination | removed | not needed |
 | argPreProcessorClassName | removed | not needed |
 
-h2. Service related changes - endpoint parameters
+h2. service.cfg related changes - endpoint parameters
 
 |_. Previous Parameter |_. New Parameter |_. Comment |
 | streamingOutputClassName | endpointClassName | parameter renamed |
@@ -345,11 +366,11 @@ h2. Service related changes - endpoint parameters
 | - | formatDispositions | new parameter |
 | - | addHeaders | new parameter |
 | postEnabled | same as 1.x | |
-| - | logMiniseedExtents | new parameter - adds ability to *not do* extra processing and logging for Miniseed channel information |
+| - | logMiniseedExtents | new parameter - extra processing and usage logging for Miniseed channel information is *no longer* performed by CmdProcessor unless this parameter is added|
 | use404For204 | same as 1.x | |
-| - | proxyURL | new parameter, used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource |
+| - | proxyURL | new parameter, must be used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource |
 
-h2. Param.cfg configuration changes
+h2. param.cfg configuration changes
 
 Configuring interface parameters has not changed except to add an endpoint name. Each parameter must now be prepended with an endpoint name. The endpoint name must be defined in the service.cfg file or the parameter will be ignored.
 
