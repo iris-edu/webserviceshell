@@ -1,6 +1,6 @@
 h1. Webserviceshell 2.2 User Documentation
 
-16 Aug 2016
+25 Aug 2016
 
 {{toc}}
 
@@ -407,7 +407,7 @@ version=1.0.0
 ##corsEnabled=false
 
 # a URL providing information about the application, documentation on usage, etc.
-rootServiceDoc=http://service/fdsnws/dataselect/docs/1/root/
+#rootServiceDoc=http://service/fdsnws/dataselect/docs/1/root/
 
 # LOG4J or JMS or RABBIT_ASYNC
 loggingMethod=LOG4J
@@ -453,11 +453,11 @@ query.use404For204=true
 
 # -------- endpoint --------
 
-application.wadl.endpointClassName=edu.iris.wss.endpoints.ProxyResource
+application/wadl.endpointClassName=edu.iris.wss.endpoints.ProxyResource
 
 # required when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource
-application.wadl.proxyURL=http://service/fdsnws/dataselect/docs/1/wadl
-application.wadl.formatTypes = \
+application/wadl.proxyURL=http://service/fdsnws/dataselect/docs/1/wadl
+application/wadl.formatTypes = \
     xml: application/xml
 </pre>
 
