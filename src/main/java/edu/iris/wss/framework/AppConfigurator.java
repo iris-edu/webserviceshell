@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -46,14 +46,14 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.2.2";
+	public static final String wssVersion = "2.2.3";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
 	private static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
 	public static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
     public static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
-    
+
     // this particular string is purposely matched is an error indicator
     // for timeout on miniseed data, although, unless changed, it will
     // also be used for writeNormal
@@ -72,7 +72,7 @@ public class AppConfigurator {
     public AppConfigurator() throws Exception {
         init();
     }
-    
+
     private void init() throws Exception  {
         // set defaults, all parameters must be set here with
         // defaults of the correct (i.e. desired) object type.
@@ -117,13 +117,13 @@ public class AppConfigurator {
 	public static enum InternalTypes {
 		MSEED, MINISEED, BINARY
 	};
-    
+
     // Make enum names the same as the names the user sees in the cfg file
     // global configuration parameter names
     public static enum GL_CFGS { appName, version, corsEnabled,
         rootServiceDoc, loggingMethod, loggingConfig, sigkillDelay,
         jndiUrl, singletonClassName};
-    
+
     // endpoint configuration parameter names
     public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
@@ -137,7 +137,7 @@ public class AppConfigurator {
     // container for endpoints, an "endpoint" is defined in the cfg file
     // as being the string in front of ENDPOINT_TO_PROPERTIES_DELIMITER
     private final Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
-    
+
     // an endpoint, i.e. contains the parameters per endpoint
     private final Map<EP_CFGS, Object> ep_defaults = new HashMap();
 
@@ -269,13 +269,13 @@ public class AppConfigurator {
      * Note: no parameter checking or configuration for endpoint checking
      *       done here, it should be done when parameters are loaded.
      * @param epName
-     * @return 
+     * @return
      */
     public IrisProcessMarker getIrisEndpointClass(String epName) {
         return (IrisProcessMarker)endpoints.get(epName)
               .get(EP_CFGS.endpointClassName);
     }
-    
+
     public String getHandlerProgram(String epName) {
         return endpoints.get(epName).get(EP_CFGS.handlerProgram).toString();
     }
@@ -435,7 +435,7 @@ public class AppConfigurator {
 
     // Note: this implements the rule that the first item in formatTypes
     //       is the default output type
-    //       
+    //
     public String getDefaultFormatTypeKey(String epName) throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> types = (Map<String, String>)endpoints
@@ -516,11 +516,11 @@ public class AppConfigurator {
 		isLoaded = true;
 
         Class thisRunTimeClass = this.getClass();
-        
+
         Properties configurationProps = loadPropertiesFile(configBase,
               thisRunTimeClass, SERVICE_CFG_NAME_SUFFIX,
               DEFAULT_SERVICE_FILE_NAME);
-        
+
         if (configurationProps != null) {
             loadConfigurationParameters(configurationProps);
         }
@@ -538,13 +538,13 @@ public class AppConfigurator {
 		// (last part of context path), e.g. 'station' or 'dataselect'
 
         String wssConfigDir = System.getProperty(Util.WSS_OS_CONFIG_DIR);
-        
+
         String warnMsg1 = "***** check for system property "
               + Util.WSS_OS_CONFIG_DIR
               + ", value found: " + wssConfigDir;
         String warnMsg2 = "***** or check webapp name on cfg files, value found: "
             + configBase;
-        
+
         if (isOkString(wssConfigDir) && isOkString(configBase)) {
             if (!wssConfigDir.endsWith("/")) {
                 wssConfigDir += "/";
@@ -607,19 +607,20 @@ public class AppConfigurator {
         while (keys.hasMoreElements()) {
             String propName = (String)keys.nextElement();
 
-            // by design, in this version of WSS, a global parameter is 
-            // defined as a string with no epname. decoration.
-            // An endpoint parameter must have a epname. in front of the 
-            // WSS to designate endpoint and endpoint parameters
-            String[] withDots = propName.split(java.util.regex.Pattern.quote(
-                  ENDPOINT_TO_PROPERTIES_DELIMITER));
-            if (withDots.length == 1) {
-                // should be already loaded, noop
-            } else if (withDots.length == 2) {
+            // by design, in this version, a global parameter is defined as
+            // a string with no delimiter. An endpoint parameter must be a
+            // string with at least one ENDPOINT_TO_PROPERTIES_DELIMITER.
+            if (! propName.contains(ENDPOINT_TO_PROPERTIES_DELIMITER)) {
+                // noop - no dots implies propName is a global and should be
+                // already loaded, else it is an unknown string
+            } else {
                 try {
-                    String epName = withDots[0];
-                    String inputParmStr = withDots[1];
-                    
+                    // use the last dot as delimiter between endpoint name and
+                    // parameter, this allows things like application.wadl.proxyURL
+                    int lastDIdx =  propName.lastIndexOf(ENDPOINT_TO_PROPERTIES_DELIMITER);
+                    String epName = propName.substring(0, lastDIdx);
+                    String inputParmStr = propName.substring(lastDIdx + 1);
+
                     // relying on throwing IllegalArgumentException if it is
                     // not a defined WSS endpoint configuration parameter
                     EP_CFGS inputParm = EP_CFGS.valueOf(inputParmStr);
@@ -642,11 +643,6 @@ public class AppConfigurator {
                     logger.warn("unexpected exception: " + ex
                       + "  propName: " + propName);
                 }
-            } else if (withDots.length > 2) {
-                System.out.println("*** ERR *** multiple dots not allowed, key: "
-                + propName);
-                logger.warn("more than 2 dot delimeters found in endpoint name,"
-                      + " found: " + withDots.length + " dots, propName: " + propName);
             }
         }
 
@@ -711,14 +707,14 @@ public class AppConfigurator {
 
     public void loadGlobalParameter(Properties input, Map cfgs, GL_CFGS eKey)
           throws Exception {
-        
+
         String key = eKey.toString();
 		String newVal = input.getProperty(key);
-        
+
 		if (isOkString(newVal)) {
             // use type of object set in default map to choose processing
             Object currentVal = cfgs.get(key);
-            
+
 //            I am currently allowing null values for some things and assume
 //            that the else clause will handle input from properties file
 //            NOTE: this only works for Strings
@@ -779,9 +775,9 @@ public class AppConfigurator {
 	public void loadEndpointParameter(Properties input, Map epDefaults,
           Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName)
           throws Exception {
-        
+
 		String newVal = input.getProperty(propName);
-        
+
 		if (isOkString(newVal)) {
             // use type defined in a default object to do additional processing
             Object defaultz = epDefaults.get(epParm);
@@ -873,7 +869,7 @@ public class AppConfigurator {
 
     private static String toStringMapStringTypes(Map<String, String> stringMaps) {
         StringBuilder s = new StringBuilder();
-        
+
         if (null != stringMaps) {
             if (stringMaps.isEmpty()) {
                 s.append("\"\"");
@@ -890,12 +886,12 @@ public class AppConfigurator {
         } else {
             s.append("null");
         }
-        
+
         return s.toString();
     }
 
     protected String getValidatedWorkingDir(String newVal) throws Exception {
-        
+
         String validVal = newVal;
         if (!validVal.matches("/.*")) {
             throw new Exception(
@@ -1027,7 +1023,7 @@ public class AppConfigurator {
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
-    
+
     public static String createEPdotPropertyName(String epName, EP_CFGS cfgName) {
         return epName + ENDPOINT_TO_PROPERTIES_DELIMITER + cfgName.toString();
     }
@@ -1036,7 +1032,7 @@ public class AppConfigurator {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
         String line = "----------------------";
-        
+
         sb.append("\n");
 		sb.append(line).append(" Web Service Shell Service Configuration").append("\n");
 
@@ -1074,12 +1070,12 @@ public class AppConfigurator {
                       )) {
                     value = toStringMapStringTypes((Map<String, String>)value);
                 }
-                
+
                 sb.append(strAppend(createEPdotPropertyName(epName, cfgName)))
                       .append(value).append("\n");
             }
             sb.append("\n");
-            
+
             try {
                 sb.append(strAppend(epName + " - default output type"))
                       .append(getDefaultFormatTypeKey(epName)).append("\n");
@@ -1126,7 +1122,7 @@ public class AppConfigurator {
         keyList.add(GL_CFGS.loggingConfig.toString());
         keyList.add(GL_CFGS.sigkillDelay.toString());
         keyList.add(GL_CFGS.singletonClassName.toString());
-        
+
         for (String key: keyList) {
             Object value = globals.get(key) != null ? globals.get(key) : "null";
             sb.append("<TR><TD>").append(key).append("</TD><TD>")
@@ -1138,7 +1134,7 @@ public class AppConfigurator {
                   .append("endpoint: ")
                   .append(epName)
                   .append("</TH></TR>");
-            
+
             Map endpoint = endpoints.get(epName);
             for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
                 Object value = endpoint.get(cfgName);
