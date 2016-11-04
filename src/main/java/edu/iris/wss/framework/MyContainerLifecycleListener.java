@@ -22,7 +22,9 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
     public static final Logger LOGGER =
           Logger.getLogger(MyContainerLifecycleListener.class);
 
-    @Context 	ServletContext context;
+    @Context ServletContext context;
+
+    private WssSingleton sw;
 
     @Override
     public void onStartup(Container cntnr) {
@@ -31,13 +33,8 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         System.out.println("*****************  "
               + MyContainerLifecycleListener.class.getSimpleName() + " onStartup, context path: " + context.getContextPath());
 
-        // relying on application and container to instantiate AppContextListener
-        // before onStartup and to exist until after onShutdown.
-        WssSingleton sw = AppContextListener.sw;
+        sw = (WssSingleton)cntnr.getConfiguration().getProperty(MyApplication.WSS_SINGLETON_KEYWORD);
         LOGGER.info("my container started for app: " + sw.appConfig.getAppName());
-        System.out.println("*****************  " + MyContainerLifecycleListener.class.getSimpleName() + " sw1: " + sw);
-
-        System.out.println("*****************  " + MyContainerLifecycleListener.class.getSimpleName() + " sw:2 " + cntnr.getConfiguration().getProperty("swobj"));
 
         // bind objects as needed to make them available to the framework
         // via a CONTEXT annotation
@@ -50,13 +47,11 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
 
     @Override
     public void onReload(Container cntnr) {
-        WssSingleton sw = AppContextListener.sw;
         LOGGER.info("my container reloaded for app: " + sw.appConfig.getAppName());
     }
 
     @Override
     public void onShutdown(Container cntnr) {
-        WssSingleton sw = AppContextListener.sw;
         LOGGER.info("my container shutdown for app: " + sw.appConfig.getAppName());
         if (WssSingleton.rabbitAsyncPublisher != null) {
             try {
@@ -75,5 +70,4 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
             }
         }
     }
-    
 }

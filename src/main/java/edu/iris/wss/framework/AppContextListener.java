@@ -33,13 +33,29 @@ public class AppContextListener implements ServletContextListener {
     public static final Logger logger = Logger.getLogger(AppContextListener.class);
 
     public static ServletContext servletContext;
-    public static WssSingleton sw;
+
+    @Override
+    public void contextInitialized(ServletContextEvent arg0) {
+        System.out.println("**************************** AppContextListener"
+              + " contextInitialized, arg0: " + arg0);
+
+        // WARNING: only use during startup, it may get overriden if
+        //          another web app is loaded
+        servletContext = arg0.getServletContext();
+
+        logger.info("AppContextListener contextInitialized, context path: "
+            + servletContext.getContextPath());
+
+        System.out.println("**************************** AppContextListener"
+              + " servletContext: " + servletContext);
+    }
 
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
         System.out.println("**************************** AppContextListener "
               + " contextDestroyedc, arg0: " + arg0);
-        logger.info("contextDestroyed called, web app is being shutdown");
+        logger.info("contextDestroyed called, context: "
+              + arg0.getServletContext().getContextPath());
         if (WssSingleton.webLogService != null) {
             try {
                 // for JMS
@@ -54,18 +70,4 @@ public class AppContextListener implements ServletContextListener {
             }
         }
     }
-
-    @Override
-    public void contextInitialized(ServletContextEvent arg0) {
-        System.out.println("**************************** AppContextListener"
-              + " contextInitialized, arg0: " + arg0);
-        logger.info("AppContextListener contextInitialized, web app is starting");
-
-        System.out.println("**************************** AppContextListener"
-              + " servletContextStatic: " + servletContext);
-
-        servletContext = arg0.getServletContext();
-        sw  = new WssSingleton();
-    }
-
 }

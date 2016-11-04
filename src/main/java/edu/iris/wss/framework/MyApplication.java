@@ -20,24 +20,17 @@
  */
 package edu.iris.wss.framework;
 
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 
 // fisnish application setup and add endpoints
 @ApplicationPath("/")
@@ -46,26 +39,29 @@ public class MyApplication extends ResourceConfig {
   public static final Logger logger = Logger.getLogger(MyApplication.class);
   public static final String CLASS_NAME = MyApplication.class.getSimpleName();
 
-////  @Context ServletContext scontext;
+  public static final String WSS_SINGLETON_KEYWORD = "wss_singleton_lookup";
 
+  private WssSingleton sw;
 
-  private WssSingleton swsing;
+  ///@Inject ServletContext srvCtxt7;
 
-  private ServletContext srvCtxt7;
-
-  public void SetupWSS(ServletContext servletContext, WssSingleton sw) throws Exception {
+  public void SetupWSS(String configBase) throws Exception {
     // always setup log4j first
-    String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
-      System.out.println("***************** SetupWSS configBase: " + configBase);
     Util.myNewInitLog4j(configBase);
 
     // get configuration information next
-////    WssSingleton sw = new WssSingleton();
+    sw = new WssSingleton();
+    Map<String, edu.iris.wss.framework.WssSingleton> swprop = new HashMap();
+    swprop.put(WSS_SINGLETON_KEYWORD, sw);
     sw.configure(configBase);
+
+    // store reference to WssSinglton so that it can be bound
+    // for injection with each request and its reference to rabbitmq can be
+    // used at shutdown time
+    setProperties(swprop);
 
     MyContainerLifecycleListener mCLL = new MyContainerLifecycleListener();
     this.registerInstances(mCLL);
-
 
     // bind classes as needed to make other objects be available to the
     // framework via a CONTEXT annotation
@@ -76,12 +72,6 @@ public class MyApplication extends ResourceConfig {
 
     // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
-
-    swsing = new WssSingleton();
-    Map<String, edu.iris.wss.framework.WssSingleton> swprop = new HashMap();
-    swprop.put("swobj", swsing);
-
-    setProperties(swprop);
 
 ////    // example for adding an endpoint from a basic pojo class
 ////    // that may not use annotations, e.g. Info1.java
@@ -116,31 +106,29 @@ public class MyApplication extends ResourceConfig {
     }
   }
 
+////  @Inject
+////  public MyApplication(ServletContext srvCtxt7) {
   public MyApplication() {
-    System.out.println("*****  " + CLASS_NAME + " no-arg constructor");
-////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor scontext: " + scontext);
-////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor contxt3: " + contxt3);
+    System.out.println("--------------- ************** " + CLASS_NAME
+          + " constructor");
+////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor srvCtxt7: " + srvCtxt7);
 
-    URL resource = getClass().getResource("/");
-    String path22 = resource.getPath();
-    System.out.println("*****  " + CLASS_NAME + " no-arg constructor path22: " + path22);
-
+    // Note: it is not safe to use servletContext after initial startup, it
+    //       might be overridden by later loading of another web app
     ServletContext servletContext = AppContextListener.servletContext;
-    System.out.println("*****  " + CLASS_NAME + " no-arg constructor servletContext: " + servletContext);
-    System.out.println("*****  " + CLASS_NAME + " no-arg constructor" + "  context path: " + servletContext.getContextPath());
-    WssSingleton sw = AppContextListener.sw;
-    System.out.println("************** myApplication construct, sw: " + sw);
+    System.out.println("--------------- ************** " + CLASS_NAME
+          + " constructor servletContext: " + servletContext);
+    String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
+    System.out.println("--------------- ************** " + CLASS_NAME
+          + " constructor" + "  context path: " + servletContext.getContextPath());
 
     try {
         System.out.println("--------------- ************** start setup");
-        SetupWSS(servletContext, sw);
+        SetupWSS(configBase);
     } catch(Exception ex) {
-        System.out.println("************ exexex ************************ " + this.getClass().getSimpleName() + "  ex: " + ex);
+        System.out.println("--------------- ************** exexex ************************ "
+              + this.getClass().getSimpleName() + "  ex: " + ex);
     }
-  }
-
-  public void setContext(@Context ServletContext contx33) {
-      System.out.println("*****  " + CLASS_NAME + " no-arg constructor contxt3: " + contx33);
   }
 
   /**
