@@ -31,16 +31,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
-import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -67,13 +63,11 @@ public class Service_ContentDisposition_PrecedenceTest  {
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
 
-    private static HttpServer server;
-
     public Service_ContentDisposition_PrecedenceTest() {
     }
 
     @BeforeClass
-    public static void setUpClass() throws IOException {
+    public static void setUpClass() throws Exception {
         // setup config dir for test environment
         System.setProperty(Util.WSS_OS_CONFIG_DIR,
             "target"
@@ -85,37 +79,15 @@ public class Service_ContentDisposition_PrecedenceTest  {
         createParamCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
               SOME_CONTEXT + "-param.cfg");
 
-        logger.info("*********** starting grizzlyWebServer, BASE_URI: "
-            + BASE_URI);
-
-        Map<String, String> initParams = new HashMap<>();
-        initParams.put(
-            ServletProperties.JAXRS_APPLICATION_CLASS,
-            MyApplication.class.getName());
-
-        logger.info("*** starting grizzly container with parameters: " + initParams);
-        System.out.println("********** start GrizzlyWebContainerFactory");
-
-        server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
-      
-        server.start();
-        System.out.println("********** started GrizzlyWebServer, class: "
-            + Service_ContentDisposition_PrecedenceTest.class.getName());
-        System.out.println("********** started GrizzlyWebServer, config: "
-            + server.getServerConfiguration());
-
-        // for manual test of server, uncomment this code then mvn clean install
-//        System.out.println("***** Application started, try: " + BASE_URI);
-//        System.out.println("***** control-c to stop its...");
-//        System.in.read();
+        GrizzlyContainerHelper.setUpServer(BASE_URI,
+              Service_ContentDisposition_PrecedenceTest.class.getName(),
+              SOME_CONTEXT);
     }
 
     @AfterClass
-    public static void tearDownClass() {
-        System.out.println("********** stopping grizzlyWebServer, class: "
-            + Service_ContentDisposition_PrecedenceTest.class.getName());
-        logger.info("*********** stopping grizzlyWebServer");
-        server.shutdownNow();
+    public static void tearDownClass() throws Exception {
+        GrizzlyContainerHelper.tearDownServer(
+              Service_ContentDisposition_PrecedenceTest.class.getName());
     }
 
     @Before
@@ -152,8 +124,8 @@ public class Service_ContentDisposition_PrecedenceTest  {
      * - no override in config addHeaders
      * - no override in config formatDispostions
      * - no override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_default_ContentDisp() throws Exception {
@@ -185,8 +157,8 @@ public class Service_ContentDisposition_PrecedenceTest  {
      * - no override in config addHeaders
      * - override in config formatDispostions
      * - no override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_formatDispositions() throws Exception {
@@ -218,8 +190,8 @@ public class Service_ContentDisposition_PrecedenceTest  {
      * - no override in config addHeaders
      * - override in config formatDispostions
      * - override by handler
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test
     public void test_handler_Dispositions() throws Exception {
@@ -331,7 +303,7 @@ public class Service_ContentDisposition_PrecedenceTest  {
 
         sb.append("# ----------------  endpoints").append("\n");
         sb.append("\n");
-        
+
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
         sb.append("test_CD3.format=TEXT").append("\n");

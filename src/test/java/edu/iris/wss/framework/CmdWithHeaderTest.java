@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2014 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -33,16 +33,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
-import org.glassfish.jersey.servlet.ServletProperties;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -62,21 +58,19 @@ public class CmdWithHeaderTest  {
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
-    
+
     // set notional webapp name
 //    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
     private static final String SOME_CONTEXT = "/tstcmd";
-    
+
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
 
-    private static HttpServer server;
-    
     public CmdWithHeaderTest() {
     }
 
     @BeforeClass
-    public static void setUpClass() throws IOException {
+    public static void setUpClass() throws Exception {
         // setup config dir for test environment
         System.setProperty(Util.WSS_OS_CONFIG_DIR,
             "target"
@@ -86,43 +80,19 @@ public class CmdWithHeaderTest  {
         createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
               SOME_CONTEXT + "-service.cfg");
 
-        logger.info("*********** starting grizzlyWebServer, BASE_URI: "
-            + BASE_URI);
-
-        Map<String, String> initParams = new HashMap<>();
-        initParams.put(
-            ServletProperties.JAXRS_APPLICATION_CLASS,
-            MyApplication.class.getName());
-
-        logger.info("*** starting grizzly container with parameters: " + initParams);
-        System.out.println("********** start GrizzlyWebContainerFactory");
-
-        server = GrizzlyWebContainerFactory.create(BASE_URI, initParams);
-      
-        server.start();
-        System.out.println("********** started GrizzlyWebServer, class: "
-            + CmdWithHeaderTest.class.getName());
-        System.out.println("********** started GrizzlyWebServer, config: "
-            + server.getServerConfiguration());
-
-        // for manual test of server, uncomment this code then mvn clean install
-//        System.out.println("***** Application started, try: " + BASE_URI);
-//        System.out.println("***** control-c to stop its...");
-//        System.in.read();
+        GrizzlyContainerHelper.setUpServer(BASE_URI, CmdWithHeaderTest.class.getName(),
+              SOME_CONTEXT);
     }
-    
+
     @AfterClass
-    public static void tearDownClass() {
-        System.out.println("********** stopping grizzlyWebServer, class: "
-            + CmdWithHeaderTest.class.getName());
-        logger.info("*********** stopping grizzlyWebServer");
-        server.shutdownNow();
+    public static void tearDownClass() throws Exception {
+        GrizzlyContainerHelper.tearDownServer(CmdWithHeaderTest.class.getName());
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -174,7 +144,7 @@ public class CmdWithHeaderTest  {
         // of SOME_CONTEXT
         assertTrue(testMsg.indexOf("sleep handle2 stdout args") == 0);
 
-        // mediatype should be default value from outputs on queryEP 
+        // mediatype should be default value from outputs on queryEP
         assertEquals(response.getMediaType().toString(), "text/plain");
     }
 
@@ -420,9 +390,9 @@ public class CmdWithHeaderTest  {
         assertEquals("inline", response.getHeaderString("Content-Disposition"));
         assertEquals("http://host.example", response.getHeaderString("Access-Control-Allow-Origin"));
 
-        // mediatype should be default value from outputs on test_CD1 
+        // mediatype should be default value from outputs on test_CD1
         assertEquals("application/octet-stream", response.getMediaType().toString());
-        
+
         // should also have the extra header
         assertEquals("value-for-test-hdr", response.getHeaderString("Test-Header"));
     }
@@ -435,7 +405,7 @@ public class CmdWithHeaderTest  {
 
         assertEquals(200, response.getStatus());
 
-        // mediatype should be default value from outputs on test_CD1 
+        // mediatype should be default value from outputs on test_CD1
         assertEquals("application/octet-stream", response.getMediaType().toString());
 
         // must be binary media type in order to have WSS add "Content-Disposition"

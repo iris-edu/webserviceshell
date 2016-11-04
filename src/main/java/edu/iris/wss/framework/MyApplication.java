@@ -20,53 +20,68 @@
  */
 package edu.iris.wss.framework;
 
+import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 
-// Set up application for injection and loading to container
-
-// Don't use annotation ApplicationPath here, it is configured in web.xml
-//@ApplicationPath("/")
+// fisnish application setup and add endpoints
+@ApplicationPath("/")
 public class MyApplication extends ResourceConfig {
-    
+
   public static final Logger logger = Logger.getLogger(MyApplication.class);
   public static final String CLASS_NAME = MyApplication.class.getSimpleName();
 
-  // Should be first thing to run when web application starts.
-  @Inject
-  public MyApplication(ServiceLocator serviceLocator,
-        @Context ServletContext servletContext) throws Exception {
+////  @Context ServletContext scontext;
+
+
+  private WssSingleton swsing;
+
+  private ServletContext srvCtxt7;
+
+  public void SetupWSS(ServletContext servletContext, WssSingleton sw) throws Exception {
     // always setup log4j first
     String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
+      System.out.println("***************** SetupWSS configBase: " + configBase);
     Util.myNewInitLog4j(configBase);
 
     // get configuration information next
-    WssSingleton sw = new WssSingleton();
+////    WssSingleton sw = new WssSingleton();
     sw.configure(configBase);
 
     MyContainerLifecycleListener mCLL = new MyContainerLifecycleListener();
     this.registerInstances(mCLL);
 
+
     // bind classes as needed to make other objects be available to the
     // framework via a CONTEXT annotation
-    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
-    Injections.addBinding(
-        Injections.newBinder(sw).to(WssSingleton.class), dc);
-    dc.commit();
+////    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+////    Injections.addBinding(
+////        Injections.newBinder(sw).to(WssSingleton.class), dc);
+////    dc.commit();
 
     // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
+
+    swsing = new WssSingleton();
+    Map<String, edu.iris.wss.framework.WssSingleton> swprop = new HashMap();
+    swprop.put("swobj", swsing);
+
+    setProperties(swprop);
 
 ////    // example for adding an endpoint from a basic pojo class
 ////    // that may not use annotations, e.g. Info1.java
@@ -75,7 +90,7 @@ public class MyApplication extends ResourceConfig {
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
-        
+
         String methodName = "doIrisStreaming";
         if (sw.appConfig.getIrisEndpointClass(epName) instanceof
               edu.iris.wss.provider.IrisProcessor) {
@@ -87,7 +102,7 @@ public class MyApplication extends ResourceConfig {
         // Note: HEAD seems to be allowed by default
         addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
               methodName, "GET", mediaTypes);
-        
+
         if (sw.appConfig.isPostEnabled(epName)) {
             addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
                   methodName, "POST", mediaTypes);
@@ -100,17 +115,38 @@ public class MyApplication extends ResourceConfig {
         }
     }
   }
-  
+
   public MyApplication() {
-    // This constructor should not get called if MyApplication is being
-    // created by the framework in the expected way
     System.out.println("*****  " + CLASS_NAME + " no-arg constructor");
+////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor scontext: " + scontext);
+////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor contxt3: " + contxt3);
+
+    URL resource = getClass().getResource("/");
+    String path22 = resource.getPath();
+    System.out.println("*****  " + CLASS_NAME + " no-arg constructor path22: " + path22);
+
+    ServletContext servletContext = AppContextListener.servletContext;
+    System.out.println("*****  " + CLASS_NAME + " no-arg constructor servletContext: " + servletContext);
+    System.out.println("*****  " + CLASS_NAME + " no-arg constructor" + "  context path: " + servletContext.getContextPath());
+    WssSingleton sw = AppContextListener.sw;
+    System.out.println("************** myApplication construct, sw: " + sw);
+
+    try {
+        System.out.println("--------------- ************** start setup");
+        SetupWSS(servletContext, sw);
+    } catch(Exception ex) {
+        System.out.println("************ exexex ************************ " + this.getClass().getSimpleName() + "  ex: " + ex);
+    }
+  }
+
+  public void setContext(@Context ServletContext contx33) {
+      System.out.println("*****  " + CLASS_NAME + " no-arg constructor contxt3: " + contx33);
   }
 
   /**
    * This method encapsulates key details for dynamically anding an
    * endpoint.
-   * 
+   *
    * @param epName - name of last part of URI path
    * @param epClass - the class containing the method to respond to a request
    * @param epMethodName - the method that handles this request
@@ -140,7 +176,7 @@ public class MyApplication extends ResourceConfig {
 
     final Resource endpointRes = resourceBuilder.build();
     registerResources(endpointRes);
-    
+
     String msg = CLASS_NAME + " added endpoint: " + endpointRes.getPath()
           + "  httpMethod: " + httpMethod + "  epMethodName: " + epMethodName
           + "  mediaTypes: " + mediaTypes;
@@ -153,15 +189,15 @@ public class MyApplication extends ResourceConfig {
 
 //@ApplicationPath("/")
 //public class MyApplicationAlt3 extends ResourceConfig {
-//    
+//
 //  public static final Logger logger = Logger.getLogger(MyApplicationAlt3.class);
-//  
+//
 //  public static class MyHK2Binder extends AbstractBinder {
 //
 //    @Override
 //    protected void configure() {
 //      System.out.println("***** MyApplicationAlt3 static MyHK2Binder configure start");
-//      
+//
 //      //bindAsContract(AppScope.class).in(Singleton.class);
 //      // singleton instance binding
 //      AppScope appScope = new AppScope();
@@ -170,7 +206,7 @@ public class MyApplication extends ResourceConfig {
 //      System.out.println("***** MyApplicationAlt3 MyHK2Binder configure");
 //    }
 //  }
-//  
+//
 //  public MyApplicationAlt3() {
 //    System.out.println("***** MyApplicationAlt3 extends ResourceConfig construct");
 //    register(Wss.class);

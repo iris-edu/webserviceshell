@@ -109,7 +109,8 @@ public class StreamEaterTest {
               false);
 
 
-        GrizzlyContainerHelper.setUpServer(BASE_URI, this.getClass().getName());
+        GrizzlyContainerHelper.setUpServer(BASE_URI, this.getClass().getName(),
+              SERVICE_CONTEXT);
     }
 
     @After

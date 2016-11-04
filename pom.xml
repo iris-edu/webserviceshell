@@ -12,7 +12,7 @@
     <name>WebServiceShell</name>
     <groupId>edu.iris</groupId>
     <artifactId>webserviceshell</artifactId>
-    <version>2.2.3</version>
+    <version>2.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>http://iris.edu</url>
@@ -126,7 +126,7 @@
 		<jersey.version.1x>1.18</jersey.version.1x>
 		<servlet.version>3.0.1</servlet.version>
 		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
-        <dmc.usage.log.version>1.0.1</dmc.usage.log.version>
+        <dmc.usage.log.version>1.0.2</dmc.usage.log.version>
         <dmc_logging.version>[1.1.4,)</dmc_logging.version>
         <wsslog4jinit.version>0.95</wsslog4jinit.version>
         <grizzly2.version>2.11</grizzly2.version>
@@ -179,7 +179,7 @@
             <artifactId>jersey-container-grizzly2-servlet</artifactId>
           <version>${jersey.version.2x}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.glassfish.hk2</groupId>
         <artifactId>hk2-locator</artifactId>
@@ -204,7 +204,13 @@
             <type>pom</type>
             <!--scope>import</scope-->
         </dependency>
-
+        <!-- CDI - JBoss Weld is the reference implementation of CDI -->
+        <dependency>
+            <groupId>javax.enterprise</groupId>
+            <artifactId>cdi-api</artifactId>
+            <version>1.2</version>
+            <type>jar</type>
+        </dependency>
         <!--dependency>
             <groupId>edu.iris.wss</groupId>
             <artifactId>IrisWSSLog4jInit</artifactId>

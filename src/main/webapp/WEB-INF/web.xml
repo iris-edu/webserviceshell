@@ -6,7 +6,7 @@
 
 	<display-name>webserviceshell</display-name>
 
-	<servlet>
+	<!--servlet>
 		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 
 		<init-param>
@@ -20,12 +20,13 @@
 	<servlet-mapping>
 		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
+	</servlet-mapping-->
 
     <session-config>
         <tracking-mode>URL</tracking-mode>
     </session-config>
 
+<!--
 	<filter>
 		<filter-name>Remote Address Filter</filter-name>
 		<filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
@@ -38,6 +39,7 @@
 		<filter-name>Remote Address Filter</filter-name>
 		<url-pattern>/wssstatus</url-pattern>
 	</filter-mapping>
+-->
 
 	<security-role>
 		<role-name>authenticated</role-name>

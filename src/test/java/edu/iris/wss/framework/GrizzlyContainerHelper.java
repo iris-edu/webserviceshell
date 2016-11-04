@@ -8,6 +8,8 @@ package edu.iris.wss.framework;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
 import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
@@ -30,7 +32,8 @@ public class GrizzlyContainerHelper {
      * @param callerClassName - used to help understand logs
      * @throws Exception
      */
-    public static void setUpServer(URI base_uri, String callerClassName) throws Exception {
+    public static void setUpServer(URI base_uri, String callerClassName,
+          String contextPath) throws Exception {
         Map<String, String> initParams = new HashMap<>();
         initParams.put(
             ServletProperties.JAXRS_APPLICATION_CLASS,
@@ -41,6 +44,14 @@ public class GrizzlyContainerHelper {
         LOGGER.info(msg + ", BASE_URI: " + base_uri);
         LOGGER.info(msg + ", parameters: " + initParams);
 
+        // do to restructure of WSS startup to enable glassfish container
+        // environment, there now needs to be an instance of AppContextListener
+        // before MyApplication can complete
+        ServletContext sc = new ServletContextHelper(contextPath);
+        AppContextListener apc = new AppContextListener();
+        apc.contextInitialized(new ServletContextEvent(sc));
+
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% server: " + server);
         server = GrizzlyWebContainerFactory.create(base_uri, initParams);
         server.start();
 
@@ -60,5 +71,6 @@ public class GrizzlyContainerHelper {
         System.out.println(msg);
         LOGGER.info(msg);
         server.shutdownNow();
+        server = null;
      }
 }

@@ -69,7 +69,8 @@ public class WssSingletonTest {
         nameCounter++; // NOTE: the number of tests cannot exceed the
                        //       number of elementas in NAME_TYPES_TO_TEST
 
-        GrizzlyContainerHelper.setUpServer(BASE_URI, this.getClass().getName());
+        GrizzlyContainerHelper.setUpServer(BASE_URI, this.getClass().getName(),
+              SOME_CONTEXT);
     }
 
     @After
