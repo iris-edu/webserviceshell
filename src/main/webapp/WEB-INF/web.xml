@@ -6,7 +6,7 @@
 
 	<display-name>webserviceshell</display-name>
 
-	<!--servlet>
+	<servlet>
 		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 
 		<init-param>
@@ -20,7 +20,7 @@
 	<servlet-mapping>
 		<servlet-name>edu.iris.wss.framework.MyApplication</servlet-name>
 		<url-pattern>/*</url-pattern>
-	</servlet-mapping-->
+	</servlet-mapping>
 
     <session-config>
         <tracking-mode>URL</tracking-mode>

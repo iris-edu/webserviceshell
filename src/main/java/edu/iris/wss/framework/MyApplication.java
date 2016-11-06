@@ -24,16 +24,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import javax.servlet.ServletContext;
-import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
-// fisnish application setup and add endpoints
-@ApplicationPath("/")
+// using web.xml start for now rather than @ApplicationPath("/")
+////@ApplicationPath("/")
 public class MyApplication extends ResourceConfig {
 
   public static final Logger logger = Logger.getLogger(MyApplication.class);
@@ -43,11 +41,9 @@ public class MyApplication extends ResourceConfig {
 
   private WssSingleton sw;
 
-  ///@Inject ServletContext srvCtxt7;
-
   public void SetupWSS(String configBase) throws Exception {
-    // always setup log4j first
-    Util.myNewInitLog4j(configBase);
+////    // always setup log4j first
+////    Util.myNewInitLog4j(configBase);
 
     // get configuration information next
     sw = new WssSingleton();
@@ -106,28 +102,27 @@ public class MyApplication extends ResourceConfig {
     }
   }
 
-////  @Inject
-////  public MyApplication(ServletContext srvCtxt7) {
   public MyApplication() {
     System.out.println("--------------- ************** " + CLASS_NAME
           + " constructor");
-////    System.out.println("*****  " + CLASS_NAME + " no-arg constructor srvCtxt7: " + srvCtxt7);
 
-    // Note: it is not safe to use servletContext after initial startup, it
-    //       might be overridden by later loading of another web app
-    ServletContext servletContext = AppContextListener.servletContext;
     System.out.println("--------------- ************** " + CLASS_NAME
-          + " constructor servletContext: " + servletContext);
-    String configBase = Util.getWssFileNameBase(servletContext.getContextPath());
+          + " constructor servletContext: "
+          + AppContextListener.configBaseToServletContext.get(AppContextListener.globalConfigBase));
+
+    String configBase = AppContextListener.globalConfigBase;
+
     System.out.println("--------------- ************** " + CLASS_NAME
-          + " constructor" + "  context path: " + servletContext.getContextPath());
+          + " constructor configBase: " + configBase);
 
     try {
-        System.out.println("--------------- ************** start setup");
         SetupWSS(configBase);
     } catch(Exception ex) {
-        System.out.println("--------------- ************** exexex ************************ "
-              + this.getClass().getSimpleName() + "  ex: " + ex);
+        String msg = "--------------- ************** " + CLASS_NAME
+              + " ERROR setting up endpoints, configBase: " + configBase
+              + " exception: " + ex;
+        System.out.println(msg);
+        logger.error(msg);
     }
   }
 

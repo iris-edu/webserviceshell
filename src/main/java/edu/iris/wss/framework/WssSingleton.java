@@ -67,6 +67,8 @@ public class WssSingleton {
     public final static String ACCESS_CONTROL_ALLOW_ORIGIN =
           "Access-Control-Allow-Origin";
 
+    private String configFileBase = "notDefinedYet";
+
 	public WssSingleton(){
         System.out.println("***** ***** ***** ***** ***** "
               + this.getClass().getSimpleName()+ " no-arg construct");
@@ -82,8 +84,13 @@ public class WssSingleton {
         }
     }
 
+    public String getConfigFileBase() {
+        return configFileBase;
+    }
+
 	public void configure(String configFileBase) throws Exception {
         if (appConfig == null) {
+            this.configFileBase = configFileBase;
             appConfig = new AppConfigurator();
         }
 

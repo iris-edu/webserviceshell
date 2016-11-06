@@ -28,13 +28,17 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
 
     @Override
     public void onStartup(Container cntnr) {
-        System.out.println("*****************  "
-              + MyContainerLifecycleListener.class.getSimpleName() + " onStartup");
-        System.out.println("*****************  "
-              + MyContainerLifecycleListener.class.getSimpleName() + " onStartup, context path: " + context.getContextPath());
+        sw = (WssSingleton)cntnr.getConfiguration().getProperty(
+              MyApplication.WSS_SINGLETON_KEYWORD);
 
-        sw = (WssSingleton)cntnr.getConfiguration().getProperty(MyApplication.WSS_SINGLETON_KEYWORD);
-        LOGGER.info("my container started for app: " + sw.appConfig.getAppName());
+        // this is to provide a reference for testign the the global passing
+        // of configBase, these two servlet context should be the same?
+        ServletContext scForSwCreation =
+              AppContextListener.configBaseToServletContext.get(sw.getConfigFileBase());
+        System.out.println("***************** MyContainerLifecycleListener"
+              + " onStartup, servlet context first: " + scForSwCreation);
+        System.out.println("***************** MyContainerLifecycleListener"
+              + " onStartup, servlet context   now: " + context);
 
         // bind objects as needed to make them available to the framework
         // via a CONTEXT annotation
@@ -43,6 +47,9 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         Injections.addBinding(
             Injections.newBinder(sw).to(WssSingleton.class), dc);
         dc.commit();
+
+        LOGGER.info("onStartup, context path: " + context.getContextPath()
+              + "  configBase: " + sw.getConfigFileBase());
     }
 
     @Override

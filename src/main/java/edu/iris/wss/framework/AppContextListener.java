@@ -19,6 +19,8 @@
 
 package edu.iris.wss.framework;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -27,27 +29,41 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * Activated by being defined as a listener in web.xml
+ * Defined as a listener in web.xml
  */
 public class AppContextListener implements ServletContextListener {
     public static final Logger logger = Logger.getLogger(AppContextListener.class);
 
-    public static ServletContext servletContext;
+    public static String globalConfigBase;
+    // overkill to allow observation of test code behavior, many test seem
+    // to be run together and share this object, it does not seem to be the
+    // case on tomcat or glassfish containters.
+    public static Map<String, ServletContext>  configBaseToServletContext = new ConcurrentHashMap();
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
         System.out.println("**************************** AppContextListener"
               + " contextInitialized, arg0: " + arg0);
 
-        // WARNING: only use during startup, it may get overriden if
-        //          another web app is loaded
-        servletContext = arg0.getServletContext();
+        synchronized(this) {
+            ServletContext sc = arg0.getServletContext();
+            String configBase = Util.getWssFileNameBase(sc.getContextPath());
+            // try to setup log4j before the first logger message
+            Util.myNewInitLog4j(configBase);
 
-        logger.info("AppContextListener contextInitialized, context path: "
-            + servletContext.getContextPath());
+            configBaseToServletContext.put(configBase, sc);
+            globalConfigBase = configBase;
 
-        System.out.println("**************************** AppContextListener"
-              + " servletContext: " + servletContext);
+            System.out.println("**************************** AppContextListener"
+                  + "  context count: " + configBaseToServletContext.size()
+                  + "  keys: " + configBaseToServletContext.keySet());
+            System.out.println("**************************** AppContextListener"
+                  + "  configBase: " + configBase
+                  + "  ContextPath: " + sc.getContextPath());
+
+            logger.info("AppContextListener contextInitialized, context path: "
+                + sc.getContextPath() + "  configBase: " + configBase);
+        }
     }
 
     @Override
