@@ -51,7 +51,6 @@ public class GrizzlyContainerHelper {
         AppContextListener apc = new AppContextListener();
         apc.contextInitialized(new ServletContextEvent(sc));
 
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% server: " + server);
         server = GrizzlyWebContainerFactory.create(base_uri, initParams);
         server.start();
 
