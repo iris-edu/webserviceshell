@@ -60,6 +60,14 @@ public class AppContextListener implements ServletContextListener {
             System.out.println("**************************** AppContextListener"
                   + "  configBase: " + configBase
                   + "  ContextPath: " + sc.getContextPath());
+            System.out.println("**************************** AppContextListener"
+                  + "         this: " + this + "  hash: " + this.hashCode());
+            System.out.println("**************************** AppContextListener"
+                  + "   this class: " + this.getClass() + "  hash: " + this.getClass().hashCode());
+            System.out.println("**************************** AppContextListener"
+                  + "  classLoader: " + this.getClass().getClassLoader() + "  hash: " + this.getClass().getClassLoader().hashCode());
+            System.out.println("**************************** AppContextListener"
+                  + "  classLoadeP: " + this.getClass().getClassLoader().getParent() + "  hash: " + this.getClass().getClassLoader().getParent().hashCode());
 
             logger.info("AppContextListener contextInitialized, context path: "
                 + sc.getContextPath() + "  configBase: " + configBase);

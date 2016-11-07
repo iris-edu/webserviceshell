@@ -156,6 +156,17 @@ public class WssSingleton {
 
     private void setupRabbitLogging(String rabbitCfgFile) {
         boolean isCreated = false;
+        System.out.println("************* ---------------- *************** rabbitAP before: " + rabbitAsyncPublisher);
+        if (rabbitAsyncPublisher != null) {
+            // should always be null if rabbitAsyncPublisher is held as a static,
+            // this implies that more than one WssSingleton object is seeing
+            // this class variable. It should be refactored or there should
+            // be different classloaders used to isolate this class from another
+            String msg = "POSSIBLE ERROR, rabbitAsyncPublisher object already exists, null was expected for rabbitAsyncPublisher, rabbitAsyncPublisher: "
+                  + rabbitAsyncPublisher;
+            System.out.println(msg);
+            logger.error(msg);
+        }
         try {
             rabbitAsyncPublisher =
                   IrisRabbitPublisherFactory.createAsyncPublisher(rabbitCfgFile,
@@ -179,6 +190,7 @@ public class WssSingleton {
                 logger.error(msg, exUURL);
             }
         }
+        System.out.println("************* ---------------- *************** rabbitAP  after: " + rabbitAsyncPublisher);
 
         if (isCreated) {
             try {
@@ -194,6 +206,17 @@ public class WssSingleton {
     }
 
     private void setupJMSLogging() {
+        if (webLogService != null) {
+            // should always be null if webLogService is held as a static,
+            // this implies that more than one WssSingleton object is seeing
+            // this class variable. It should be refactored or there should
+            // be different classloaders used to isolate this class from another
+            String msg = "POSSIBLE ERROR, JMS object already exists, null was expected for webLogService, webLogService: "
+                  + webLogService;
+            System.out.println(msg);
+            logger.error(msg);
+        }
+
         webLogService = new WebLogService();
         try {
             webLogService.init();

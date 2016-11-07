@@ -31,10 +31,32 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         sw = (WssSingleton)cntnr.getConfiguration().getProperty(
               MyApplication.WSS_SINGLETON_KEYWORD);
 
-        // this is to provide a reference for testign the the global passing
-        // of configBase, these two servlet context should be the same?
+        // check for container startup timing errors that should never
+        // occur in regular use, but might appear in unit testing, or when
+        // container/injection frameworks are changed
+        //
+        // compare the configBase used for the configuration of this sw
+        // versus the configBase associated with this ServletContext and
+        // serviceLocator which will bind sw to all the resources
+
+        String configuredSw_configBase = sw.getConfigFileBase();
+        String this_configBase = Util.getWssFileNameBase(
+              context.getContextPath());
+        if (configuredSw_configBase.equals(this_configBase)) {
+            // noop - no problem
+        } else {
+            String msg = "POSSIBLE ERROR, possible mis-match of configured WssSingleton object with respective resources,"
+                  + "  configured configBase: " + configuredSw_configBase
+                  + "  resource configBase: " + this_configBase;
+            System.out.println(msg);
+            LOGGER.error(msg);
+        }
+
+        // expecting the servletContext objects to be the same from
+        // different times in the startup process, except sometimes in
+        // the unit test framework
         ServletContext scForSwCreation =
-              AppContextListener.configBaseToServletContext.get(sw.getConfigFileBase());
+              AppContextListener.configBaseToServletContext.get(configuredSw_configBase);
         System.out.println("***************** MyContainerLifecycleListener"
               + " onStartup, servlet context first: " + scForSwCreation);
         System.out.println("***************** MyContainerLifecycleListener"
@@ -43,6 +65,8 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         // bind objects as needed to make them available to the framework
         // via a CONTEXT annotation
         ServiceLocator serviceLocator = cntnr.getApplicationHandler().getServiceLocator();
+        System.out.println("***************** MyContainerLifecycleListener"
+              + " serviceLocator: " + serviceLocator);
         DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
         Injections.addBinding(
             Injections.newBinder(sw).to(WssSingleton.class), dc);
