@@ -117,14 +117,19 @@ public  class RequestInfo {
     }
 
     public static String getEndpointNameForThisRequest(HttpServletRequest req) {
-//        Dont use this, as it creates a session for every request
+//        Dont use req.getSession(), as it creates a session for every request
 //        String contextPath = req.getSession().getServletContext().getContextPath();
-        String contextPath = req.getContextPath();
+
+String contextPath = req.getContextPath();
         String requestURI = req.getRequestURI();
 
-        // remove any leading /
-        String epName = requestURI.substring(contextPath.length())
-              .replaceFirst(java.util.regex.Pattern.quote("/"), "");
+        // remove any leading slash character
+        String epName =  requestURI.substring(contextPath.length());
+        if (epName.length() > 0 ) {
+            if (epName.startsWith("/")) {
+                epName = epName.substring(1);
+            }
+        }
 
         return epName;
     }

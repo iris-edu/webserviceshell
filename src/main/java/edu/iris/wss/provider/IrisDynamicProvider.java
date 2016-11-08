@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -52,7 +52,7 @@ public class IrisDynamicProvider {
 
     @Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
-    @Context 	UriInfo uriInfo;	
+    @Context 	UriInfo uriInfo;
     @Context 	HttpHeaders requestHeaders;
 
     @Context 	WssSingleton sw;
@@ -140,9 +140,10 @@ public class IrisDynamicProvider {
         String requestedEpName = ri.getEndpointNameForThisRequest();
 
         if (!ri.isThisEndpointConfigured()) {
-            Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
-                  "Error, there is no configuration information for"
-                        + " endpoint: " + requestedEpName);
+            Util.logAndThrowException(ri, Status.NOT_FOUND,
+                  "Error, this endpoint is not configured, or it is mistyped, or"
+                        + " there is a trailing slash in path: "
+                        + ri.request.getRequestURI());
         }
 
         if (containerRequestContext.getMethod().equals("POST")) {
@@ -185,14 +186,14 @@ public class IrisDynamicProvider {
             // this might happen if the service config has been set with
             // some other valid IRIS class, since the one parameter is now
             // used with more than one class type.
-            
+
             String briefMsg = "An IrisProcessor object was not found, "
                   + " this class was found: "
                   + sw.appConfig.getIrisEndpointClass(requestedEpName).getClass();
-            
+
             String moreDetails = "Check the setup in service config or dynamic"
                   + " class assignment in MyApplication";
-            
+
             Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                   briefMsg, moreDetails);
         }
