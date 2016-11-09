@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -35,20 +35,22 @@ import edu.iris.wss.framework.WssSingleton;
 import edu.iris.wss.framework.Util;
 import org.apache.log4j.Logger;
 import edu.iris.wss.utils.WebUtils;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Path ("/")
 public class Wss {
 	@Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
-    @Context 	UriInfo uriInfo;	
+    @Context 	UriInfo uriInfo;
     @Context 	HttpHeaders requestHeaders;
 
     @Context 	WssSingleton sw;
 
     //private RequestInfo ri;
-    
+
 	public static final Logger logger = Logger.getLogger(Wss.class);
-	
+
 	public Wss()  {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
@@ -83,7 +85,7 @@ public class Wss {
 
         sb.append("<br/>");
         sb.append(ri.appConfig.toHtmlString());
-    	
+
         sb.append("<br/>");
         sb.append(ri.paramConfig.toHtmlString());
 
@@ -146,8 +148,23 @@ public class Wss {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
         ri.statsKeeper.logGet();
 
+        if (request.getRequestURI().endsWith("/")) {
+            // noop - dont need redirect
+        } else {
+            try {
+                URI redirectTo = new URI(request.getRequestURI() + "/");
+                ResponseBuilder builder = Response.status(Status.TEMPORARY_REDIRECT)
+                      .location(redirectTo);
+                return builder.build();
+            } catch (URISyntaxException ex) {
+                Util.logAndThrowException(ri, Status.BAD_REQUEST,
+                      "WebServiceShell could not build a URI for request: " +
+                            request.getRequestURI());
+            }
+        }
+
     	String docUrl = ri.appConfig.getRootServiceDoc();
-    	
+
     	// Dump some default text if no good Service Doc Config
     	if (!AppConfigurator.isOkString(docUrl)) {
             String htmlMarkup ="<div>The <b>rootServiceDoc</b> parameter is not"
@@ -165,13 +182,13 @@ public class Wss {
 
             return builder.build();
         }
-    	
+
       	InputStream is = null;
-      	URL url = null;
-    	try {    		
-    		url = new URL(docUrl);    		
-    		is = url.openStream();
-    	} catch (Exception e) {
+        URL url = null;
+        try {
+            url = new URL(docUrl);
+            is = url.openStream();
+        } catch (Exception e) {
             String htmlMarkup = "<div>An exception occurred while reading the"
                   + " contents of the <b>rootServiceDoc</b> parameter.</div>"
                   + "<div><b>rootServiceDoc value:</b> " + docUrl + "</div>"
@@ -188,7 +205,7 @@ public class Wss {
 
             return builder.build();
     	}
-    	
+
     	final BufferedReader br = new BufferedReader( new InputStreamReader( is));
 
     	StreamingOutput so = new StreamingOutput() {
@@ -218,7 +235,7 @@ public class Wss {
 
 		return builder.build();
    }
-    
+
     @Path("wssversion")
 	@GET @Produces("text/plain")
 	public Response getWssVersion() throws IOException {
@@ -235,7 +252,7 @@ public class Wss {
 
 		return builder.build();
 	}
-	
+
 	@Path("version")
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
@@ -252,7 +269,7 @@ public class Wss {
 
 		return builder.build();
 	}
-	
+
 	@Path("whoami")
 	@GET @Produces("text/plain")
 	public Response getwho() {
