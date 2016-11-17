@@ -585,6 +585,8 @@ public class AppConfigurator {
             configurationProps.load(inStream);
             logger.info("Default application properties loaded, file: "
                 + defaultCfgName);
+
+            inStream.close();
         }
         return configurationProps;
     }
