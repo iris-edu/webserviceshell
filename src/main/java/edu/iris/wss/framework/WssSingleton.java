@@ -70,8 +70,8 @@ public class WssSingleton {
     private String configFileBase = "notDefinedYet";
 
 	public WssSingleton(){
-        System.out.println("***** ***** ***** ***** ***** "
-              + this.getClass().getSimpleName()+ " no-arg construct");
+//        System.out.println("***** ***** ***** ***** ***** "
+//              + this.getClass().getSimpleName()+ " no-arg construct");
         // Create these for CmdProcessor, they are used =on every request
         // Note: These only work for an encoding with one byte per character,
         // so let it throw and exception if some representive byte encoding
@@ -156,7 +156,6 @@ public class WssSingleton {
 
     private void setupRabbitLogging(String rabbitCfgFile) {
         boolean isCreated = false;
-        System.out.println("************* ---------------- *************** rabbitAP before: " + rabbitAsyncPublisher);
         if (rabbitAsyncPublisher != null) {
             // should always be null if rabbitAsyncPublisher is held as a static,
             // this implies that more than one WssSingleton object is seeing
@@ -190,7 +189,6 @@ public class WssSingleton {
                 logger.error(msg, exUURL);
             }
         }
-        System.out.println("************* ---------------- *************** rabbitAP  after: " + rabbitAsyncPublisher);
 
         if (isCreated) {
             try {

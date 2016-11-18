@@ -42,8 +42,8 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
-        System.out.println("**************************** AppContextListener"
-              + " contextInitialized, arg0: " + arg0);
+//        System.out.println("**************************** AppContextListener"
+//              + " contextInitialized, arg0: " + arg0);
 
         synchronized(this) {
             ServletContext sc = arg0.getServletContext();
@@ -60,14 +60,6 @@ public class AppContextListener implements ServletContextListener {
             System.out.println("**************************** AppContextListener"
                   + "  configBase: " + configBase
                   + "  ContextPath: " + sc.getContextPath());
-            System.out.println("**************************** AppContextListener"
-                  + "         this: " + this + "  hash: " + this.hashCode());
-            System.out.println("**************************** AppContextListener"
-                  + "   this class: " + this.getClass() + "  hash: " + this.getClass().hashCode());
-            System.out.println("**************************** AppContextListener"
-                  + "  classLoader: " + this.getClass().getClassLoader() + "  hash: " + this.getClass().getClassLoader().hashCode());
-            System.out.println("**************************** AppContextListener"
-                  + "  classLoadeP: " + this.getClass().getClassLoader().getParent() + "  hash: " + this.getClass().getClassLoader().getParent().hashCode());
 
             logger.info("AppContextListener contextInitialized, context path: "
                 + sc.getContextPath() + "  configBase: " + configBase);
@@ -76,8 +68,8 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
-        System.out.println("**************************** AppContextListener "
-              + " contextDestroyedc, arg0: " + arg0);
+//        System.out.println("**************************** AppContextListener "
+//              + " contextDestroyedc, arg0: " + arg0);
         logger.info("contextDestroyed called, context: "
               + arg0.getServletContext().getContextPath());
         if (WssSingleton.webLogService != null) {

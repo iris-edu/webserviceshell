@@ -52,21 +52,19 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
             LOGGER.error(msg);
         }
 
-        // expecting the servletContext objects to be the same from
-        // different times in the startup process, except sometimes in
-        // the unit test framework
-        ServletContext scForSwCreation =
-              AppContextListener.configBaseToServletContext.get(configuredSw_configBase);
-        System.out.println("***************** MyContainerLifecycleListener"
-              + " onStartup, servlet context first: " + scForSwCreation);
-        System.out.println("***************** MyContainerLifecycleListener"
-              + " onStartup, servlet context   now: " + context);
+//        // expecting the servletContext objects to be the same from
+//        // different times in the startup process, except sometimes in
+//        // the unit test framework
+//        ServletContext scForSwCreation =
+//              AppContextListener.configBaseToServletContext.get(configuredSw_configBase);
+//        System.out.println("***************** MyContainerLifecycleListener"
+//              + " onStartup, servlet context first: " + scForSwCreation);
+//        System.out.println("***************** MyContainerLifecycleListener"
+//              + " onStartup, servlet context   now: " + context);
 
         // bind objects as needed to make them available to the framework
         // via a CONTEXT annotation
         ServiceLocator serviceLocator = cntnr.getApplicationHandler().getServiceLocator();
-        System.out.println("***************** MyContainerLifecycleListener"
-              + " serviceLocator: " + serviceLocator);
         DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
         Injections.addBinding(
             Injections.newBinder(sw).to(WssSingleton.class), dc);

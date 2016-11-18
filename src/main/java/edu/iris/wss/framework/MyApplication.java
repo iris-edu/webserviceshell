@@ -24,14 +24,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
-// using web.xml start for now rather than @ApplicationPath("/")
-////@ApplicationPath("/")
+// using web.xml and @ApplicationPath("/") for now, this annotation
+// seems to be required to get glassfish to manage
+@ApplicationPath("/")
 public class MyApplication extends ResourceConfig {
 
   public static final Logger logger = Logger.getLogger(MyApplication.class);
@@ -103,17 +105,10 @@ public class MyApplication extends ResourceConfig {
   }
 
   public MyApplication() {
-    System.out.println("--------------- ************** " + CLASS_NAME
-          + " constructor");
-
-    System.out.println("--------------- ************** " + CLASS_NAME
-          + " constructor servletContext: "
-          + AppContextListener.configBaseToServletContext.get(AppContextListener.globalConfigBase));
+//    System.out.println("--------------- ************** " + CLASS_NAME
+//          + " constructor");
 
     String configBase = AppContextListener.globalConfigBase;
-
-    System.out.println("--------------- ************** " + CLASS_NAME
-          + " constructor configBase: " + configBase);
 
     try {
         SetupWSS(configBase);
