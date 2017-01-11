@@ -680,11 +680,14 @@ public class AppConfigurator {
                         InputStream is = url.openStream();
                     }
                 } catch(Exception ex) {
-                    String msg = EP_CFGS.proxyURL.toString()
-                          + " error for endpoint: " + epName
+                    String msg = "unable to open URL for parameter: "
+                          + EP_CFGS.proxyURL.toString()
+                          + " on endpoint: " + epName
                           + "  ex: " + ex.toString();
-                    logger.error(msg);
-                    throw new Exception(msg, ex);
+                      logger.warn(msg);
+//                    accept when possible approach 11-Jan-2017
+//                    logger.error(msg);
+//                    throw new Exception(msg, ex);
                 }
             }
         }

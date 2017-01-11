@@ -229,10 +229,9 @@ public class AppConfigurator_getters_Test {
 
         try {
             appCfg.loadConfigurationParameters(props);
-            fail("Unexpected success, proxyURL should be a required property here.");
         } catch(Exception ex) {
-            // successful test,
-            // should throw exception if propxyURL property is not defined
+//          accept when possible approach 11-Jan-2017
+            fail("Unexpected exception, load should exceed without proxyURL property.");
         }
 
         // add the proxyURL property
@@ -244,9 +243,10 @@ public class AppConfigurator_getters_Test {
         appCfg = new AppConfigurator();
         try {
             appCfg.loadConfigurationParameters(props);
-            fail("Unexpected success, this load should fail with file not found.");
         } catch(Exception ex) {
-            assert(ex.toString().contains("java.io.FileNotFoundException"));
+//            assert(ex.toString().contains("java.io.FileNotFoundException"));
+//          accept when possible approach 11-Jan-2017
+            fail("Unexpected exception, load should exceed with incorrect proxyURL value.");
         }
 
         // use any file to test the proxyURL target as this is not part of the test

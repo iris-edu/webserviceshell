@@ -1,18 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -57,22 +57,24 @@ public class ProxyResource extends IrisProcessor {
             logger.info("Attempting to load resource from: " + proxyURLSource);
 
             InputStream is = null;
-          	URL url = null;
-        	try { 
+            URL url = null;
+            try {
                 url = new URL(proxyURLSource);
         		is = url.openStream();
         	} catch (Exception ex) {
                 String briefMsg = this.getClass().getName()
-                      + " could not resolve proxy URL: " + proxyURLSource;
-                String detailedMsg = this.getClass().getName()
-                      + ".getProcessingResults -  exception: " + ex;
+                      + " could not open URL: " + proxyURLSource;
+                String detailedMsg = "resource is not available or possibley"
+                      + " the cfg file is incorrect, method: "
+                      + this.getClass().getName()
+                      + ".getProcessingResults - exception: " + ex;
 
                 IrisProcessingResult ipr =
                       IrisProcessingResult.processError(
-                            FdsnStatus.Status.NO_CONTENT, briefMsg, detailedMsg);
+                            FdsnStatus.Status.NOT_FOUND, briefMsg, detailedMsg);
 				return ipr;
         	}
-        	
+
             final InputStreamReader inputSR = new InputStreamReader(is);
 
         	StreamingOutput so = new StreamingOutput() {
@@ -91,7 +93,7 @@ public class ProxyResource extends IrisProcessor {
                     }
     			}
         	};
-            
+
             IrisProcessingResult ipr = IrisProcessingResult.processStream(so,
                   wssMediaType, null);
 
@@ -107,7 +109,7 @@ public class ProxyResource extends IrisProcessor {
               + " class, also check parameter "
               + AppConfigurator.EP_CFGS.proxyURL.toString()
               + " in -service.cfg file";
-        
+
         IrisProcessingResult ipr = IrisProcessingResult.processError(
               FdsnStatus.Status.INTERNAL_SERVER_ERROR, briefMsg, detailedMsg);
 
