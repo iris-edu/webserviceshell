@@ -180,8 +180,8 @@ public class IrisDynamicProvider {
             // object as defined by the config file. Get the classname of
             // that object and re-instantiate - DON'T reuse it!
             isdo = (IrisProcessor)sw.appConfig.getIrisEndpointClass(requestedEpName);
-            isdo = (IrisProcessor)AppConfigurator.getIrisProcessorInstance(
-                  isdo.getClass().getName());
+            isdo = (IrisProcessor)AppConfigurator.getClassInstance(
+                  isdo.getClass().getName(), IrisProcessMarker.class);
         } else {
             // this might happen if the service config has been set with
             // some other valid IRIS class, since the one parameter is now

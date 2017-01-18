@@ -19,8 +19,8 @@
 
 package edu.iris.wss.framework;
 
+import edu.iris.wss.endpoints.ReplacementWhenError;
 import edu.iris.wss.provider.IrisProcessMarker;
-import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
 import java.io.File;
 import java.io.FileInputStream;
@@ -88,19 +88,21 @@ public class AppConfigurator {
 
         // a slight dissonance, endpointClassName will appear as a
         // string externally, but an instatiated object internally
-        ep_defaults.put(EP_CFGS.endpointClassName,
-              getIrisProcessorInstance("edu.iris.wss.endpoints.CmdProcessor"));
-        ep_defaults.put(EP_CFGS.handlerProgram, "nonespecified");
-        ep_defaults.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
-        ep_defaults.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
-        ep_defaults.put(EP_CFGS.formatTypes, createFormatTypes(""));
-        ep_defaults.put(EP_CFGS.usageLog, true);
-        ep_defaults.put(EP_CFGS.postEnabled, false);
-        ep_defaults.put(EP_CFGS.use404For204, false);
-        ep_defaults.put(EP_CFGS.proxyURL, "noproxyURL");
-        ep_defaults.put(EP_CFGS.logMiniseedExtents, false);
-        ep_defaults.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
-        ep_defaults.put(EP_CFGS.addHeaders, createCfgHeaders(""));
+        ep_defaults.cfgMap.put(EP_CFGS.endpointClassName,
+//              getIrisProcessorInstance("edu.iris.wss.endpoints.CmdProcessor")
+              getClassInstance("edu.iris.wss.endpoints.CmdProcessor",
+                    IrisProcessMarker.class));
+        ep_defaults.cfgMap.put(EP_CFGS.handlerProgram, "nonespecified");
+        ep_defaults.cfgMap.put(EP_CFGS.handlerTimeout, 30); // timeout in seconds
+        ep_defaults.cfgMap.put(EP_CFGS.handlerWorkingDirectory, "/tmp");
+        ep_defaults.cfgMap.put(EP_CFGS.formatTypes, createFormatTypes(""));
+        ep_defaults.cfgMap.put(EP_CFGS.usageLog, true);
+        ep_defaults.cfgMap.put(EP_CFGS.postEnabled, false);
+        ep_defaults.cfgMap.put(EP_CFGS.use404For204, false);
+        ep_defaults.cfgMap.put(EP_CFGS.proxyURL, "noproxyURL");
+        ep_defaults.cfgMap.put(EP_CFGS.logMiniseedExtents, false);
+        ep_defaults.cfgMap.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
+        ep_defaults.cfgMap.put(EP_CFGS.addHeaders, createCfgHeaders(""));
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -131,15 +133,26 @@ public class AppConfigurator {
         addHeaders
     }
 
+    /**
+     * An object containing configuration and state information for
+     * one endpoint
+     */
+    private class Endpoint {
+        // false until some exception occurs
+        boolean hasExcpetion = false;
+
+        // operator configuration parameters from the config file
+        final Map<EP_CFGS, Object> cfgMap = new HashMap();
+    }
     // container for parameters that apply to all endpoints
     private final Map<String, Object> globals = new HashMap();
 
     // container for endpoints, an "endpoint" is defined in the cfg file
     // as being the string in front of ENDPOINT_TO_PROPERTIES_DELIMITER
-    private final Map<String, Map<EP_CFGS, Object>> endpoints = new HashMap();
+    private final Map<String, Endpoint> endpoints = new HashMap();
 
     // an endpoint, i.e. contains the parameters per endpoint
-    private final Map<EP_CFGS, Object> ep_defaults = new HashMap();
+    private final Endpoint ep_defaults = new Endpoint();
 
 	public static enum LoggingMethod {
 		LOG4J, JMS, RABBIT_ASYNC
@@ -262,7 +275,7 @@ public class AppConfigurator {
     }
 
     public String getProxyUrl(String epName) {
-         return endpoints.get(epName).get(EP_CFGS.proxyURL).toString();
+         return endpoints.get(epName).cfgMap.get(EP_CFGS.proxyURL).toString();
     }
 
     /**
@@ -273,19 +286,19 @@ public class AppConfigurator {
      */
     public IrisProcessMarker getIrisEndpointClass(String epName) {
         return (IrisProcessMarker)endpoints.get(epName)
-              .get(EP_CFGS.endpointClassName);
+              .cfgMap.get(EP_CFGS.endpointClassName);
     }
 
     public String getHandlerProgram(String epName) {
-        return endpoints.get(epName).get(EP_CFGS.handlerProgram).toString();
+        return endpoints.get(epName).cfgMap.get(EP_CFGS.handlerProgram).toString();
     }
 
 	public int getTimeoutSeconds(String epName) {
-		return (int)endpoints.get(epName).get(EP_CFGS.handlerTimeout);
+		return (int)endpoints.get(epName).cfgMap.get(EP_CFGS.handlerTimeout);
 	}
 
     public String getWorkingDirectory(String epName) {
-        return endpoints.get(epName).get(EP_CFGS.handlerWorkingDirectory).toString();
+        return endpoints.get(epName).cfgMap.get(EP_CFGS.handlerWorkingDirectory).toString();
     }
 
     // Note: this can throw NullPointerException and ClassCastException
@@ -300,7 +313,7 @@ public class AppConfigurator {
     // Note: this can throw NullPointerException and ClassCastException
     public boolean isConfiguredForTypeKey(String epName, String formatTypeKey) {
         Map<String, String> outTypes = (Map<String, String>)endpoints.get(epName)
-              .get(EP_CFGS.formatTypes);
+              .cfgMap.get(EP_CFGS.formatTypes);
         return outTypes.containsKey(formatTypeKey);
 	}
 
@@ -308,7 +321,7 @@ public class AppConfigurator {
           throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> formatTypes = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.formatTypes);
+                  .get(epName).cfgMap.get(EP_CFGS.formatTypes);
 
             // Note: do the same operation on formatTypeKey as the setter, e.g. trim
             //       and toUpperCase
@@ -328,7 +341,7 @@ public class AppConfigurator {
           throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> formatTypes = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.formatTypes);
+                  .get(epName).cfgMap.get(EP_CFGS.formatTypes);
 
             Collection<String> mediaTypesStr = formatTypes.values();
             Collection<MediaType> mediaTypes = new HashSet<>();
@@ -365,7 +378,7 @@ public class AppConfigurator {
           throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> dispositions = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.formatDispositions);
+                  .get(epName).cfgMap.get(EP_CFGS.formatDispositions);
 
             // Note: do the same operation on formatTypeKey as the setter, e.g. trim
             //       and toUpperCase
@@ -403,7 +416,7 @@ public class AppConfigurator {
           throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> headers = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.addHeaders);
+                  .get(epName).cfgMap.get(EP_CFGS.addHeaders);
 
             Map<String, String> copy = createCfgHeaders("");
             copy.putAll(headers);
@@ -418,19 +431,19 @@ public class AppConfigurator {
 	}
 
     public boolean isUsageLogEnabled(String epName) {
-        return (boolean)endpoints.get(epName).get(EP_CFGS.usageLog);
+        return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.usageLog);
 	}
 
 	public boolean isPostEnabled(String epName) {
-		return (boolean)endpoints.get(epName).get(EP_CFGS.postEnabled);
+		return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.postEnabled);
 	}
 
 	public boolean isUse404For204Enabled(String epName) {
-		return (boolean)endpoints.get(epName).get(EP_CFGS.use404For204);
+		return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.use404For204);
 	}
 
     public boolean isLogMiniseedExtents(String epName) {
-        return (boolean)endpoints.get(epName).get(EP_CFGS.logMiniseedExtents);
+        return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.logMiniseedExtents);
 	}
 
     // Note: this implements the rule that the first item in formatTypes
@@ -439,7 +452,7 @@ public class AppConfigurator {
     public String getDefaultFormatTypeKey(String epName) throws Exception {
         if (endpoints.containsKey(epName)) {
             Map<String, String> types = (Map<String, String>)endpoints
-                  .get(epName).get(EP_CFGS.formatTypes);
+                  .get(epName).cfgMap.get(EP_CFGS.formatTypes);
 
             String defaultFormatTypeKey = (String)types.keySet().toArray()[0];
 
@@ -627,13 +640,13 @@ public class AppConfigurator {
                     // not a defined WSS endpoint configuration parameter
                     EP_CFGS inputParm = EP_CFGS.valueOf(inputParmStr);
 
-                    Map<EP_CFGS, Object> endpoint = null;
+                    Endpoint endpoint = null;
 
                     if (endpoints.containsKey(epName)) {
                         endpoint = endpoints.get(epName);
                     } else {
-                        endpoint = new HashMap<EP_CFGS, Object>();
-                        endpoint.putAll(ep_defaults);
+                        endpoint = new Endpoint();
+                        endpoint.cfgMap.putAll(ep_defaults.cfgMap);
                         endpoints.put(epName, endpoint);
                     }
 
@@ -653,26 +666,23 @@ public class AppConfigurator {
 
         for (String epName : endpoints.keySet()) {
             IrisProcessMarker iso = getIrisEndpointClass(epName);
-
-//          cannot do this (for now) because it forces an endpoint to always
-//          point to a runnable file, even if the endpoint does not
-//          use a handler.
-////            if (iso instanceof edu.iris.wss.endpoints.CmdProcessor) {
-////                String handlerName = getHandlerProgram(epName);
-////                try {
-////                    if (isOkString(handlerName)) {
-////                        if (isExecutableAndExists(handlerName)) {
-////                            continue;
-////                        }
-////                    }
-////                } catch(Exception ex) {
-////                    String msg = "Error getting handlerProgram for endpoint: "
-////                          + epName + "  ex: " + ex.toString();
-////                    logger.error(msg);
-////                    throw new Exception(msg, ex);
-////                }
-////            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
-            if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
+            if (iso instanceof edu.iris.wss.endpoints.CmdProcessor) {
+                String handlerName = getHandlerProgram(epName);
+                try {
+                    if (isOkString(handlerName)) {
+                        if (isExecutableAndExists(handlerName)) {
+                            continue;
+                        }
+                    }
+                } catch(Exception ex) {
+                    String msg = "Error getting handlerProgram for endpoint: "
+                          + epName + "  ex: " + ex.toString();
+                    logger.warn(msg);
+//                    accept when possible approach 11-Jan-2017
+//                    logger.error(msg);
+//                    throw new Exception(msg, ex);
+                }
+            } else if (iso instanceof edu.iris.wss.endpoints.ProxyResource) {
                 String resoureToProxyURL = getProxyUrl(epName);
                 try {
                     if (isOkString(resoureToProxyURL)) {
@@ -684,7 +694,7 @@ public class AppConfigurator {
                           + EP_CFGS.proxyURL.toString()
                           + " on endpoint: " + epName
                           + "  ex: " + ex.toString();
-                      logger.warn(msg);
+                    logger.warn(msg);
 //                    accept when possible approach 11-Jan-2017
 //                    logger.error(msg);
 //                    throw new Exception(msg, ex);
@@ -777,53 +787,72 @@ public class AppConfigurator {
         }
 	}
 
-	public void loadEndpointParameter(Properties input, Map epDefaults,
-          Map<EP_CFGS, Object> endPt, EP_CFGS epParm, String propName)
+	public void loadEndpointParameter(Properties input, Endpoint epDefaults,
+          Endpoint endPt, EP_CFGS epParm, String propName)
           throws Exception {
 
 		String newVal = input.getProperty(propName);
 
 		if (isOkString(newVal)) {
             // use type defined in a default object to do additional processing
-            Object defaultz = epDefaults.get(epParm);
+            Object defaultz = epDefaults.cfgMap.get(epParm);
 
             if (defaultz != null) {
                 if (defaultz instanceof Boolean) {
-                    endPt.put(epParm, Boolean.valueOf(newVal));
+                    endPt.cfgMap.put(epParm, Boolean.valueOf(newVal));
                 } else if (defaultz instanceof Integer) {
                     try {
-                        endPt.put(epParm, Integer.valueOf(newVal));
+                        endPt.cfgMap.put(epParm, Integer.valueOf(newVal));
                     } catch (NumberFormatException ex) {
-                        throw new Exception("Unrecognized Integer for paramater: "
+                        String msg = "Unrecognized Integer for paramater: "
                               + propName + "  value found: " + newVal
-                              + "  it should be an integer");
+                              + "  it should be an integer";
+//                      accept when possible approach 11-Jan-2017
+//                        throw new Exception(msg);
+//                      just take previous value, i.e. it is the default
+//                      on a first pass, could be some other value if
+//                      multiple lines of the same value are in the cfg file
+//                      and also switch out the endpoint class to ensure
+//                      exception is noted
+                        logger.error(msg);
+                        endPt.hasExcpetion = true;
+                        Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
+                        endPt.cfgMap.put(EP_CFGS.endpointClassName, ipm);
                     }
                 } else if(defaultz instanceof IrisProcessMarker) {
-                    try {
-                        Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
-                        endPt.put(epParm, ipm);
-                    } catch (Exception ex) {
-                        String msg = "loadEndpointParameter error, ex: "
-                              + ex.getMessage();
-                        logger.fatal(msg);
-                        throw new Exception(msg, ex);
+                    if (endPt.hasExcpetion) {
+                        // noop - skip update to endpoint if an exception has occurred
+                                                System.out.println("*************** IrisProcessMarker skipped newVal: " + newVal);
+                    } else {
+                        // normal path unless prior issues loading configuration
+                        try {
+                            Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
+                            endPt.cfgMap.put(epParm, ipm);
+                                                System.out.println("*************** IrisProcessMarker newVal: " + newVal);
+
+                        } catch (Exception ex) {
+                            String msg = "loadEndpointParameter error, ex: "
+                                  + ex.getMessage();
+                            logger.fatal(msg);
+                            throw new Exception(msg, ex);
+                        }
                     }
                 } else if(defaultz instanceof Map) {
                     if (epParm.equals(EP_CFGS.formatTypes)) {
                         // note: Don't use the map from from the default object,
                         //       create a new one.
                         Map<String, String> newmap = createFormatTypes(newVal);
-                        endPt.put(EP_CFGS.formatTypes, newmap);
+                        endPt.cfgMap.put(EP_CFGS.formatTypes, newmap);
                     } else if (epParm.equals(EP_CFGS.formatDispositions)) {
                         // note: Don't use the map from from the default object,
                         //       create a new one.
                         Map<String, String> newmap = createFormatDispositions(newVal);
-                        endPt.put(EP_CFGS.formatDispositions, newmap);
+                        endPt.cfgMap.put(EP_CFGS.formatDispositions, newmap);
                     } else if (epParm.equals(EP_CFGS.addHeaders)) {
                         // note: Don't use the map from from the default object,
                         //       create a new one.
                         Map<String, String> newmap = createCfgHeaders(newVal);
-                        endPt.put(EP_CFGS.addHeaders, newmap);
+                        endPt.cfgMap.put(EP_CFGS.addHeaders, newmap);
                     } else {
                         String msg = "Unexpected Map type for paramater: "
                               + propName + "  value found: " + newVal
@@ -838,7 +867,7 @@ public class AppConfigurator {
                     } else {
                         // noop, use newVal as is
                     }
-                    endPt.put(epParm, newVal);
+                    endPt.cfgMap.put(epParm, newVal);
                 }
             } else {
                 String msg = "*** default value not defined for key: "
@@ -934,6 +963,17 @@ public class AppConfigurator {
         return validVal;
     }
 
+    /**
+     * Note: 2017-01-12 - this was meant to be generic, but with the addition
+     * of the ReplacementWhenError, it is not generic.
+     * TBD - to make this method useful for IrisSingleton, or other classes -
+     *       it would be necessary to branch in the exception recovery for
+     *       each type of expectedClass supported.
+     *
+     * @param className
+     * @param expectedClass
+     * @return
+     */
     public static Object getClassInstance(String className,
           Class expectedClass) {
         Object iso = null;
@@ -955,43 +995,60 @@ public class AppConfigurator {
         }
 
         if (null == iso) {
+            Class replacementClass = ReplacementWhenError.class;
             String msg = exObj.getClass() + ", className: " + className
-                  + "  expected Class type: " + expectedClass.getName();
-            throw new RuntimeException(msg, exObj);
+                  + "  expected Class type: " + expectedClass.getName()
+                  + "  replacement endpoint class: " + replacementClass.getName();
+//          accept when possible approach 11-Jan-2017
+//            throw new RuntimeException(msg, exObj);
+            logger.error(msg);
+            try {
+                iso = expectedClass.cast(Class.forName(replacementClass.getName())
+                      .newInstance());
+            }
+            catch(Exception ex2) {
+                String moreMsg = "initial error: " + msg + "  secondary error: "
+                      + "Programatic error while creating an instance of"
+                      + " ExceptionRecovery, no recovery possible.  ex: "
+                      + ex2;
+                logger.error("initial error: " + msg + "  secondary error: "
+                      + moreMsg);
+                throw new RuntimeException(moreMsg, ex2);
+            }
         }
 
         return iso;
     }
 
-    public static IrisProcessMarker getIrisProcessorInstance(String className) {
-        Class<?> irisClass = null;
-        IrisProcessor iso = null;
-        try {
-            irisClass = Class.forName(className);
-            iso = (IrisProcessor) irisClass.newInstance();
-        } catch (ClassNotFoundException ex) {
-            String msg = "getIrisProcessorInstance could not find "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (InstantiationException ex) {
-            String msg = "getIrisProcessorInstance could not instantiate "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (IllegalAccessException ex) {
-            String msg = "getIrisProcessorInstance illegal access while instantiating "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        } catch (ClassCastException ex) {
-            String msg = "getIrisProcessorInstance ClassCastException while instantiating "
-                  + EP_CFGS.endpointClassName + ": " + className;
-            logger.fatal(msg);
-            throw new RuntimeException(msg, ex);
-        }
-        return iso;
-    }
+////    public static IrisProcessMarker getIrisProcessorInstance(String className) {
+////        Class<?> irisClass = null;
+////        IrisProcessor iso = null;
+////        try {
+////            irisClass = Class.forName(className);
+////            iso = (IrisProcessor) irisClass.newInstance();
+////        } catch (ClassNotFoundException ex) {
+////            String msg = "getIrisProcessorInstance could not find "
+////                  + EP_CFGS.endpointClassName + ": " + className;
+////            logger.fatal(msg);
+////            throw new RuntimeException(msg, ex);
+////        } catch (InstantiationException ex) {
+////            String msg = "getIrisProcessorInstance could not instantiate "
+////                  + EP_CFGS.endpointClassName + ": " + className;
+////            logger.fatal(msg);
+////            throw new RuntimeException(msg, ex);
+////        } catch (IllegalAccessException ex) {
+////            String msg = "getIrisProcessorInstance illegal access while instantiating "
+////                  + EP_CFGS.endpointClassName + ": " + className;
+////            logger.fatal(msg);
+////            throw new RuntimeException(msg, ex);
+////        } catch (ClassCastException ex) {
+////            String msg = "getIrisProcessorInstance ClassCastException while instantiating "
+////                  + EP_CFGS.endpointClassName + ": " + className;
+////            logger.fatal(msg);
+////            throw new RuntimeException(msg, ex);
+////        }
+////        return iso;
+////    }
 
     public static IrisSingleton getIrisSingletonInstance(String className) {
         Class<?> irisClass = null;
@@ -1039,7 +1096,7 @@ public class AppConfigurator {
         String line = "----------------------";
 
         sb.append("\n");
-		sb.append(line).append(" Web Service Shell Service Configuration").append("\n");
+		sb.append(line).append(" Global Parameters and Endpoint Configurations").append("\n");
 
 		sb.append(strAppend("Web Service Shell Version")).append(wssVersion).append("\n");
 
@@ -1061,9 +1118,9 @@ public class AppConfigurator {
 
         sb.append(line).append(" endpoints\n");
         for (String epName : endpoints.keySet()) {
-            Map endpoint = endpoints.get(epName);
-            for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
-                Object value = endpoint.get(cfgName);
+            Endpoint endpoint = endpoints.get(epName);
+            for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.cfgMap.keySet()) {
+                Object value = endpoint.cfgMap.get(cfgName);
                 if (value == null) {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
@@ -1111,7 +1168,7 @@ public class AppConfigurator {
 		sb.append("<col style='width: 30%' />");
 
 		sb.append("<TR><TH colspan=\"2\" >")
-              .append("Web Service Shell Configuration")
+              .append("Global Parameters and Endpoint Configurations")
               .append("</TH></TR>");
 
         sb.append("<TR><TH colspan=\"2\" >")
@@ -1140,9 +1197,9 @@ public class AppConfigurator {
                   .append(epName)
                   .append("</TH></TR>");
 
-            Map endpoint = endpoints.get(epName);
-            for (EP_CFGS cfgName: (Set<EP_CFGS>)endpoint.keySet()) {
-                Object value = endpoint.get(cfgName);
+            Map cfgs = endpoints.get(epName).cfgMap;
+            for (EP_CFGS cfgName: (Set<EP_CFGS>)cfgs.keySet()) {
+                Object value = cfgs.get(cfgName);
                 if (value == null) {
                     value = "null";
                 } else if(value instanceof IrisProcessMarker) {
