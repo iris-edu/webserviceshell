@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -32,7 +32,7 @@ import java.util.Set;
 
 public class ParamConfigurator {
 	public static final Logger logger = Logger.getLogger(ParamConfigurator.class);
-	
+
     private static final String DEFAULT_PARAM_FILE_NAME = "META-INF/param.cfg";
     public static final String PARAM_CFG_NAME_SUFFIX = "-param.cfg";
     private static final String ALIASES_KEY_NAME = "aliases";
@@ -46,12 +46,12 @@ public class ParamConfigurator {
 
 		public ConfigParam() {
 		}
-		
+
 		public ConfigParam (String name, ParamType type) {
 			this.name = name;
 			this.type = type;
 		}
-		
+
 		public ConfigParam (String name, ParamType type, String value) {
 			this.name = name;
 			this.type = type;
@@ -96,7 +96,7 @@ public class ParamConfigurator {
         return epAliases.get(epName).get(aliasName);
     }
 
-	public void loadConfigFile(String configBase) throws Exception {		
+	public void loadConfigFile(String configBase) throws Exception {
 
 		// Depending on the way the servlet context starts, this can be called multiple
 		// times via SingletonWrapper class.
@@ -104,7 +104,7 @@ public class ParamConfigurator {
 		isLoaded = true;
 
         Class thisRunTimeClass = this.getClass();
-        
+
         Properties configurationProps = AppConfigurator.loadPropertiesFile(
               configBase, thisRunTimeClass, PARAM_CFG_NAME_SUFFIX,
               DEFAULT_PARAM_FILE_NAME);
@@ -178,7 +178,7 @@ public class ParamConfigurator {
         Map<String, String> aliases = new HashMap<>();
 
         StringBuilder s2 = new StringBuilder(aliasValues.length());
-        
+
         // simple parsing, rebuild string with commas inside perenthesis
         // replaced with |
         int openPerenCnt = 0;
@@ -186,7 +186,7 @@ public class ParamConfigurator {
             char c = aliasValues.charAt(i1);
             if (c == '(') {
                 openPerenCnt++;
-                if (openPerenCnt > 1) 
+                if (openPerenCnt > 1)
                 {
                     throw new Exception(
                         "WebserviceShell createAliasesMap too many open parenthesis"
@@ -195,14 +195,14 @@ public class ParamConfigurator {
             }
             if (c == ')') {
                 openPerenCnt--;
-                if (openPerenCnt < 0) 
+                if (openPerenCnt < 0)
                 {
                     throw new Exception(
                         "WebserviceShell createAliasesMap too many closed parenthesis"
                             + " no nesting expected, aliases input: " + aliasValues);
                 }
             }
-            
+
             if (openPerenCnt == 1 && c == ',') {
                 c = '|';
             }
@@ -213,9 +213,9 @@ public class ParamConfigurator {
                     "WebserviceShell createAliasesMap unbalanced parenthesis"
                         + " aliases input: " + aliasValues);
         }
-        
+
         String[] pairs = s2.toString().split(java.util.regex.Pattern.quote(","));
-        
+
         for (String pair : pairs) {
             String[] oneKV = pair.split(java.util.regex.Pattern.quote(":"));
             if (oneKV.length != 2) {
@@ -229,10 +229,10 @@ public class ParamConfigurator {
             }
 
             String respectiveParam = oneKV[0].trim();
-            
+
             String[] aliasArray = oneKV[1].trim().replace("(", "")
                     .replace(")", "").split(java.util.regex.Pattern.quote("|"));
-            
+
             for (String s: aliasArray) {
                 aliases.put(s.trim(), respectiveParam);
             }
@@ -247,7 +247,7 @@ public class ParamConfigurator {
         String line = "----------------------";
 
         sb.append("\n");
-		sb.append("Web Service Shell Interface Parameter Configuration").append("\n");
+		sb.append("User parameters for each endpoint").append("\n");
 
         sb.append(line).append(" endpoints\n");
         for (String epName : epParams.keySet()) {
@@ -295,7 +295,7 @@ public class ParamConfigurator {
 		sb.append("<TABLE border=2 style='width: 600px'>");
 		sb.append("<col style='width: 30%' />");
 		sb.append("<TR><TH colspan=\"2\" >")
-              .append("Web Service Shell Interface Parameter Configuration")
+              .append("User parameters for each endpoint")
               .append("</TH></TR>");
 
         for (String epName : epParams.keySet()) {

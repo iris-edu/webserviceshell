@@ -127,7 +127,7 @@
 		<servlet.version>3.0.1</servlet.version>
 		<sc.seis.seisFile>1.6.2</sc.seis.seisFile>
         <dmc.usage.log.version>1.0.2</dmc.usage.log.version>
-        <dmc_logging.version>[1.1.4,)</dmc_logging.version>
+        <dmc_logging.version>[1.1.10,)</dmc_logging.version>
         <wsslog4jinit.version>0.95</wsslog4jinit.version>
         <grizzly2.version>2.11</grizzly2.version>
         <hk2.version>2.4.0-b31</hk2.version>
