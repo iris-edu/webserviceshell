@@ -24,6 +24,8 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This endpoint class will be used as a substitute for a configured endpoint
@@ -34,16 +36,26 @@ import edu.iris.wss.provider.IrisProcessor;
  */
 public class ReplacementWhenError extends IrisProcessor {
 
+    public static final Map<String, String> errorMsgMap = new TreeMap();
+
     @Override
     public IrisProcessingResult getProcessingResults(RequestInfo ri,
           String wssMediaType) {
 
         String briefMsg = "There is a configuration error or unavailable"
               + " endpointClassName object.";
-        String detailedMsg = "Check the configuration for this endpoint and"
-              + " also check that the respective class file is deployed";
+
+        StringBuilder detailedMsg = new StringBuilder();
+        detailedMsg.append("Check the configuration files and");
+        detailedMsg.append(" also check that respective class file(s) is/are deployed.");
+
+        for (Map.Entry<String, String> entry : errorMsgMap.entrySet()) {
+            detailedMsg.append("\n").append(" - paramerter: ").append(entry.getKey())
+                  .append("  msg: ").append(entry.getValue());
+        }
+
         Util.logAndThrowException(ri, FdsnStatus.Status.NOT_IMPLEMENTED, briefMsg,
-              detailedMsg);
+              detailedMsg.toString());
 
         // should never get here!
         IrisProcessingResult ipr = IrisProcessingResult.processError(

@@ -25,9 +25,12 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.log4j.Logger;
 
 public  class RequestInfo {
+	public static final Logger logger = Logger.getLogger(RequestInfo.class);
 
 	public UriInfo uriInfo;
 	public javax.servlet.http.HttpServletRequest request;
@@ -65,9 +68,39 @@ public  class RequestInfo {
 
         RequestInfo ri = new RequestInfo();
 
+        if (sw == null) {
+            // quick hack to populate ri
+            ri.statsKeeper = new StatsKeeper();
+            ri.request = request;
+            Status status = Status.SERVICE_UNAVAILABLE;
+
+            String briefMsg = "One or more unrecoverable exceptions occurred"
+                  + " when this web service's configuration was loaded.";
+
+
+            String detailedMsg = "  ri.request: " + ri.request;
+            String errMsg = briefMsg  + "  detailedMsg: " + detailedMsg;
+            if (ri.request != null) {
+                detailedMsg = "request: " + ri.request.getRequestURL().toString();
+
+                errMsg = ServiceShellException.createFdsnErrorMsg(status,
+                      briefMsg, detailedMsg, ri.request.getRequestURL().toString(),
+                      ri.request.getQueryString(), "exception_on_config_for_appName",
+                      "exception_on_config_for_appVersion");
+            }
+
+            // shorter message for console and log file
+            String shorter = "Error: " + status + "  " + briefMsg
+                  + "  detail: " + detailedMsg + "  " + (new Date());
+            System.out.println("^^^^^^^^^^^^^ " + shorter);
+            logger.error(shorter);
+
+            throw new ServiceShellException(Status.SERVICE_UNAVAILABLE, errMsg);
+        }
+
         ri.sw = sw;
-        ri.HEADER_START_IDENTIFIER_BYTES = sw.HEADER_START_IDENTIFIER_BYTES;
-        ri.HEADER_END_IDENTIFIER_BYTES = sw.HEADER_END_IDENTIFIER_BYTES;
+        ri.HEADER_START_IDENTIFIER_BYTES = WssSingleton.HEADER_START_IDENTIFIER_BYTES;
+        ri.HEADER_END_IDENTIFIER_BYTES = WssSingleton.HEADER_END_IDENTIFIER_BYTES;
         ri.uriInfo = uriInfo;
         ri.request = request;
 		ri.requestHeaders = requestHeaders;
@@ -120,7 +153,7 @@ public  class RequestInfo {
 //        Dont use req.getSession(), as it creates a session for every request
 //        String contextPath = req.getSession().getServletContext().getContextPath();
 
-String contextPath = req.getContextPath();
+        String contextPath = req.getContextPath();
         String requestURI = req.getRequestURI();
 
         // remove any leading slash character

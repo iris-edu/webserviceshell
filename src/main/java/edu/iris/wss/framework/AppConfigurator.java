@@ -21,6 +21,7 @@ package edu.iris.wss.framework;
 
 import edu.iris.wss.endpoints.ReplacementWhenError;
 import edu.iris.wss.provider.IrisProcessMarker;
+import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
 import java.io.File;
 import java.io.FileInputStream;
@@ -809,6 +810,7 @@ public class AppConfigurator {
                               + "  it should be an integer";
 //                      accept when possible approach 11-Jan-2017
 //                        throw new Exception(msg);
+//
 //                      just take previous value, i.e. it is the default
 //                      on a first pass, could be some other value if
 //                      multiple lines of the same value are in the cfg file
@@ -816,21 +818,23 @@ public class AppConfigurator {
 //                      exception is noted
                         logger.error(msg);
                         endPt.hasExcpetion = true;
-                        Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
+                        Object ipm = getClassInstance(
+                              ReplacementWhenError.class.getName(),
+                              IrisProcessor.class);
                         endPt.cfgMap.put(EP_CFGS.endpointClassName, ipm);
+                        ((ReplacementWhenError)ipm).errorMsgMap.put(propName, msg);
                     }
                 } else if(defaultz instanceof IrisProcessMarker) {
                     if (endPt.hasExcpetion) {
-                        // noop - skip update to endpoint if an exception has occurred
-                                                System.out.println("*************** IrisProcessMarker skipped newVal: " + newVal);
+                        // noop - skip update to endpointClassName if an exception
+                        // has occurred
                     } else {
-                        // normal path unless prior issues loading configuration
+                        // normal path
                         try {
                             Object ipm = getClassInstance(newVal, IrisProcessMarker.class);
                             endPt.cfgMap.put(epParm, ipm);
-                                                System.out.println("*************** IrisProcessMarker newVal: " + newVal);
-
                         } catch (Exception ex) {
+                            // secondary error, could not load internal endpoint
                             String msg = "loadEndpointParameter error, ex: "
                                   + ex.getMessage();
                             logger.fatal(msg);
@@ -838,36 +842,56 @@ public class AppConfigurator {
                         }
                     }
                 } else if(defaultz instanceof Map) {
-                    if (epParm.equals(EP_CFGS.formatTypes)) {
-                        // note: Don't use the map from from the default object,
-                        //       create a new one.
-                        Map<String, String> newmap = createFormatTypes(newVal);
-                        endPt.cfgMap.put(EP_CFGS.formatTypes, newmap);
-                    } else if (epParm.equals(EP_CFGS.formatDispositions)) {
-                        // note: Don't use the map from from the default object,
-                        //       create a new one.
-                        Map<String, String> newmap = createFormatDispositions(newVal);
-                        endPt.cfgMap.put(EP_CFGS.formatDispositions, newmap);
-                    } else if (epParm.equals(EP_CFGS.addHeaders)) {
-                        // note: Don't use the map from from the default object,
-                        //       create a new one.
-                        Map<String, String> newmap = createCfgHeaders(newVal);
-                        endPt.cfgMap.put(EP_CFGS.addHeaders, newmap);
-                    } else {
-                        String msg = "Unexpected Map type for paramater: "
-                              + propName + "  value found: " + newVal
-                              + "  only handling formatTypes";
-                        logger.fatal(msg);
-                        throw new Exception(msg);
+                    try {
+                        if (epParm.equals(EP_CFGS.formatTypes)) {
+                            // note: Don't use the map from from the default object,
+                            //       create a new one.
+                            Map<String, String> newmap = createFormatTypes(newVal);
+                            endPt.cfgMap.put(EP_CFGS.formatTypes, newmap);
+                        } else if (epParm.equals(EP_CFGS.formatDispositions)) {
+                            // note: Don't use the map from from the default object,
+                            //       create a new one.
+                            Map<String, String> newmap = createFormatDispositions(newVal);
+                            endPt.cfgMap.put(EP_CFGS.formatDispositions, newmap);
+                        } else if (epParm.equals(EP_CFGS.addHeaders)) {
+                            // note: Don't use the map from from the default object,
+                            //       create a new one.
+                            Map<String, String> newmap = createCfgHeaders(newVal);
+                            endPt.cfgMap.put(EP_CFGS.addHeaders, newmap);
+                        } else {
+                            String msg = "Unexpected Map type for paramater: "
+                                  + propName + "  value found: " + newVal
+                                  + "  only handling formatTypes";
+                            logger.error(msg);
+                            throw new Exception(msg);
+                        }
+                    } catch (Exception ex) {
+                        logger.error(ex.toString());
+                        endPt.hasExcpetion = true;
+                        Object ipm = getClassInstance(
+                              ReplacementWhenError.class.getName(),
+                              IrisProcessor.class);
+                        endPt.cfgMap.put(EP_CFGS.endpointClassName, ipm);
+                        ((ReplacementWhenError)ipm).errorMsgMap.put(propName, ex.toString());
                     }
                 } else {
-                    // should be String type if here
-                    if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
-                        newVal = getValidatedWorkingDir(newVal);
-                    } else {
-                        // noop, use newVal as is
+                    try {
+                        // should be String type if here
+                        if (epParm.equals(EP_CFGS.handlerWorkingDirectory)) {
+                            newVal = getValidatedWorkingDir(newVal);
+                        } else {
+                            // noop, use newVal as is
+                        }
+                        endPt.cfgMap.put(epParm, newVal);
+                    } catch (Exception ex) {
+                        logger.error(ex.toString());
+                        endPt.hasExcpetion = true;
+                        Object ipm = getClassInstance(
+                              ReplacementWhenError.class.getName(),
+                              IrisProcessor.class);
+                        endPt.cfgMap.put(EP_CFGS.endpointClassName, ipm);
+                        ((ReplacementWhenError)ipm).errorMsgMap.put(propName, ex.toString());
                     }
-                    endPt.cfgMap.put(epParm, newVal);
                 }
             } else {
                 String msg = "*** default value not defined for key: "
