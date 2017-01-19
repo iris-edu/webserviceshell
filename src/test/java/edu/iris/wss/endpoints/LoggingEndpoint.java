@@ -98,6 +98,20 @@ public class LoggingEndpoint extends IrisProcessor {
                       "show bad_request messageType option: " + value,
                       "detailed message for bad_request option: " + value);
 
+            } else if (value.equals("log_and_throw_test_null_briefMsg")) {
+                String briefMsg = "briefMsg for messageType option: " + value;
+                briefMsg = null;
+                String detailMsg = "detailed message for messageType option: " + value;
+                Util.logAndThrowException(ri, FdsnStatus.Status.BAD_REQUEST,
+                      briefMsg, detailMsg);
+
+            } else if (value.equals("log_and_throw_test_null_detailMsg")) {
+                String briefMsg = "briefMsg for messageType option: " + value;
+                String detailMsg = "detailed message for messageType option: " + value;
+                detailMsg = null;
+                Util.logAndThrowException(ri, FdsnStatus.Status.BAD_REQUEST,
+                      briefMsg, detailMsg);
+
             } else {
                 ipr = IrisProcessingResult.processError(
                       FdsnStatus.Status.BAD_REQUEST,

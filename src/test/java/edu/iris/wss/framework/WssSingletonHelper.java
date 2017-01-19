@@ -17,7 +17,8 @@ import java.io.OutputStream;
  */
 public class WssSingletonHelper {
     public static enum TEST_TYPE {
-		CONFIG_FILE, CONFIG_URL, CONFIG_BOGUS_URL
+		CONFIG_FILE, CONFIG_URL, CONFIG_BOGUS_URL, BRIEF_MSG_IS_NULL,
+        DETAILED_MSG_IS_NULL
 	};
 
    public static void setupCfgFiles(String wssConfigDir, String wsContext,
@@ -32,6 +33,12 @@ public class WssSingletonHelper {
         String rabbitCfgName = createIRISRabbitCfgFile(targetPath, rabbitPropName);
 
         if (nameTypes.equals(TEST_TYPE.CONFIG_FILE)) {
+            // noop - leave name as local system name, should resolve to
+            // a real file
+        } else if (nameTypes.equals(TEST_TYPE.BRIEF_MSG_IS_NULL)) {
+            // noop - leave name as local system name, should resolve to
+            // a real file
+        } else if (nameTypes.equals(TEST_TYPE.DETAILED_MSG_IS_NULL)) {
             // noop - leave name as local system name, should resolve to
             // a real file
         } else if (nameTypes.equals(TEST_TYPE.CONFIG_URL)) {
