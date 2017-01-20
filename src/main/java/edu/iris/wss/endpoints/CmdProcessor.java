@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -71,11 +71,11 @@ public class CmdProcessor extends IrisProcessor {
 
 	private InputStream is = null;
 	private StreamEater se = null;
-    
+
     private final AtomicBoolean isKillingProcess = new AtomicBoolean(false);
-    
+
     private String epName = null;
-    
+
     RequestInfo ri;
 
 	public CmdProcessor() {
@@ -88,7 +88,7 @@ public class CmdProcessor extends IrisProcessor {
 
         this.ri = ri;
         epName = ri.getEndpointNameForThisRequest();
-        
+
         // this needs to be done again since it is not part of the
         // IrisStreamingOutput interface, but any errors should have
         // already been reported, so not checking for existance and
@@ -114,7 +114,7 @@ public class CmdProcessor extends IrisProcessor {
 	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
 	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
 	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
-        processBuilder.environment().put("CLIENTNAME", "WebUtils.getClientName(request)");
+        processBuilder.environment().put("CLIENTNAME", WebUtils.getClientName(ri.request));
         processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
 		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
 		if (AppConfigurator.isOkString(username)) {
@@ -158,7 +158,7 @@ public class CmdProcessor extends IrisProcessor {
 // mls 2014-06-19 - code to make post from html forms work... worked once with curl as well
 // not implementing until time to test for side affects related to url encoding or not.
 // CONTENT_TYPE may not match encoding from curl, depending on the combination
-//  of curl options. e.g. curl does not set "query=" like 
+//  of curl options. e.g. curl does not set "query=" like
 // htmls forms, but CONTENT_TYPE is set to application/x-www-form-urlencoded
 // even when the body was not encoded. so curl does not control CONTENT_TYPE
 // versus what is sent using the --data-binary option.
@@ -170,7 +170,7 @@ public class CmdProcessor extends IrisProcessor {
 //            + "  USER_AGENT: " + ri.requestHeaders.getRequestHeader(HttpHeaders.USER_AGENT));
 //
 //        System.out.println("***************** postBody: " + ri.postBody);
-//                
+//
 //        String urlDecoded = null;
 //        try {
 //            // code to make queries work from browsers, via html forms
@@ -181,7 +181,7 @@ public class CmdProcessor extends IrisProcessor {
 //        }
 //        System.out.println("***************** postBoUD: " + urlDecoded);
 // 		  process.getOutputStream().write(urlDecoded.getBytes());
-//                               
+//
 				process.getOutputStream().write(ri.postBody.getBytes());
 				process.getOutputStream().close();
 			} catch (IOException ioe) {
@@ -228,7 +228,7 @@ public class CmdProcessor extends IrisProcessor {
                         }
                         isHeadersChecked = true;
                     }
-                    
+
                     // Assumed state at this point
                     // 1) headers were read, and there is more data on the
                     //    input stream - so create StreamingOutput object
@@ -246,7 +246,7 @@ public class CmdProcessor extends IrisProcessor {
 
                     // so at this time, log any headers read exceptions and
                     // keep going
-                    
+
                     if (is.available() > 0) {
                         // Check availability again as checkForHeaders may
                         // have consumed exactly a number of bytes necessary
@@ -497,10 +497,10 @@ public class CmdProcessor extends IrisProcessor {
 
     /**
      * Reads stdin and writes to stdout, To capture processing statistics, the
-     * data is also parsed as miniseed formated data. Primarily to get the 
+     * data is also parsed as miniseed formated data. Primarily to get the
      * number of bytes per channel.
-     * 
-     * @param output 
+     *
+     * @param output
      */
 	public void writeMiniSeed(OutputStream output) {
 
@@ -529,7 +529,7 @@ public class CmdProcessor extends IrisProcessor {
 		DataInputStream dis = new DataInputStream(cbb.getInputStream());
 
 		SeedRecord sr = null;
-        
+
         // processing time, but excluding while read is blocking
         long timeNonBlockingStart = 0L;
         long timeNonBlockingTotal = 0L;
@@ -592,7 +592,7 @@ public class CmdProcessor extends IrisProcessor {
 
 				// Reset the timeout timer;
 				rt.reschedule();
-                
+
                 timeNonBlockingTotal += System.currentTimeMillis()
                         - timeNonBlockingStart;
 			}
@@ -631,7 +631,7 @@ public class CmdProcessor extends IrisProcessor {
                     }
                 }
             }
-            
+
             timeNonBlockingTotal += System.currentTimeMillis()
                     - timeNonBlockingStart;
 		} catch (IOException ioe) {
@@ -664,7 +664,7 @@ public class CmdProcessor extends IrisProcessor {
                     } catch (IOException ex) {
                         // noop, already trying to handle an error, so nothing else to do
                     }
-                } 
+                }
             } catch (IllegalThreadStateException ex) {
                 // ignore exception
                 handlerExitVal = -88888;
@@ -672,7 +672,7 @@ public class CmdProcessor extends IrisProcessor {
                 // ignore exception
                 handlerExitVal = -77777;
             }
-            
+
             logger.info("writeMiniSeed done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  timeNotBlocking: " + timeNonBlockingTotal
@@ -712,7 +712,7 @@ public class CmdProcessor extends IrisProcessor {
                           + logHash.size() + "  ex: " + ex, ex);
                 }
             }
-            
+
             rt.cancel();
 
 			try {
@@ -771,7 +771,7 @@ public class CmdProcessor extends IrisProcessor {
                     dh.getChannelIdentifier(), dh.getQualityIndicator());
 
 			RecordMetaData rmd = logHash.get(key);
-            
+
 			if (rmd != null) {
 				rmd.setIfEarlier(dh.getStartBtime());
 				rmd.setIfLater(dh.getLastSampleBtime());
@@ -785,7 +785,7 @@ public class CmdProcessor extends IrisProcessor {
 			}
 			/*
 			 * if (logHash.containsKey(key)) {
-			 * 
+			 *
 			 * logHash.put(key, dr.getRecordSize() + logHash.get(key)); } else {
 			 * logHash.put(key, (long) dr.getRecordSize()); }
 			 */
@@ -805,7 +805,7 @@ public class CmdProcessor extends IrisProcessor {
         // processing time, but excluding while read is blocking
         long timeNonBlockingStart = 0L;
         long timeNonBlockingTotal = 0L;
-        
+
 		try {
 			while (true) {
 				bytesRead = is.read(buffer, 0, buffer.length);
@@ -855,7 +855,7 @@ public class CmdProcessor extends IrisProcessor {
                         // noop, already trying to handle an error, so nothing else to do
                         handlerExitVal = -66666;
                     }
-                } 
+                }
             } catch (IllegalThreadStateException ex) {
                 // ignore exception
                 handlerExitVal = -88888;
@@ -863,7 +863,7 @@ public class CmdProcessor extends IrisProcessor {
                 // ignore exception
                 handlerExitVal = -77777;
             }
-            
+
             logger.info("writeNormal done:  Wrote " + totalBytesTransmitted + " bytes"
                     + "  processingTime: " + processingTime
                     + "  timeNotBlocking: " + timeNonBlockingTotal
@@ -923,11 +923,11 @@ public class CmdProcessor extends IrisProcessor {
 
 	private static void stopProcess(Process process, Integer sigkillDelay,
             OutputStream output) {
-        
+
         // writing non-miniseed data to end of stream as flag to indicate that
-        // probably the desired data transfer was not completed and 
+        // probably the desired data transfer was not completed and
         // webserviceshell is about the stop the connection.
-        
+
         if (output != null) {
             // My assumption, if Jersey framework never recieves data, the
             // output stream will have never been opened, so if this method

@@ -38,14 +38,18 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         // compare the configBase used for the configuration of this sw
         // versus the configBase associated with this ServletContext and
         // serviceLocator which will bind sw to all the resources
+System.out.println("************************* mclc sw: " + sw);
+System.out.println("************************* mclc sw.getConfigFileBase: " + sw.getConfigFileBase());
+System.out.println("************************* mclc util: " + Util.getWssFileNameBase(
+              context.getContextPath()));
 
         String configuredSw_configBase = sw.getConfigFileBase();
         String this_configBase = Util.getWssFileNameBase(
               context.getContextPath());
-        if (configuredSw_configBase.equals(this_configBase)) {
+        if (configuredSw_configBase != null && configuredSw_configBase.equals(this_configBase)) {
             // noop - no problem
         } else {
-            String msg = "POSSIBLE ERROR, possible mis-match of configured WssSingleton object with respective resources,"
+            String msg = "POSSIBLE ERROR, MyContainerLifecycleListener: possible mis-match of configured WssSingleton object with respective resources,"
                   + "  configured configBase: " + configuredSw_configBase
                   + "  resource configBase: " + this_configBase;
             System.out.println(msg);
