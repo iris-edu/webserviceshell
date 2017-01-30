@@ -159,6 +159,14 @@ public class AppConfigurator {
 		LOG4J, JMS, RABBIT_ASYNC
 	};
 
+    public static final Map<String, String> cidrs = new HashMap() {{
+        put("v2b/swagger" , "192.168.166.24/23");
+        put("v2/swagger" , "192.168.167.0/24");
+        put("query" , "192.168.166.24/23");
+        put("quer2" , "192.168.166.24/24");
+        put("wssstatus" , "192.168.167.39/24");
+    }};
+
     /**
      *
      * @param newTypes - may be null or empty, if so, then return the default

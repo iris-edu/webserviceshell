@@ -74,6 +74,8 @@ System.out.println("************************* mclc util: " + Util.getWssFileName
             Injections.newBinder(sw).to(WssSingleton.class), dc);
         dc.commit();
 
+        context.setAttribute("wssSinlgton", sw);
+
         LOGGER.info("onStartup, context path: " + context.getContextPath()
               + "  configBase: " + sw.getConfigFileBase());
     }

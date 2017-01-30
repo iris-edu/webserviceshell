@@ -49,9 +49,11 @@ public class MyApplication extends ResourceConfig {
 
     // get configuration information next
     sw = new WssSingleton();
+System.out.println("************************* SetupWSS sw: " + sw);
     Map<String, edu.iris.wss.framework.WssSingleton> swprop = new HashMap();
     swprop.put(WSS_SINGLETON_KEYWORD, sw);
     sw.configure(configBase);
+System.out.println("************************* SetupWSS after sw configure ");
 
     // store reference to WssSinglton so that it can be bound
     // for injection with each request and its reference to rabbitmq can be
@@ -60,6 +62,7 @@ public class MyApplication extends ResourceConfig {
 
     MyContainerLifecycleListener mCLL = new MyContainerLifecycleListener();
     this.registerInstances(mCLL);
+System.out.println("************************* SetupWSS after registerInstances ");
 
     // bind classes as needed to make other objects be available to the
     // framework via a CONTEXT annotation
@@ -70,6 +73,7 @@ public class MyApplication extends ResourceConfig {
 
     // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
+System.out.println("************************* SetupWSS after register Wss ");
 
 ////    // example for adding an endpoint from a basic pojo class
 ////    // that may not use annotations, e.g. Info1.java

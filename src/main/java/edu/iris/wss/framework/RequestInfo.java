@@ -20,12 +20,15 @@
 package edu.iris.wss.framework;
 
 
+import edazdarevic.commons.net.CIDRUtils;
 import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 import edu.iris.wss.framework.FdsnStatus.Status;
+import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
@@ -112,7 +115,7 @@ public  class RequestInfo {
 
         // need this to avoid checking for endpoint information when global
         // (i.e. non-endpoint) request are being handled
-        if (isThisEndpointConfigured(request, sw.appConfig)) {
+        if (isThisEndpointConfigured(request, ri.appConfig)) {
             try {
                 if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
                       || ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
@@ -130,6 +133,21 @@ public  class RequestInfo {
                 System.out.println("^^^^^ msg ex: " + ex);
                 Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR, msg,
                       "Exception: " + ex.getMessage());
+            }
+        }
+
+        String cidr = AppConfigurator.cidrs.get(trialEndpoint);
+        if (cidr == null) {
+            System.out.println("-*-*-*- cidr: " + cidr + "  all IPs are allowed");
+////            cidr = "0.0.0.0/0";
+        } else {
+            // TBD will be loop on CIDRs
+            String ip = request.getRemoteAddr();
+            if (isAddressAllowed(ip, cidr)) {
+                // allowed, continue
+            } else {
+                Util.logAndThrowException(ri, Status.FORBIDDEN,
+                       ip + " is not allowed", "");
             }
         }
 
@@ -177,6 +195,36 @@ public  class RequestInfo {
 
         return trialEpName.length() > 0
               && appCfg.isThisEndpointConfigured(trialEpName);
+    }
+
+    public static boolean isAddressAllowed(String address, String cidr) {
+        System.out.println("*-*-*-* address: " + address + "  cidr: " + cidr);
+
+        CIDRUtils cidrUtils = null;
+        try {
+            cidrUtils = new CIDRUtils(cidr);
+            System.out.println("--- "
+                  + "  cidr: " + cidr
+                  + "  startAddr: " + cidrUtils.getNetworkAddress()
+                  + "  endAddr: " + cidrUtils.getBroadcastAddress()
+                  + "  isInRange: " + cidrUtils.isInRange(address)
+                  + "  test: " + address);
+
+        } catch (UnknownHostException ex) {
+            System.out.println("--- ex: " + ex);
+            ex.printStackTrace();
+        }
+
+        boolean isInRange = false;
+        try {
+            isInRange = cidrUtils.isInRange(address);
+        } catch (UnknownHostException ex) {
+            // TBD need to throw this exception and return HTTP 500 about an unexpected address, may be program error
+            System.out.println("--- inline ex: " + ex);
+            ex.printStackTrace();
+        }
+        // need to check for false and return HTTP 403
+        return isInRange;
     }
 
     // For testing only
