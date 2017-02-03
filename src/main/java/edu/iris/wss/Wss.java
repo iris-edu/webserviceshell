@@ -51,11 +51,25 @@ public class Wss {
 
 	public static final Logger logger = Logger.getLogger(Wss.class);
 
+    public static final String WSSSTATUS = "wssstatus";
+    public static final String WSSVERSION = "wssversion";
+    public static final String VERSION = "version";
+    public static final String WHOAMI = "whoami";
+
+    // NOTE: this must be maintained manually for all hard coded endpoints
+    //       in order to support IP fillering with allowIPs parameter
+    public static final List<String> STATIC_ENDPOINTS = new ArrayList() {{
+        add(WSSSTATUS);
+        add(WSSVERSION);
+        add(VERSION);
+        add(WHOAMI);
+    }};
+
 	public Wss()  {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
 
-	@Path("wssstatus")
+	@Path(WSSSTATUS)
 	@GET
 	public Response getStatus() {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
@@ -236,7 +250,7 @@ public class Wss {
 		return builder.build();
    }
 
-    @Path("wssversion")
+    @Path(WSSVERSION)
 	@GET @Produces("text/plain")
 	public Response getWssVersion() throws IOException {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
@@ -253,7 +267,7 @@ public class Wss {
 		return builder.build();
 	}
 
-	@Path("version")
+	@Path(VERSION)
 	@GET @Produces("text/plain")
 	public Response getAppVersion() {
     	RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
@@ -270,7 +284,7 @@ public class Wss {
 		return builder.build();
 	}
 
-	@Path("whoami")
+	@Path(WHOAMI)
 	@GET @Produces("text/plain")
 	public Response getwho() {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);

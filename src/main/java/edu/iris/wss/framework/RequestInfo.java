@@ -28,7 +28,7 @@ import javax.ws.rs.core.UriInfo;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import java.net.UnknownHostException;
 import java.util.Date;
-import java.util.logging.Level;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
@@ -36,7 +36,7 @@ public  class RequestInfo {
 	public static final Logger logger = Logger.getLogger(RequestInfo.class);
 
 	public UriInfo uriInfo;
-	public javax.servlet.http.HttpServletRequest request;
+	public HttpServletRequest request;
 	public HttpHeaders requestHeaders;
 
 	public boolean perRequestUse404for204 = false;
@@ -111,15 +111,15 @@ public  class RequestInfo {
 		ri.paramConfig = sw.paramConfig;
 		ri.statsKeeper = sw.statsKeeper;
 
-        String trialEndpoint = getEndpointNameForThisRequest(ri.request);
+        String epName = getEndpointNameForThisRequest(ri.request);
 
         // need this to avoid checking for endpoint information when global
         // (i.e. non-endpoint) request are being handled
         if (isThisEndpointConfigured(request, ri.appConfig)) {
             try {
-                if (ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MSEED)
-                      || ri.isCurrentTypeKey(trialEndpoint, InternalTypes.MINISEED)) {
-                    if (ri.appConfig.isLogMiniseedExtents(trialEndpoint)) {
+                if (ri.isCurrentTypeKey(epName, InternalTypes.MSEED)
+                      || ri.isCurrentTypeKey(epName, InternalTypes.MINISEED)) {
+                    if (ri.appConfig.isLogMiniseedExtents(epName)) {
                         ri.isWriteToMiniseed = true;
                     } else {
                         ri.isWriteToMiniseed = false;
@@ -128,7 +128,7 @@ public  class RequestInfo {
             } catch (Exception ex) {
                 String msg = "Service configuration problem, possibly missing"
                       + " type definition for MINISEED for endpointName: "
-                      + trialEndpoint;
+                      + epName;
                 System.out.println("^^^^^ msg: " + msg);
                 System.out.println("^^^^^ msg ex: " + ex);
                 Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR, msg,
@@ -136,22 +136,53 @@ public  class RequestInfo {
             }
         }
 
-        String cidr = AppConfigurator.cidrs.get(trialEndpoint);
-        if (cidr == null) {
-            System.out.println("-*-*-*- cidr: " + cidr + "  all IPs are allowed");
-////            cidr = "0.0.0.0/0";
+        System.out.println("-*-*-*--*-*-*--*-*-*- epName: " + epName
+        + "  ri.appConfig null?: " + (ri.appConfig == null));
+
+        List<CIDRUtils> allowedCidrs = ri.appConfig.getAllowedIPs(epName);
+        if (isIPAllowed(ri, allowedCidrs)) {
+            // is allowed, continue
+            System.out.println("-*-*-*- cidrList: " + allowedCidrs + "  for ep: " + epName);
         } else {
-            // TBD will be loop on CIDRs
-            String ip = request.getRemoteAddr();
-            if (isAddressAllowed(ip, cidr)) {
-                // allowed, continue
-            } else {
-                Util.logAndThrowException(ri, Status.FORBIDDEN,
-                       ip + " is not allowed", "");
-            }
+            String ipInQuestion = ri.request.getRemoteAddr();
+            Util.logAndThrowException(ri, Status.FORBIDDEN, "IP: " + ipInQuestion
+                      + (" is not allowed for endpoint: " + epName),
+                      "");
         }
 
         return ri;
+    }
+
+    public static boolean isIPAllowed(RequestInfo ri, List<CIDRUtils> okCidrs) {
+        boolean isAllowed = false;
+        if (okCidrs == null || okCidrs.isEmpty()) {
+            isAllowed = true;
+        } else {
+            String ipInQuestion = ri.request.getRemoteAddr();
+            for (CIDRUtils cidr : okCidrs) {
+                try {
+                    if (cidr.isInRange(ipInQuestion)) {
+                        isAllowed = true;
+                        break;
+                    }
+                } catch (UnknownHostException ex) {
+                    System.out.println("--- inline ex: " + ex);
+                    ex.printStackTrace();
+                    // not sure yet, 2017-02-02, if this an error or actual bad IP,
+                    // in which case it is more like bad data, so 400, or 406?
+                    Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
+                           "Error resolving remote address: " + ipInQuestion, "");
+                }
+                System.out.println("--chk- "
+                  + "  cidr: " + cidr
+                  + "  startAddr: " + cidr.getStartAddress()
+                  + "  endAddr: " + cidr.getEndAddress()
+                  + "  ipInQuestion: " + ipInQuestion
+                  + "  CIDR: " + cidr.getCIDR());
+            }
+        }
+
+        return isAllowed;
     }
 
     public boolean isWriteToMiniseed() {
@@ -195,36 +226,6 @@ public  class RequestInfo {
 
         return trialEpName.length() > 0
               && appCfg.isThisEndpointConfigured(trialEpName);
-    }
-
-    public static boolean isAddressAllowed(String address, String cidr) {
-        System.out.println("*-*-*-* address: " + address + "  cidr: " + cidr);
-
-        CIDRUtils cidrUtils = null;
-        try {
-            cidrUtils = new CIDRUtils(cidr);
-            System.out.println("--- "
-                  + "  cidr: " + cidr
-                  + "  startAddr: " + cidrUtils.getNetworkAddress()
-                  + "  endAddr: " + cidrUtils.getBroadcastAddress()
-                  + "  isInRange: " + cidrUtils.isInRange(address)
-                  + "  test: " + address);
-
-        } catch (UnknownHostException ex) {
-            System.out.println("--- ex: " + ex);
-            ex.printStackTrace();
-        }
-
-        boolean isInRange = false;
-        try {
-            isInRange = cidrUtils.isInRange(address);
-        } catch (UnknownHostException ex) {
-            // TBD need to throw this exception and return HTTP 500 about an unexpected address, may be program error
-            System.out.println("--- inline ex: " + ex);
-            ex.printStackTrace();
-        }
-        // need to check for false and return HTTP 403
-        return isInRange;
     }
 
     // For testing only

@@ -26,7 +26,9 @@
 /*
  * MLS - 2017-01-26
  * from https://github.com/edazdarevic/CIDRUtils/blob/master/CIDRUtils.java
- * addded check on prefixLength and throw IllegalArgumentException
+ * addded check on prefixLength and throw IllegalArgumentException.
+ * Note: It might be slightly mis-named, it not so much utils as a container
+ *       for a CIDR construct.
 */
 
 package edazdarevic.commons.net;
@@ -135,12 +137,15 @@ public class CIDRUtils {
         return ret;
     }
 
-    public String getNetworkAddress() {
+    public String getCIDR() {
+        return this.inetAddress.getHostAddress() + "/" + prefixLength;
+    }
 
+    public String getStartAddress() {
         return this.startAddress.getHostAddress();
     }
 
-    public String getBroadcastAddress() {
+    public String getEndAddress() {
         return this.endAddress.getHostAddress();
     }
 

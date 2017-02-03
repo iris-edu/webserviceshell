@@ -5,9 +5,11 @@
  */
 package edu.iris.wss.framework;
 
+import edazdarevic.commons.net.CIDRUtils;
 import edu.iris.wss.framework.AppConfigurator.EP_CFGS;
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -309,5 +311,62 @@ public class AppConfigurator_getters_Test {
         assert(appCfg.getMediaType(endpointName, "json").equals(jsonMediaType));
         assert(appCfg.getMediaType(endPName2, "xml").equals(xmlMediaType));
         assert(appCfg.getMediaType(endPName3, "xml").equals(xmlMediaType));
+    }
+
+    @Test
+    public void test_getAllowedIPs() throws Exception {
+        String endpointName = "endpnt4IP";
+        Properties props = createInitialTestProperties(endpointName);
+        AppConfigurator appCfg = new AppConfigurator();
+
+        String propName = AppConfigurator.createEPdotPropertyName(endpointName,
+              EP_CFGS.allowIPs);
+
+        String ip1 = "0.0.0.0";
+        String cd1 = ip1 + "/0";
+
+        String ip2resolved = "0:0:0:0:0:0:0:0";
+        String cd2 = "::0/0";
+
+
+        props.setProperty(propName, cd1 + ", " + cd2);
+        try {
+            appCfg.loadConfigurationParameters(props);
+        } catch (Exception ex) {
+            // ignore handler exception for this test
+            if (ex.toString().contains("Handler error for endpoint")) {
+                // noop
+            } else {
+                fail("Unexpected failure in test setup, this is not a test, ex: "
+                      + ex);
+            }
+        }
+
+        // can use indicies with current implementation
+        CIDRUtils cdu = appCfg.getAllowedIPs(endpointName).get(0);
+        assert(cdu.getStartAddress().equals(ip1));
+        assert(cdu.isInRange(ip1));
+        assert(cdu.isInRange("192.160.1.26"));
+        assert(cdu.isInRange("255.255.255.255"));
+
+        cdu = appCfg.getAllowedIPs(endpointName).get(1);
+        assert(cdu.getStartAddress().equals(ip2resolved));
+        assert(cdu.isInRange(ip2resolved));
+        assert(cdu.isInRange("238f:3::2"));
+        assert(cdu.isInRange("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"));
+
+
+        // test for bad address in string
+
+        String testWith = "192.166.166.12/24, 192:166.167.1/24, 127.0.0.1/32";
+        props.setProperty(propName, testWith);
+        try {
+            appCfg.loadConfigurationParameters(props);
+            fail("Unexpected success with testWith: " + testWith);
+        } catch (UnknownHostException ex) {
+            // noop - expected result
+        } catch (Exception ex) {
+            fail("Unexpected failure for test bad ip string, ex: " + ex);
+        }
     }
 }

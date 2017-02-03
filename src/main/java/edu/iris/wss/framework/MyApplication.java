@@ -20,6 +20,7 @@
  */
 package edu.iris.wss.framework;
 
+import edu.iris.wss.Wss;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +83,8 @@ System.out.println("************************* SetupWSS after register Wss ");
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
+        // don't try to make a static endpoint dynamic
+        if (Wss.STATIC_ENDPOINTS.contains(epName)) { continue; }
 
         String methodName = "doIrisStreaming";
         if (sw.appConfig.getIrisEndpointClass(epName) instanceof

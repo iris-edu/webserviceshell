@@ -136,6 +136,30 @@ public class ServiceConfigTest  {
         assertTrue(testMsg.contains("localhost"));
     }
 
+    @Test
+    public void testGet_IPfilter() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("query_cn2").request().get();
+
+        String testMsg = response.readEntity(String.class);
+        System.out.println("* -----------------------------------------cn2- testMsg: " + testMsg);
+        assertEquals(403, response.getStatus());
+    }
+
+    @Test
+    public void testGet_IPfilter_whoami() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        System.out.println("************** whoami wT: " + webTarget);
+        Response response = webTarget.path("whoami").request().get();
+
+        assertNotNull(response);
+        String testMsg = response.readEntity(String.class);
+        System.out.println("* -----------------------------------------cn2- whoami: " + testMsg);
+        assertEquals(403, response.getStatus());
+    }
+
     // create a config file to test against on a target test path
     private static void createTestCfgFile(String filePath, String fileName)
           throws FileNotFoundException, IOException {
@@ -219,6 +243,28 @@ public class ServiceConfigTest  {
         sb.append("\n");
         sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
         sb.append("query_client_name.use404For204=true").append("\n");
+        sb.append("\n");
+
+        sb.append("query_cn2.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+        sb.append("query_cn2.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("query_cn2.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("query_cn2.formatTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("query_cn2.use404For204=true").append("\n");
+        sb.append("query_cn2.allowIPs = 192.192.192.192/32").append("\n");
+        sb.append("\n");
+
+        sb.append("\n");
+        sb.append("wssstatus.allowIPs = 127.0.0.1/32").append("\n");
+        sb.append("whoami.allowIPs = 0.0.0.0/32, ::0/128").append("\n");
         sb.append("\n");
 
         os.write(sb.toString().getBytes());
