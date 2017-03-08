@@ -109,6 +109,7 @@ public class AppConfigurator {
         ep_defaults.cfgMap.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
         ep_defaults.cfgMap.put(EP_CFGS.addHeaders, createCfgHeaders(""));
         ep_defaults.cfgMap.put(EP_CFGS.allowIPs, createAllowedIPsList(""));
+        ep_defaults.cfgMap.put(EP_CFGS.mediaParameter, "format");
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -136,7 +137,7 @@ public class AppConfigurator {
     public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
         endpointClassName, proxyURL, logMiniseedExtents, formatDispositions,
-        addHeaders, allowIPs
+        addHeaders, allowIPs, mediaParameter
     }
 
     /**
@@ -320,6 +321,10 @@ public class AppConfigurator {
 
     public String getProxyUrl(String epName) {
          return endpoints.get(epName).cfgMap.get(EP_CFGS.proxyURL).toString();
+    }
+
+    public String getMediaParameter(String epName) {
+         return endpoints.get(epName).cfgMap.get(EP_CFGS.mediaParameter).toString();
     }
 
     /**

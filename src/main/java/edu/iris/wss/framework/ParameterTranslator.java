@@ -1,18 +1,18 @@
 /*******************************************************************************
  * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -43,13 +43,6 @@ public class ParameterTranslator {
 	// alone w/o a 'option'.
 
 	public final static String rawKeySignature = "ARG";
-
-	// Output is being deprecated, but will be allowable for now.
-	// Since they perform the same function, the last seen entry in the param
-	// config
-	// will be used.
-	public final static String outputControlSignature1 = "output";
-	public final static String outputControlSignature2 = "format";
 
 	public final static String NODATA_QUERY_PARAMETER = "nodata";
 	public final static String usernameSignature = "username";
@@ -127,20 +120,14 @@ public class ParameterTranslator {
 				qps.remove(rawKeySignature);
 			}
 		}
-        
-        // look in post data for parameters that affect HTTP response header type,
-        // at this time, 2014-06-20, "format" and "output"
-        if (ri.postBody != null) {
-            String key = outputControlSignature1;
-            if (ri.postBody.contains(key)) {
-                String value = extractValueByKey(ri.postBody, key);
-                qps.add(key, value);
-            }
 
-            key = outputControlSignature2;
-            if (ri.postBody.contains(key)) {
-                String value = extractValueByKey(ri.postBody, key);
-                qps.add(key, value);
+        // look in POST data for a mediaParameter name in order to set the HTTP
+        // response media type later, aliases are not checked at this time, 2017-03-08
+        if (ri.postBody != null) {
+            String specifiedName = ri.appConfig.getMediaParameter(epName);
+            if (ri.postBody.contains(specifiedName)) {
+                String value = extractValueByKey(ri.postBody, specifiedName);
+                qps.add(specifiedName, value);
             }
         }
 
@@ -156,7 +143,7 @@ public class ParameterTranslator {
 				throw new Exception("Multiple entries for query parameter: "
                       + queryKey);
             }
-            
+
             String nonAliasNameKey;
             if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
                 nonAliasNameKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
@@ -222,15 +209,14 @@ public class ParameterTranslator {
 				break;
 			}
 
-			// Check to see if this was the 'format' parameter. If present AND
-			// valid, change the config class's
+			// Check to see if this was a 'format' or other equivalent name.
+			//  If present AND valid, change the config class's
 			// output mime type so that the overall service's output format will
 			// change.
-			if (nonAliasNameKey.equalsIgnoreCase(outputControlSignature1)
-					|| nonAliasNameKey.equalsIgnoreCase(outputControlSignature2)) {
-                
-				ri.setPerRequestFormatType(epName, value);
-			}
+            if (nonAliasNameKey.equalsIgnoreCase(
+                  ri.appConfig.getMediaParameter(epName))) {
+                    ri.setPerRequestFormatType(epName, value);
+            }
 
 			// Add key and also value if valid.
 			cmd.add("--" + nonAliasNameKey);
@@ -246,7 +232,6 @@ public class ParameterTranslator {
 
 		// logger.info("CMD: " + cmd);
 	}
-    
 
     /**
      * Method to extract the value of the input key in a string where
@@ -254,13 +239,13 @@ public class ParameterTranslator {
      * to work on plain text or application/x-www-form-urlencoded text.
      * Also expects newline separators between key-value pairs and network,
      * station, etc lines.
-     * 
+     *
      * @param postBody - the text to parse
      * @param key - the text to search for
      * @return - the value for the respective key,
      *           or, returns null if key not found,
      *           or, reeturns empty string if parameter found but no value
-     * @throws Exception 
+     * @throws Exception
      */
     static String extractValueByKey(String postBody, String key)
         throws UnsupportedEncodingException, IllegalArgumentException {
@@ -280,10 +265,10 @@ public class ParameterTranslator {
 
         // assumes properties may be separated by carriage return newline,
         //after URLDecoding
-        
+
         // ignore carriage return so as to work with either plain text or url decoded
         urlDecoded = urlDecoded.replaceAll("\\r", "");
-            
+
         String[] itemsByLine = urlDecoded.split("\\n");
         for (String s : itemsByLine) {
             if (s.contains(key)) {

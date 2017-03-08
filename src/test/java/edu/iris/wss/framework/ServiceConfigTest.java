@@ -74,6 +74,8 @@ public class ServiceConfigTest  {
 
         createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
               SOME_CONTEXT + "-service.cfg");
+        createParamCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
+              SOME_CONTEXT + "-param.cfg");
 
         logger.info("*********** starting grizzlyWebServer, BASE_URI: "
             + BASE_URI);
@@ -158,6 +160,59 @@ public class ServiceConfigTest  {
         String testMsg = response.readEntity(String.class);
         System.out.println("* -----------------------------------------cn2- whoami: " + testMsg);
         assertEquals(403, response.getStatus());
+    }
+
+    @Test
+    public void testMediaParameter1() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        // don't forget mediaType must be defined in param.cfg as well
+        // else grizzly on returns "bad request", not the full WSS message
+        Response response = webTarget.path("/query_mt1")
+              .queryParam("mediaType", "json")
+              .request().get();
+
+        assertNotNull(response);
+        // don't care about payload for this test
+//        String testMsg = response.readEntity(String.class);
+//        System.out.println("* -----------------------------------------mt1- text: " + testMsg);
+        assertEquals(200, response.getStatus());
+        assertEquals("application/json", response.getMediaType().toString());
+        assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
+    }
+
+    @Test
+    public void testMediaParameter2() throws Exception {
+         // using default mediaParamter of "format", check aliases and default
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/query_mt2")
+              .queryParam("output", "json")
+              .request().get();
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertEquals("application/json", response.getMediaType().toString());
+        assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
+
+        webTarget = c.target(BASE_URI);
+        response = webTarget.path("/query_mt2")
+              .queryParam("mediatp", "xml")
+              .request().get();
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertEquals("application/xml", response.getMediaType().toString());
+        assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
+
+        webTarget = c.target(BASE_URI);
+        response = webTarget.path("/query_mt2")
+              .request().get();
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertEquals("text/plain", response.getMediaType().toString());
+        assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
     }
 
     // create a config file to test against on a target test path
@@ -266,6 +321,62 @@ public class ServiceConfigTest  {
         sb.append("wssstatus.allowIPs = 127.0.0.1/32").append("\n");
         sb.append("whoami.allowIPs = 0.0.0.0/32, ::0/128").append("\n");
         sb.append("\n");
+
+        sb.append("query_mt1.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+        sb.append("query_mt1.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("query_mt1.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("query_mt1.mediaParameter=mediaType").append("\n");
+        sb.append("query_mt1.formatTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("query_mt1.use404For204=true").append("\n");
+        sb.append("\n");
+
+        sb.append("query_mt2.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+        sb.append("query_mt2.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("query_mt2.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("query_mt2.formatTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("query_mt2.use404For204=true").append("\n");
+        sb.append("\n");
+
+        os.write(sb.toString().getBytes());
+    }
+
+    // create a config file to test against on a target test path
+    private static void createParamCfgFile(String filePath, String fileName)
+          throws FileNotFoundException, IOException {
+
+        File testFile = new File(filePath + File.separator + fileName);
+        OutputStream os = new FileOutputStream(testFile);
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ----------------  endpoints").append("\n");
+        sb.append("\n");
+
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("query_mt1.mediaType=TEXT").append("\n");
+        sb.append("\n");
+        sb.append("query_mt2.format=TEXT").append("\n");
+        sb.append("query_mt2.aliases = \\").append("\n");
+        sb.append("format: (output, mediatp)").append("\n");
 
         os.write(sb.toString().getBytes());
     }
