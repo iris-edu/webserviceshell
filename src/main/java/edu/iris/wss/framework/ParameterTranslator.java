@@ -34,14 +34,11 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 public class ParameterTranslator {
 
-	// This rawKeySignature is the string that a URI query parameter must have
-	// for the 'name'
-	// portion when you don't wan the 'value' portion to be rendered into the
-	// command line
-	// command. I.e. say ..?name1=val1&ARG=foo... to get -name1 val1 foo. I.e.,
-	// "foo" stands
-	// alone w/o a 'option'.
-
+    // The rawKeySignature string can be used on a the URL request to bypass
+    // regular parameter setup and checking. For instance, if this string
+    // &ARG=someStr1&ARG=someStr2 is part of the request URL, then the resulting
+    // command line will have this " someStr1 someStr2" appended to the end
+    // of the line
 	public final static String rawKeySignature = "ARG";
 
 	public final static String NODATA_QUERY_PARAMETER = "nodata";
@@ -106,13 +103,8 @@ public class ParameterTranslator {
 			cmd.add("--" + postSignature);
 		}
 
-		// Since the query parameters aren't going to come out of the Map
-		// structure in any meaningful
-		// way, we need some way to deal with non parameterized
-		// Parse query parameter map, adding all key / value pairs to the
-		// command line and storing
-		// away any keys that don't have values to be appended later.
-
+        // Look for any bypass parameters, put them in their own collection and
+        // remove them from the well-defined parameter collection
 		if (qps.get(rawKeySignature) != null) {
 			keysWithNoValue.addAll(qps.get(rawKeySignature));
 
@@ -226,6 +218,7 @@ public class ParameterTranslator {
 			}
 		}
 
+        // add the bypass parameters back in for final output
 		for (String rawArg : keysWithNoValue) {
 			cmd.add(rawArg);
 		}
