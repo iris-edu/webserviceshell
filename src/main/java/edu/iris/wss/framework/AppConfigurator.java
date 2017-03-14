@@ -110,6 +110,7 @@ public class AppConfigurator {
         ep_defaults.cfgMap.put(EP_CFGS.addHeaders, createCfgHeaders(""));
         ep_defaults.cfgMap.put(EP_CFGS.allowIPs, createAllowedIPsList(""));
         ep_defaults.cfgMap.put(EP_CFGS.mediaParameter, "format");
+        ep_defaults.cfgMap.put(EP_CFGS.relaxedValidation, false);
     }
 
     // InternalTypes is an enum of the types supported internally.
@@ -137,7 +138,7 @@ public class AppConfigurator {
     public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
         endpointClassName, proxyURL, logMiniseedExtents, formatDispositions,
-        addHeaders, allowIPs, mediaParameter
+        addHeaders, allowIPs, mediaParameter, relaxedValidation
     }
 
     /**
@@ -503,6 +504,10 @@ public class AppConfigurator {
 
     public boolean isLogMiniseedExtents(String epName) {
         return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.logMiniseedExtents);
+	}
+
+    public boolean isRelaxedValidation(String epName) {
+        return (boolean)endpoints.get(epName).cfgMap.get(EP_CFGS.relaxedValidation);
 	}
 
     // Note: this implements the rule that the first item in formatTypes

@@ -130,93 +130,106 @@ public class ParameterTranslator {
 		keys.addAll(qps.keySet());
 
         for (String queryKey : keys) {
+            // assign whatever is available from the request
+            String nonAliasNameKey = queryKey;
+            String value = qps.getFirst(queryKey);
 
-			if (qps.get(queryKey).size() > 1) {
-				throw new Exception("Multiple entries for query parameter: "
-                      + queryKey);
-            }
+            ConfigParam trialCp = ri.paramConfig.getConfigParamValue(epName, queryKey);
+            if (trialCp == null && ri.appConfig.isRelaxedValidation(epName)) {
+                // i.e. relaxedValidation property is true and a parameter
+                // as defined by queryKey is not defined in param.cfg
+                //
+                // so use the contents of the URL request with no further
+                // validation
+                //
+                // noop - drop and add to output cmd collection
+            } else {
+                if (qps.get(queryKey).size() > 1) {
+                    throw new Exception("Multiple entries for query parameter: "
+                          + queryKey);
+                }
 
-            String nonAliasNameKey;
-            if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
-                nonAliasNameKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
-                if (nonAliasNameKey != null) {
-                    if (qps.containsKey(nonAliasNameKey)) {
-                        throw new Exception(
-                              "Multiple parameters found from alias parameter: "
-                              + queryKey + "  an alias for parameter: " + nonAliasNameKey
-                              + "  on endpoint: " + epName);
+                if (ri.paramConfig.containsParamAlias(epName, queryKey)) {
+                    nonAliasNameKey = ri.paramConfig.getParamFromAlias(epName, queryKey);
+                    if (nonAliasNameKey != null) {
+                        if (qps.containsKey(nonAliasNameKey)) {
+                            throw new Exception(
+                                  "Multiple parameters found from alias parameter: "
+                                  + queryKey + "  an alias for parameter: " + nonAliasNameKey
+                                  + "  on endpoint: " + epName);
+                        }
+                    } else {
+                        throw new Exception("undefined alias parameter: "
+                                + queryKey + "  on endpoint: "+ epName);
                     }
                 } else {
-                    throw new Exception("undefined alias parameter: "
-                            + queryKey + "  on endpoint: "+ epName);
+                    nonAliasNameKey = queryKey;
                 }
-            } else {
-                nonAliasNameKey = queryKey;
+
+                ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, nonAliasNameKey);
+                if (cp == null) {
+                    throw new Exception("No type defined or unknown query parameter: "
+                          + queryKey);
+                }
+
+                // note: should only be one value, duplicate checks should be
+                //       performed before this assignment
+                value = qps.getFirst(queryKey);
+
+                // Test if param type is OK. DATE, NUMBER, TEXT, BOOLEAN
+                switch (cp.type) {
+                case NONE:
+                    if (AppConfigurator.isOkString(value)) {
+                        throw new Exception("No value permitted for " + queryKey
+                                + " Found value: " + value);
+                    }
+                    break;
+
+                case DATE:
+                    if (!isValidFdsnDate(value)) {
+                        throw new Exception("Bad date value for " + queryKey + ": "
+                                + value);
+                    }
+                    break;
+
+                case NUMBER:
+                    if (!isValidFdsnDecimal(value)) {
+                        throw new Exception("Bad numeric value for " + queryKey + ": "
+                                + value);
+                    }
+                    break;
+
+                case BOOLEAN:
+                    if (!value.equalsIgnoreCase("true")
+                            && !value.equalsIgnoreCase("false"))
+                        throw new Exception("Bad boolean value for " + queryKey + ": "
+                                + value);
+                    break;
+
+                case TEXT:
+                    if (!AppConfigurator.isOkString(value)) {
+                        throw new Exception("Invalid value for parameter: " + queryKey);
+                    }
+                    break;
+                }
+
+                // Check to see if this was a 'format' or other equivalent name.
+                //  If present AND valid, change the config class's
+                // output mime type so that the overall service's output format will
+                // change.
+                if (nonAliasNameKey.equalsIgnoreCase(
+                      ri.appConfig.getMediaParameter(epName))) {
+                        ri.setPerRequestFormatType(epName, value);
+                }
             }
 
-			ConfigParam cp = ri.paramConfig.getConfigParamValue(epName, nonAliasNameKey);
-			if (cp == null) {
-				throw new Exception("No type defined or unknown query parameter: "
-                      + queryKey);
-			}
-
-			// note: should only be one value, duplicate checks should be
-            //       performed before this assignment
-			String value = qps.getFirst(queryKey);
-
-			// Test if param type is OK. DATE, NUMBER, TEXT, BOOLEAN
-			switch (cp.type) {
-			case NONE:
-				if (AppConfigurator.isOkString(value)) {
-					throw new Exception("No value permitted for " + queryKey
-							+ " Found value: " + value);
-				}
-				break;
-
-			case DATE:
-				if (!isValidFdsnDate(value)) {
-					throw new Exception("Bad date value for " + queryKey + ": "
-							+ value);
-				}
-				break;
-
-			case NUMBER:
-				if (!isValidFdsnDecimal(value)) {
-					throw new Exception("Bad numeric value for " + queryKey + ": "
-							+ value);
-				}
-				break;
-
-			case BOOLEAN:
-				if (!value.equalsIgnoreCase("true")
-						&& !value.equalsIgnoreCase("false"))
-					throw new Exception("Bad boolean value for " + queryKey + ": "
-							+ value);
-				break;
-
-			case TEXT:
-				if (!AppConfigurator.isOkString(value)) {
-					throw new Exception("Invalid value for parameter: " + queryKey);
-				}
-				break;
-			}
-
-			// Check to see if this was a 'format' or other equivalent name.
-			//  If present AND valid, change the config class's
-			// output mime type so that the overall service's output format will
-			// change.
-            if (nonAliasNameKey.equalsIgnoreCase(
-                  ri.appConfig.getMediaParameter(epName))) {
-                    ri.setPerRequestFormatType(epName, value);
-            }
-
-			// Add key and also value if valid.
-			cmd.add("--" + nonAliasNameKey);
-			if (AppConfigurator.isOkString(value)) {
+            // Add key and also value if valid.
+            cmd.add("--" + nonAliasNameKey);
+            if (AppConfigurator.isOkString(value)) {
                 // remove any control characters
-				cmd.add(value.replaceAll("\\p{Cntrl}", ""));
-			}
-		}
+                cmd.add(value.replaceAll("\\p{Cntrl}", ""));
+            }
+        }
 
         // add the bypass parameters back in for final output
 		for (String rawArg : keysWithNoValue) {

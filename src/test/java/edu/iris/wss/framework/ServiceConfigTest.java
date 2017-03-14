@@ -215,6 +215,28 @@ public class ServiceConfigTest  {
         assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));
     }
 
+    @Test
+    public void testRelaxedValidation1() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/query_rv1")
+              .queryParam("parmValidated1", "textval1")
+              .queryParam("parmNotValidated20", "textval20")
+              .request().get();
+
+        assertNotNull(response);
+
+        String testMsg = response.readEntity(String.class);
+        System.out.println("* -----------------------------------------rv1- text: " + testMsg);
+        assertTrue(testMsg.contains("--parmValidated1"));
+        assertTrue(testMsg.contains("textval1"));
+        assertTrue(testMsg.contains("--parmNotValidated20"));
+        assertTrue(testMsg.contains("textval20"));
+
+        assertEquals(200, response.getStatus());
+        assertEquals("text/plain", response.getMediaType().toString());
+    }
+
     // create a config file to test against on a target test path
     private static void createTestCfgFile(String filePath, String fileName)
           throws FileNotFoundException, IOException {
@@ -355,6 +377,25 @@ public class ServiceConfigTest  {
         sb.append("query_mt2.use404For204=true").append("\n");
         sb.append("\n");
 
+        file = new File(filePath + File.separator + "echo_args.sh");
+        file.setExecutable(true);
+        sb.append("query_rv1.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+        sb.append("query_rv1.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("query_rv1.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("query_rv1.relaxedValidation=true").append("\n");
+        sb.append("query_rv1.formatTypes = \\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    texttree: text/plain,\\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("query_rv1.use404For204=true").append("\n");
+        sb.append("\n");
+
         os.write(sb.toString().getBytes());
     }
 
@@ -377,6 +418,8 @@ public class ServiceConfigTest  {
         sb.append("query_mt2.format=TEXT").append("\n");
         sb.append("query_mt2.aliases = \\").append("\n");
         sb.append("format: (output, mediatp)").append("\n");
+        sb.append("\n");
+        sb.append("query_rv1.parmValidated1=TEXT").append("\n");
 
         os.write(sb.toString().getBytes());
     }
