@@ -54,10 +54,10 @@ public class AppContextListener implements ServletContextListener {
             configBaseToServletContext.put(configBase, sc);
             globalConfigBase = configBase;
 
-            System.out.println("**************************** AppContextListener"
+            System.out.println("**************************** AppContextListener init"
                   + "  context count: " + configBaseToServletContext.size()
                   + "  keys: " + configBaseToServletContext.keySet());
-            System.out.println("**************************** AppContextListener"
+            System.out.println("**************************** AppContextListener init"
                   + "  configBase: " + configBase
                   + "  ContextPath: " + sc.getContextPath());
 

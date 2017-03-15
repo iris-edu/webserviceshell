@@ -136,13 +136,13 @@ public  class RequestInfo {
             }
         }
 
-        System.out.println("-*-*-*--*-*-*--*-*-*- epName: " + epName
-        + "  ri.appConfig null?: " + (ri.appConfig == null));
+//        System.out.println("-*-*-*--*-*-*--*-*-*- epName: " + epName
+//        + "  ri.appConfig null?: " + (ri.appConfig == null));
 
         List<CIDRUtils> allowedCidrs = ri.appConfig.getAllowedIPs(epName);
         if (isIPAllowed(ri, allowedCidrs)) {
             // is allowed, continue
-            System.out.println("-*-*-*- cidrList: " + allowedCidrs + "  for ep: " + epName);
+//            System.out.println("-*-*-*- cidrList: " + allowedCidrs + "  for ep: " + epName);
         } else {
             String ipInQuestion = ri.request.getRemoteAddr();
             Util.logAndThrowException(ri, Status.FORBIDDEN, "IP: " + ipInQuestion
@@ -173,12 +173,12 @@ public  class RequestInfo {
                     Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                            "Error resolving remote address: " + ipInQuestion, "");
                 }
-                System.out.println("--chk- "
-                  + "  cidr: " + cidr
-                  + "  startAddr: " + cidr.getStartAddress()
-                  + "  endAddr: " + cidr.getEndAddress()
-                  + "  ipInQuestion: " + ipInQuestion
-                  + "  CIDR: " + cidr.getCIDR());
+//                System.out.println("--chk- "
+//                  + "  cidr: " + cidr
+//                  + "  startAddr: " + cidr.getStartAddress()
+//                  + "  endAddr: " + cidr.getEndAddress()
+//                  + "  ipInQuestion: " + ipInQuestion
+//                  + "  CIDR: " + cidr.getCIDR());
             }
         }
 

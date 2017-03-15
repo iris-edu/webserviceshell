@@ -38,10 +38,10 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
         // compare the configBase used for the configuration of this sw
         // versus the configBase associated with this ServletContext and
         // serviceLocator which will bind sw to all the resources
-System.out.println("************************* mclc sw: " + sw);
-System.out.println("************************* mclc sw.getConfigFileBase: " + sw.getConfigFileBase());
-System.out.println("************************* mclc util: " + Util.getWssFileNameBase(
-              context.getContextPath()));
+//System.out.println("************************* mclc sw: " + sw);
+//System.out.println("************************* mclc sw.getConfigFileBase: " + sw.getConfigFileBase());
+//System.out.println("************************* mclc util: " + Util.getWssFileNameBase(
+//              context.getContextPath()));
 
         String configuredSw_configBase = sw.getConfigFileBase();
         String this_configBase = Util.getWssFileNameBase(
