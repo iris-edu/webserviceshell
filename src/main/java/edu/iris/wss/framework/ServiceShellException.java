@@ -26,6 +26,8 @@ import javax.ws.rs.core.Response;
 import edu.iris.wss.framework.FdsnStatus.Status;
 import org.apache.log4j.Logger;
 import edu.iris.wss.utils.LoggerUtils;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.log4j.Level;
 
 public class ServiceShellException extends WebApplicationException {
@@ -35,26 +37,44 @@ public class ServiceShellException extends WebApplicationException {
 	public static final Logger usageLogger = Logger.getLogger("UsageLogger");
     public static final String usageDetailsSignature = "Usage Details ...";
 
-	public ServiceShellException(final Status status) {
-        // need this constructor for 204, otherwise, if entity or type is
-        // used in builder, Jersey appears to convert the status to 200
-		super(Response.status(status).build());
-	}
-
-    public ServiceShellException(final Status status, final String message) {
+    public ServiceShellException(final Status status, final String message,
+          RequestInfo ri) {
         // Note: when running in junit with Grizzley server, the content in
-        //       message is not passed threw to the end reponse shown externally
-        super(new Throwable("throwable - " + message), Response.status(status).
-           entity(message + "\n").type("text/plain").build());
+        //       this message is not passed threw to the client
+        //
+        // In earlier versions of Jersey 1.x, a status code of 204 plus
+        // content in errMsg would cause Jersey to convert the 204 to a 200
+        // Now in Jersey 2.x, the errMsg is ignored and 204 remains a 204,
+        // which is the desired behaviour
+        super(new Throwable("throwable - " + message),
+              preConstructorReponse(status, message, ri));
     }
+
+    private static Response preConstructorReponse(final Status status,
+          final String message, RequestInfo ri) {
+        // Note: when running in junit with Grizzley server, the content in
+        //       message is not passed through to the client
+
+        Response.ResponseBuilder builder = Response.status(status).
+           entity(message + "\n").type("text/plain");
+
+        Map<String, String> headersMap = new HashMap<>();
+        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
+        Util.setResponseHeaders(builder, headersMap);
+
+        Response response= builder.build();
+
+        return response;
+    }
+
 
     public static void logAndThrowException(RequestInfo ri, Status status, String message) {
     	if (message != null)
     		logAndThrowException(ri, status, message, null);
         else {
             // This probably should not happen, it implies a programmer error
-            // either in the a WSS call sequence or the from external code
-            // via endpoint the public interfaces.
+            // either in the a WSS call sequence or from endpoint code created
+            // external to WSS
             //
             // make a new message and explain the problem
             Thread.dumpStack();
@@ -87,15 +107,12 @@ public class ServiceShellException extends WebApplicationException {
           ri.request.getRequestURL().toString(), ri.request.getQueryString(),
           ri.appConfig.getAppName(), ri.appConfig.getAppVersion());
 
-//    	sb.append(WebUtils.getCrazyHostPort(ri.request));
-//    	logger.error(sb.toString());
-        if (status == Status.NO_CONTENT) {
-            // for 204, need different constructor with no message
-            // otherwise Jersey changes 204 to 200
-            throw new ServiceShellException(status);
-        } else {
-            throw new ServiceShellException(status, errMsg);
-        }
+
+        // In earlier versions of Jersey 1.x, a status code of 204 plus
+        // content in errMsg would cause Jersey to convert the 204 to a 200
+        // Now in Jersey 2.x, the errMsg is ignored and 204 remains a 204,
+        // which is the desired behaviour
+        throw new ServiceShellException(status, errMsg, ri);
     }
 
     public static String createFdsnErrorMsg(Status status, String briefMsg,

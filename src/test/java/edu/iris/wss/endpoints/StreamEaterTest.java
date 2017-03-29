@@ -80,6 +80,10 @@ public class StreamEaterTest {
         String handlerName = null;
         TEST_ID test = TEST_IDS.get(nameCounter);
 
+        // objective here: iterate through the predefined number of test
+        // as controlled with TEST_IDS and nameCounter, therefor doing the
+        // same set of unit test for each script language
+
         // JUnit runs setUp and tearDown before and after each test
         // respectively, iterating through TEST_IDS enables a mechanism
         // to change test values based on the number of JUnit tests defined.
@@ -154,15 +158,22 @@ public class StreamEaterTest {
         Response response = do_GET(TEST_PARAM.EXIT_0_WITH_NO_STDOUT);
 
         assertEquals(204, response.getStatus());
-//        showing up as html, I think this is a Grizzley shortcoming
-//        assertEquals("text/plain", response.getMediaType().toString());
+
+        String testMsg = response.readEntity(String.class);
+        assertEquals(testMsg, "");
     }
 
     public void test_3_with_err_msg() throws Exception {
         Response response = do_GET(TEST_PARAM.EXIT_3_WITH_ERR_MSG);
 
         assertEquals(400, response.getStatus());
-//        assertEquals("text/plain", response.getMediaType().toString());
+
+//      possible Grizzley shortcoming, I expect standard FDSN error message
+//      as type text/plain, does not happen in the unittest
+////        assertEquals("text/plain", response.getMediaType().toString());
+//      instead, get this html message
+//        String testMsg = response.readEntity(String.class);
+//        System.out.println("* -----------------------------------------test_3_with_err_msg - text: " + testMsg);
     }
 
     public void test_3_with_no_err_msg() throws Exception {
@@ -223,6 +234,9 @@ public class StreamEaterTest {
 
         Response response = webTarget.request().get();
 
+        // This should be true for all queries when corsEnabled=false
+        assertEquals(null, response.getHeaderString("access-control-allow-origin"));
+
         return response;
     }
 
@@ -233,6 +247,8 @@ public class StreamEaterTest {
               "",
               "appName=" + THIS_CLASS_NAME,
               "version=0.1",
+              "",
+              "corsEnabled=false",
               "",
               "# LOG4J or JMS",
               "loggingMethod=LOG4J",

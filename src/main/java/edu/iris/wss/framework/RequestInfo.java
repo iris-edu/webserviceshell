@@ -98,7 +98,8 @@ public  class RequestInfo {
             System.out.println("^^^^^^^^^^^^^ " + shorter);
             logger.error(shorter);
 
-            throw new ServiceShellException(Status.SERVICE_UNAVAILABLE, errMsg);
+            throw new ServiceShellException(Status.SERVICE_UNAVAILABLE, errMsg,
+                  ri);
         }
 
         ri.sw = sw;

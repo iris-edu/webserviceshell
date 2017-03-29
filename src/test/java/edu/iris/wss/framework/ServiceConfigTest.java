@@ -134,8 +134,9 @@ public class ServiceConfigTest  {
         String testMsg = response.readEntity(String.class);
         assertEquals(200, response.getStatus());
 
-        // subject to change if BASE_HOST, testMsg allso containes \n
+        // subject to breaking if BASE_HOST changes or testMsg contains \n
         assertTrue(testMsg.contains("localhost"));
+        assertEquals("*", response.getHeaderString("access-control-allow-origin"));
     }
 
     @Test
@@ -144,9 +145,15 @@ public class ServiceConfigTest  {
         WebTarget webTarget = c.target(BASE_URI);
         Response response = webTarget.path("query_cn2").request().get();
 
-        String testMsg = response.readEntity(String.class);
-        System.out.println("* -----------------------------------------cn2- testMsg: " + testMsg);
+        // cannot test for FDSN message in junit because Grizzly server does
+        // not pass the plain text message through
+//        String testMsg = response.readEntity(String.class);
+//        System.out.println("* -----------------------------------------cn2- testMsg: " + testMsg);
         assertEquals(403, response.getStatus());
+
+        // note: for default setting of true for corsEnabled,
+        //   access-control-allow-origin should exist in the header with value *
+        assertEquals("*", response.getHeaderString("access-control-allow-origin"));
     }
 
     @Test
@@ -157,8 +164,6 @@ public class ServiceConfigTest  {
         Response response = webTarget.path("whoami").request().get();
 
         assertNotNull(response);
-        String testMsg = response.readEntity(String.class);
-        System.out.println("* -----------------------------------------cn2- whoami: " + testMsg);
         assertEquals(403, response.getStatus());
     }
 
@@ -227,7 +232,6 @@ public class ServiceConfigTest  {
         assertNotNull(response);
 
         String testMsg = response.readEntity(String.class);
-        System.out.println("* -----------------------------------------rv1- text: " + testMsg);
         assertTrue(testMsg.contains("--parmValidated1"));
         assertTrue(testMsg.contains("textval1"));
         assertTrue(testMsg.contains("--parmNotValidated20"));
