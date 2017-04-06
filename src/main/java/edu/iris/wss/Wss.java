@@ -57,7 +57,7 @@ public class Wss {
     public static final String WHOAMI = "whoami";
 
     // NOTE: this must be maintained manually for all hard coded endpoints
-    //       in order to support IP fillering with allowIPs parameter
+    //       in order to support IP fillering with allowedIPs parameter
     public static final List<String> STATIC_ENDPOINTS = new ArrayList() {{
         add(WSSSTATUS);
         add(WSSVERSION);

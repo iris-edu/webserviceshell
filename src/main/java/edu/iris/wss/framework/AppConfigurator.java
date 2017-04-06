@@ -108,7 +108,7 @@ public class AppConfigurator {
         ep_defaults.cfgMap.put(EP_CFGS.logMiniseedExtents, false);
         ep_defaults.cfgMap.put(EP_CFGS.formatDispositions, createFormatDispositions(""));
         ep_defaults.cfgMap.put(EP_CFGS.addHeaders, createCfgHeaders(""));
-        ep_defaults.cfgMap.put(EP_CFGS.allowIPs, createAllowedIPsList(""));
+        ep_defaults.cfgMap.put(EP_CFGS.allowedIPs, createAllowedIPsList(""));
         ep_defaults.cfgMap.put(EP_CFGS.mediaParameter, "format");
         ep_defaults.cfgMap.put(EP_CFGS.relaxedValidation, false);
     }
@@ -138,7 +138,7 @@ public class AppConfigurator {
     public static enum EP_CFGS { formatTypes, handlerTimeout,
         handlerProgram, handlerWorkingDirectory, usageLog, postEnabled, use404For204,
         endpointClassName, proxyURL, logMiniseedExtents, formatDispositions,
-        addHeaders, allowIPs, mediaParameter, relaxedValidation
+        addHeaders, allowedIPs, mediaParameter, relaxedValidation
     }
 
     /**
@@ -346,7 +346,7 @@ public class AppConfigurator {
 //            System.out.println("**************************** no map entry for CIDRList for epName: " + epName);
             return new ArrayList<CIDRUtils>();
         } else {
-            return (List<CIDRUtils>) endpoints.get(epName).cfgMap.get(EP_CFGS.allowIPs);
+            return (List<CIDRUtils>) endpoints.get(epName).cfgMap.get(EP_CFGS.allowedIPs);
         }
     }
 
@@ -939,9 +939,9 @@ public class AppConfigurator {
                         ((ReplacementWhenError)ipm).errorMsgMap.put(propName, ex.toString());
                     }
                 } else if(defaultz instanceof List) {
-                    if (epParm.equals(EP_CFGS.allowIPs)) {
+                    if (epParm.equals(EP_CFGS.allowedIPs)) {
                         List<CIDRUtils> allowed = createAllowedIPsList(newVal);
-                        endPt.cfgMap.put(EP_CFGS.allowIPs, allowed);
+                        endPt.cfgMap.put(EP_CFGS.allowedIPs, allowed);
                     }
                 } else {
                     try {
@@ -1233,9 +1233,9 @@ public class AppConfigurator {
         sb.append(line).append(" endpoints\n");
         for (String epName : endpoints.keySet()) {
             if (Wss.STATIC_ENDPOINTS.contains(epName)) {
-                // only show allowIPs for these endpoints
+                // only show allowedIPs for these endpoints
                 List<CIDRUtils> cidrs = getAllowedIPs(epName);
-                sb.append(strAppend(createEPdotPropertyName(epName, EP_CFGS.allowIPs)));
+                sb.append(strAppend(createEPdotPropertyName(epName, EP_CFGS.allowedIPs)));
                 sb.append(toStringCIDRUtilList(cidrs));
                 sb.append("\n\n");
                 continue;
@@ -1249,7 +1249,7 @@ public class AppConfigurator {
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
                 } else if (value instanceof List &&
-                      (cfgName.toString().equals(EP_CFGS.allowIPs.toString())
+                      (cfgName.toString().equals(EP_CFGS.allowedIPs.toString())
                       )) {
                     List<CIDRUtils> cidrs = getAllowedIPs(epName);
                     value = toStringCIDRUtilList(cidrs);
@@ -1326,12 +1326,12 @@ public class AppConfigurator {
                   .append("</TH></TR>");
 
             if (Wss.STATIC_ENDPOINTS.contains(epName)) {
-                // only show allowIPs for these endpoints
+                // only show allowedIPs for these endpoints
                 List<CIDRUtils> cidrs = getAllowedIPs(epName);
                 Object value = toStringCIDRUtilList(cidrs);
 
                 sb.append("<TR><TD>")
-                      .append(createEPdotPropertyName(epName, EP_CFGS.allowIPs))
+                      .append(createEPdotPropertyName(epName, EP_CFGS.allowedIPs))
                       .append("</TD><TD>")
                       .append(value)
                       .append("</TD></TR>");
@@ -1347,7 +1347,7 @@ public class AppConfigurator {
                 } else if(value instanceof IrisProcessMarker) {
                     value = value.getClass().getName();
                 } else if (value instanceof List &&
-                      (cfgName.toString().equals(EP_CFGS.allowIPs.toString())
+                      (cfgName.toString().equals(EP_CFGS.allowedIPs.toString())
                       )) {
                     List<CIDRUtils> cidrs = getAllowedIPs(epName);
                     value = toStringCIDRUtilList(cidrs);

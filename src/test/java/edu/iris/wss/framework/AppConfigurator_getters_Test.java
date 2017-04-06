@@ -320,7 +320,7 @@ public class AppConfigurator_getters_Test {
         AppConfigurator appCfg = new AppConfigurator();
 
         String propName = AppConfigurator.createEPdotPropertyName(endpointName,
-              EP_CFGS.allowIPs);
+              EP_CFGS.allowedIPs);
 
         String ip1 = "0.0.0.0";
         String cd1 = ip1 + "/0";

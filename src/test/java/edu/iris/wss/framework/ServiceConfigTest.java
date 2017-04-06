@@ -340,12 +340,12 @@ public class ServiceConfigTest  {
         sb.append("\n");
         sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
         sb.append("query_cn2.use404For204=true").append("\n");
-        sb.append("query_cn2.allowIPs = 192.192.192.192/32").append("\n");
+        sb.append("query_cn2.allowedIPs = 192.192.192.192/32").append("\n");
         sb.append("\n");
 
         sb.append("\n");
-        sb.append("wssstatus.allowIPs = 127.0.0.1/32").append("\n");
-        sb.append("whoami.allowIPs = 0.0.0.0/32, ::0/128").append("\n");
+        sb.append("wssstatus.allowedIPs = 127.0.0.1/32").append("\n");
+        sb.append("whoami.allowedIPs = 0.0.0.0/32, ::0/128").append("\n");
         sb.append("\n");
 
         sb.append("query_mt1.handlerProgram=").append(file.getAbsolutePath()).append("\n");
