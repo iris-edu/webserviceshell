@@ -1,18 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -51,7 +51,7 @@ public class OutputStreamFeeder {
     private boolean started = false;
 
     Logger logger = Logger.getLogger(OutputStreamFeeder.class);
-    
+
 
     public OutputStreamFeeder(OutputStream outputStream, int bufferSize, int retainSize, int dripSize, int dripPeriod) {
 
@@ -160,8 +160,8 @@ public class OutputStreamFeeder {
         throwException();
 
     }
-    
-    
+
+
     public long getBytesWritten() {
         if( worker == null ) {
             return -1;
@@ -183,7 +183,7 @@ public class OutputStreamFeeder {
 
 
     private class Worker implements Runnable {
-        
+
         long bytesWritten = 0;
 
         public void run() {
@@ -203,7 +203,7 @@ public class OutputStreamFeeder {
                     exception = e;
                 }
             }
-            
+
         }
 
         public void _run() {
@@ -212,7 +212,7 @@ public class OutputStreamFeeder {
 
             long nextFlushTime = 0;
             boolean dataSent = false;
-            
+
             try {
 
                 // loop until close and buffer is empty
@@ -239,7 +239,7 @@ public class OutputStreamFeeder {
 //                        SleepTest.sleep("/tmp/sleep2", "write");
 
                         outputStream.write(buff, 0, writeLen);
-                        
+
                         bytesWritten += writeLen;
 
                         dataSent = true;
@@ -261,7 +261,7 @@ public class OutputStreamFeeder {
                     }
 
                 } // end while
-                
+
             } catch (InterruptedException ex) {
                 logger.info(ex);
                 exception = ex;

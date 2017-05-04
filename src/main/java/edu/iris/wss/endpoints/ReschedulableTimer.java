@@ -1,18 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
- *  
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
+ *
  * This file is part of the Web Service Shell (WSS).
- *  
+ *
  * The WSS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * The WSS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -23,33 +23,33 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ReschedulableTimer extends Timer {
-	
+
 	// Default delay for timeout timers: 30 seconds
 	public final static int defaultDelayMsec = 30 * 1000;
-	
+
 	private Runnable task = null;
 	private TimerTask timerTask;
 	private int delayMsec = defaultDelayMsec;
-	
+
 	public ReschedulableTimer() {
-		
+
 	}
-	
+
 	public ReschedulableTimer(Integer timeout) {
 		if (timeout != null) delayMsec = timeout;
 	}
-	
+
 	public int getDelayMsec() {
 		return delayMsec;
 	}
 	public void setDelayMsec(int i) {
 		delayMsec = i;
 	}
-	
+
 	public void schedule(Runnable runnable) {
 		task = runnable;
-		timerTask = new TimerTask() { public void run() { task.run(); }; };	        
-	    this.schedule(timerTask, delayMsec);        
+		timerTask = new TimerTask() { public void run() { task.run(); }; };
+	    this.schedule(timerTask, delayMsec);
 	  }
 
 	  public void reschedule() throws Exception {
@@ -58,7 +58,7 @@ public class ReschedulableTimer extends Timer {
 		  }
 	    timerTask.cancel();
 	    timerTask = new TimerTask() { public void run() { task.run(); }; };
-	    this.schedule(timerTask, delayMsec);        
+	    this.schedule(timerTask, delayMsec);
 	  }
 
 	  public void cancel() {

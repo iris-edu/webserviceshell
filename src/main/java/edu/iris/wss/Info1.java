@@ -1,3 +1,22 @@
+/*******************************************************************************
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
+ *
+ * This file is part of the Web Service Shell (WSS).
+ *
+ * The WSS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * The WSS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * A copy of the GNU Lesser General Public License is available at
+ * <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package edu.iris.wss;
 
 
@@ -31,16 +50,16 @@ import org.apache.log4j.Logger;
 public class Info1 {
 	@Context 	ServletContext context;
 	@Context	javax.servlet.http.HttpServletRequest request;
-    @Context 	UriInfo uriInfo;	
+    @Context 	UriInfo uriInfo;
     @Context 	HttpHeaders requestHeaders;
 
     @Context 	WssSingleton sw;
-    
+
 	public static final Logger logger = Logger.getLogger(Info1.class);
-	
+
 	public Info1()  {
         System.out.println("***************&&& Info1 constr");
-	}	
+	}
 	public Response getDyWssVersion() throws IOException {
         RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request, requestHeaders);
 

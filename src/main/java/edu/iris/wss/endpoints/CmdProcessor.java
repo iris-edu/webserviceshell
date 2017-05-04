@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 IRIS DMC supported by the National Science Foundation.
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
  *
  * This file is part of the Web Service Shell (WSS).
  *
