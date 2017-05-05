@@ -1,8 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/*******************************************************************************
+ * Copyright (c) 2017 IRIS DMC supported by the National Science Foundation.
+ *
+ * This file is part of the Web Service Shell (WSS).
+ *
+ * The WSS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * The WSS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * A copy of the GNU Lesser General Public License is available at
+ * <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package edu.iris.wss.framework;
 
 import edu.iris.wss.framework.AppConfigurator.EP_CFGS;
@@ -33,7 +47,7 @@ public class AppConfiguratorSetFormatTypesTest {
             // noop - this is expected result
         }
     }
-    
+
     @Test
     public void testForZeroLengthExceptionInFormatTypesSetter() throws Exception {
         try {
@@ -45,7 +59,7 @@ public class AppConfiguratorSetFormatTypesTest {
             // noop - this is expected result
         }
     }
-    
+
     @Test
     public void testForNullExceptionInFormatTypesSetter() throws Exception {
         try {
@@ -57,7 +71,7 @@ public class AppConfiguratorSetFormatTypesTest {
             // noop - this is expected result
         }
     }
-    
+
     @Test
     public void testForMissingCommasExceptionInFormatTypesSetter() throws Exception {
         // no commas should throw exception
@@ -73,7 +87,7 @@ public class AppConfiguratorSetFormatTypesTest {
             // noop - this is expected result
         }
     }
-    
+
     @Test
     public void testForNoColonExceptionInInFormatTypesSetter() throws Exception {
         // no colons should throw exception
