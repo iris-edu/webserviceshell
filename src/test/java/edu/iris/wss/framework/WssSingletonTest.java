@@ -52,6 +52,8 @@ public class WssSingletonTest {
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
         + BASE_PORT + SOME_CONTEXT);
 
+    // 2017-10-25 - Was use of NAME_TYPES_TO_TEST necessary after previous
+    //              changes for glassfish? Can it be removed?
     private static final ArrayList<TEST_TYPE> NAME_TYPES_TO_TEST = new ArrayList();
     private static int nameCounter = 0;
     static {
