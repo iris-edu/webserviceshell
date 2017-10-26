@@ -30,7 +30,9 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 public  class RequestInfo {
 	public static final Logger logger = Logger.getLogger(RequestInfo.class);
@@ -47,6 +49,8 @@ public  class RequestInfo {
 	public String perRequestFormatTypeKey = null;
 
 	public String postBody = null;
+    public FormDataMultiPart postMultipart = null;
+    public MediaType requestMediaType = null;
 
 	public AppConfigurator appConfig;
 	public ParamConfigurator paramConfig;

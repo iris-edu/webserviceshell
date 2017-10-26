@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -74,6 +75,10 @@ public class MyApplication extends ResourceConfig {
     // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
 //System.out.println("************************* SetupWSS after register Wss ");
+
+    // register Multipart for use in IrisDynamicProvider
+    packages("org.glassfish.jersey.examples.multipart");
+    register(MultiPartFeature.class);
 
 ////    // example for adding an endpoint from a basic pojo class
 ////    // that may not use annotations, e.g. Info1.java

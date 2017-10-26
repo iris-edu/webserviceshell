@@ -25,26 +25,20 @@ import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.WssSingleton;
-import static edu.iris.wss.framework.WssSingleton.CONTENT_DISPOSITION;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.utils.WebUtils;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
 
 public class IrisDynamicProvider {
@@ -146,12 +140,18 @@ public class IrisDynamicProvider {
                         + ri.request.getRequestURI());
         }
 
+        ri.requestMediaType = containerRequestContext.getMediaType();
         if (containerRequestContext.getMethod().equals("POST")) {
             if (containerRequestContext != null) {
-                ri.postBody = ((ContainerRequest) containerRequestContext)
-                      .readEntity(String.class);
-            } else {
                 ri.postBody = "";
+                if (MediaTypes.typeEqual(MediaType.MULTIPART_FORM_DATA_TYPE,
+                        ri.requestMediaType)) {
+                    ri.postMultipart = ((ContainerRequest) containerRequestContext)
+                          .readEntity(FormDataMultiPart.class);
+                } else {
+                    ri.postBody = ((ContainerRequest) containerRequestContext)
+                          .readEntity(String.class);
+                }
             }
 
             String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
