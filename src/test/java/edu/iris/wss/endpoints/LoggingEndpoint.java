@@ -87,6 +87,10 @@ public class LoggingEndpoint extends IrisProcessor {
             ipr = IrisProcessingResult.processStream(so, wssMediaType);
         }
 
+        // take the incoming query reqest parameters in ri, parse out the
+        // parameters as cmd line options, then put each cmd option into the
+        // multi valued map as a key, along with the option value,
+        // then use the respective option value to control the logging choice
         MultivaluedMap<String, String> mvm = getParameters(ri);
 
         if (mvm.containsKey("messageType")) {

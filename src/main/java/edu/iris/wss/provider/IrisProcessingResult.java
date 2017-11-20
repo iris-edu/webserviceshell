@@ -51,6 +51,21 @@ public class IrisProcessingResult {
         //noop
     }
 
+    public String toString() {
+        String delimiter = "  ";
+
+        String s = String.join(delimiter,
+            "wssMediaType: " + wssMediaType,
+            "fdsnSS code: " + fdsnSS.getStatusCode(),
+            "fdsnSS reason: " + fdsnSS.getReasonPhrase(),
+            "briefErrMessage: " + briefErrMessage,
+            "detailedErrMessage: " + detailedErrMessage,
+            "headers: " + headers,
+            "entity: " + entity);
+
+        return s;
+    }
+
 ////    // another version with StreamingOutput type for entity
 ////    public IrisProcessingResult(StreamingOutput so, String wssMediaType,
 ////          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
