@@ -20,10 +20,8 @@
 package test;
 
 import edu.iris.wss.framework.FdsnStatus;
-import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.ServiceShellException;
 import edu.iris.wss.framework.Util;
-import javax.ws.rs.core.Response;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -58,11 +56,15 @@ public class UtilTest {
     public void test_FileNameBase() {
         System.out.println("* ------------------------- base: "
         + Util.getWssFileNameBase("/geows-uf/aaa/bbb/cccc/ddddd"));
+
+        assert("geows-uf.aaa.bbb.cccc.ddddd".equals(
+              Util.getWssFileNameBase("/geows-uf/aaa/bbb/cccc/ddddd")));
     }
 
     @Test
-    public void test_ServicShell_createMsg() {
-        Exception ex = new Exception("an exception message");
+    public void test_ServicShell_createFdsnErrorMsg() {
+        String exMsg = "an exception message";
+        Exception ex = new Exception(exMsg);
         String briefMsg = "No type defined or unknown query parameter: formatx";
         String detailedMsg = ex.getMessage();
         String requestURL = "http://cube1:8092/fdsnwsbeta/station/1/staquery";
@@ -72,16 +74,18 @@ public class UtilTest {
 
         FdsnStatus.Status status = FdsnStatus.Status.BAD_REQUEST;
 
-        System.out.println("* ------------------------- err msg: \n"
-        + ServiceShellException.createFdsnErrorMsg(status, briefMsg,
-              detailedMsg, requestURL, queryString, appName, appVersion));
+        String ErrMsg = ServiceShellException.createFdsnErrorMsg(status, briefMsg,
+              detailedMsg, requestURL, queryString, appName, appVersion);
 
+        assert(ErrMsg.contains(Integer.toString(status.getStatusCode())));
+        assert(ErrMsg.contains(briefMsg));
 
-        System.out.println("* ------------------------- BR: " + FdsnStatus.Status.BAD_REQUEST);
-        System.out.println("* ------------------------- BR.gr: " + FdsnStatus.Status.BAD_REQUEST.getReasonPhrase());
-        System.out.println("* ------------------------- BR.ts: " + FdsnStatus.Status.BAD_REQUEST.toString());
-        System.out.println("* ------------------------- BR.nm: " + FdsnStatus.Status.BAD_REQUEST.name());
-        System.out.println("* ------------------------- BR.fa: " + FdsnStatus.Status.BAD_REQUEST.getFamily());
-        System.out.println("* ------------------------- BR.sc: " + FdsnStatus.Status.BAD_REQUEST.getStatusCode());
+        assert(ErrMsg.contains("More Details:"));
+        assert(ErrMsg.contains(exMsg));
+
+        assert(ErrMsg.contains(requestURL));
+        assert(ErrMsg.contains(queryString));
+        assert(ErrMsg.contains(appName));
+        assert(ErrMsg.contains(appVersion));
     }
 }

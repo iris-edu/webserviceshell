@@ -19,18 +19,23 @@
 
 package edu.iris.wss.endpoints;
 
+import edu.iris.wss.framework.FdsnStatus;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.Set;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  *
  * @author mike
  */
 public class IncomingHeaders extends IrisProcessor {
+    public static final String THIS_CLASS_NAME = IncomingHeaders.class.getSimpleName();
 
     // concerning proxy informatino from apache to tomcat
     // https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#x-headers
@@ -51,6 +56,56 @@ public class IncomingHeaders extends IrisProcessor {
 
     @Override
     public IrisProcessingResult getProcessingResults(RequestInfo ri,
+          String wssMediaType) {
+        IrisProcessingResult ipr = IrisProcessingResult.processString(
+              "is String, as a default IrisProcessingResult from " + THIS_CLASS_NAME);
+
+        // for Jersey 2.x, the structure returned from getQueryParameters()
+        // is now immutable, so make a local copy
+        MultivaluedMap<String, String> qps_immutable = ri.uriInfo.getQueryParameters();
+        Set<String> mmKeys = qps_immutable.keySet();
+
+        if (mmKeys.size() == 0) {
+            // handle base path
+            ipr = getHeaders(ri, wssMediaType);
+        } else {
+            for (String mmkey : mmKeys) {
+                String value = qps_immutable.get(mmkey).get(0);
+                if (mmkey.equals("setlogandthrow")) {
+                    ipr = handle_setlogandthrow(ri, mmkey, value);
+                }
+            }
+        }
+
+        return ipr;
+    }
+
+    private IrisProcessingResult handle_setlogandthrow(RequestInfo ri, String key,
+          String value) {
+        String input = "param: " + key + "  value: " + value;
+        FdsnStatus.Status status = FdsnStatus.Status.NOT_IMPLEMENTED;
+        if (value.equals("204")) {
+            status = FdsnStatus.Status.NO_CONTENT;
+        } else if ((value.equals("404"))) {
+            status = FdsnStatus.Status.NOT_FOUND;
+        } else {
+            Util.logAndThrowException(ri, FdsnStatus.Status.OK,
+                  "return 200 for -- " + input);
+        }
+        Util.logAndThrowException(ri, status,
+              "msg: log and throw executed with code: " + status.getStatusCode()
+              + ", reason: " + status.getReasonPhrase()
+              + "  based on input of " + input);
+
+        // should never get here
+        IrisProcessingResult ipr = IrisProcessingResult.processString(
+              "is String, from class: " + THIS_CLASS_NAME
+              + " method: handle_setlogandthrow, this should never execute");
+
+        return ipr;
+    }
+
+    private IrisProcessingResult getHeaders(RequestInfo ri,
           String wssMediaType) {
 
         String wssIP = "";

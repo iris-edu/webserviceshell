@@ -58,6 +58,9 @@ public class PostTest {
 
     private static final String SERVICE_CONTEXT = "/posttest";
     private static final String ENDPOINT_NAME = "process";
+    // piggy back a util test on this code
+//    private static final String ENDPOIN2_NAME = "utiltest";
+    private static final String ENDPOIN2_NAME = "incoming";
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
@@ -84,14 +87,17 @@ public class PostTest {
     @Before
     public void setUp() throws Exception {
         String className = "edu.iris.wss.endpoints.PostEndpoint";
+//        String clas2Name = "edu.iris.wss.endpoints.UtilEndpoint";
+        String clas2Name = "edu.iris.wss.endpoints.IncomingHeaders";
         String newFN = FileCreaterHelper.createFileInWssFolder(SERVICE_CONTEXT,
               AppConfigurator.SERVICE_CFG_NAME_SUFFIX,
-              createServiceCfgStr(ENDPOINT_NAME, className),
+              createServiceCfgStr(ENDPOINT_NAME, className, ENDPOIN2_NAME,
+                    clas2Name),
               false);
 
         newFN = FileCreaterHelper.createFileInWssFolder(SERVICE_CONTEXT,
               ParamConfigurator.PARAM_CFG_NAME_SUFFIX,
-              createParamCfgStr(ENDPOINT_NAME),
+              createParamCfgStr(ENDPOINT_NAME, ENDPOIN2_NAME),
               false);
 
 
@@ -102,38 +108,6 @@ public class PostTest {
     @After
     public void tearDown() throws Exception {
         GrizzlyContainerHelper.tearDownServer(this.getClass().getName());
-    }
-
-    //@Test // TBD add a get in at some point?
-    public void test_1() throws Exception {
-        test_all();
-    }
-
-    private void test_all() throws Exception {
-        test_0_stdout();
-    }
-
-    public void test_0_stdout() throws Exception {
-        Response response = do_GET(TEST_PARAM.EXIT_0_WITH_STDOUT);
-
-        assertEquals(200, response.getStatus());
-        assertEquals("text/plain", response.getMediaType().toString());
-    }
-
-    private Response do_GET(TEST_PARAM tparm) throws Exception {
-        Client c = ClientBuilder.newClient();
-
-        WebTarget webTarget = c.target(BASE_URI)
-              .path(ENDPOINT_NAME)
-              .queryParam(tparm.toString(), "no_val")
-              .queryParam("format", "TEXT");
-
-        Response response = webTarget.request().get();
-
-        // This should be true for all queries when corsEnabled=false
-        assertEquals(null, response.getHeaderString("access-control-allow-origin"));
-
-        return response;
     }
 
     @Test
@@ -175,7 +149,7 @@ public class PostTest {
     public void testPost2() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        final String TEST_STR = "some-post-data2-text";
+        final String TEST_STR = "testPost2-text";
         Response response = webTarget.path(ENDPOINT_NAME).request()
               .post(Entity.text(TEST_STR));
         String responseMsg = response.readEntity(String.class);
@@ -184,8 +158,75 @@ public class PostTest {
         assertTrue(responseMsg.equals(TEST_STR));
     }
 
+    @Test
+    public void testUtil1() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME)
+              .queryParam("setlogandthrow", "204");
+
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(204, response.getStatus());
+        // client should not return anything for 204 even if server
+        // is generating text
+        assertTrue(responseMsg.equals(""));
+    }
+
+    @Test
+    public void testUtil2() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME)
+              .queryParam("format", "TEXT")
+              .queryParam("setlogandthrow", "404");
+
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(404, response.getStatus());
+        // another case where ServiceShellException.logAndThrowException
+        // generates an FDSN message but Grizzly ignore or cant handle
+        // the message and instead, returns an html message
+        assertTrue(responseMsg.contains("Not Found"));
+    }
+
+    @Test
+    public void testUtil3() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME);
+
+        // get the default text from query with no parameters
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        // note: this make break if IncomingHeaers is changed
+        assertTrue(responseMsg.contains("all_headers:"));
+    }
+
+    @Test
+    public void testUtil4() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME)
+              .queryParam("format", "TEXT");
+
+        // get the default text from query when this query parameter is
+        // not handled
+        Response response = webTarget.request().get();
+
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        // note: this make break if IncomingHeaers is changed
+        assertTrue(responseMsg.contains("is String, as a default IrisProcessingResult from IncomingHeaders"));
+    }
+
     private static String createServiceCfgStr(String endpointName,
-          String endpointClass) {
+          String endpointClass, String endpoin2Name, String endpoin2Class) {
         String s = String.join("\n",
               "# ---------------- globals",
               "",
@@ -212,17 +253,33 @@ public class PostTest {
               "    json: application/json, \\",
               "    miniseed: application/vnd.fdsn.mseed, \\",
               "    geocsv: text/plain",
+              "",
+              endpoin2Name + ".endpointClassName=" + endpoin2Class,
+              endpoin2Name + ".usageLog",
+              endpoin2Name + ".postEnabled=false",
+              endpoin2Name + ".logMiniseedExtents = false",
+              endpoin2Name + ".use404For204=false",
+              endpoin2Name + ".formatTypes = \\",
+              "    text: text/plain,\\",
+              "    json: application/json, \\",
+              "    miniseed: application/vnd.fdsn.mseed, \\",
+              "    geocsv: text/plain",
               ""
         );
 
         return s;
     }
 
-    private static String createParamCfgStr(String endpointName) {
+    private static String createParamCfgStr(String endpointName,
+          String endpoin2Name) {
         String s = String.join("\n",
               "# ----------------  endpoints",
               "",
-              endpointName + ".format=TEXT"
+              endpointName + ".format=TEXT",
+              "",
+              endpoin2Name + ".format=TEXT",
+              endpoin2Name + ".setlogandthrow=TEXT",
+              ""
         );
 
         return s;
