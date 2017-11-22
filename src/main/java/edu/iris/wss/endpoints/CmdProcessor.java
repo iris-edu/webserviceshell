@@ -89,10 +89,11 @@ public class CmdProcessor extends IrisProcessor {
         this.ri = ri;
         epName = ri.getEndpointNameForThisRequest();
 
-        // this needs to be done again since it is not part of the
-        // IrisStreamingOutput interface, but any errors should have
-        // already been reported, so not checking for existance and
-        // runability of handler program here
+        // The cmd list is needed here, so run parseQueryParams again,
+        // if the cmd list was part of the IrisStreamingOutput interface,
+        // this would not be necessary, but it is not, so run it again,
+        // any errors should have already been reported, so not checking
+        // for existance and runability of handler program here
         String handlerName = ri.appConfig.getHandlerProgram(epName);
 
         ArrayList<String> cmd = new ArrayList<>(Arrays.asList(

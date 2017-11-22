@@ -36,6 +36,9 @@ import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -55,11 +58,12 @@ public class PostTest {
 		EXIT_0_WITH_STDOUT, EXIT_0_WITH_NO_STDOUT, EXIT_3_WITH_ERR_MSG,
         EXIT_3_WITH_NO_ERR_MSG, EXIT_1234_NO_OUTPUT, EXIT_4_STDOUT_THEN_STDERR
 	};
+    private static final String MEDIA_PARAM = "myFORMTname";
 
     private static final String SERVICE_CONTEXT = "/posttest";
     private static final String ENDPOINT_NAME = "process";
-    // piggy back a util test on this code
-//    private static final String ENDPOIN2_NAME = "utiltest";
+    // piggy-back some util tests using ENDPOIN2_NAME into this
+    // original POST multipart test
     private static final String ENDPOIN2_NAME = "incoming";
 
     private static final String BASE_HOST = "http://localhost";
@@ -116,6 +120,7 @@ public class PostTest {
               .register(MultiPartFeature.class).build();
         WebTarget webTarget = c.target(BASE_URI);
 
+        final String TEST_PART_NAME_1 = "part1test";
         final String TEST_STR1 = "some-multipart-data-text-one";
         final String TEST_PART_NAME_2 = "part2test";
         final String TEST_STR2 = "some-multipart-data-text-two";
@@ -123,7 +128,7 @@ public class PostTest {
         MultiPart multiPart = new MultiPart();
         multiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
 
-        FormDataBodyPart formPart1 = new FormDataBodyPart("part1test",
+        FormDataBodyPart formPart1 = new FormDataBodyPart(TEST_PART_NAME_1,
               TEST_STR1);
         multiPart.bodyPart(formPart1);
         FormDataBodyPart formPart2 = new FormDataBodyPart(TEST_PART_NAME_2,
@@ -138,11 +143,99 @@ public class PostTest {
 //        Response response = webTarget.path(ENDPOINT_NAME).request(MediaType.APPLICATION_JSON_TYPE)
         Response response = webTarget.path(ENDPOINT_NAME).request()
               .post(Entity.entity(multiPart, multiPart.getMediaType()));
+        // expecting JSON string as plain/text
         String responseMsg = response.readEntity(String.class);
 
         assertEquals(200, response.getStatus());
-        assertTrue(responseMsg.contains(TEST_STR2));
-        assertTrue(responseMsg.contains(TEST_PART_NAME_2));
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject ro = (JSONObject)parser.parse(responseMsg);
+            assertTrue(ro.get(TEST_PART_NAME_1).equals(TEST_STR1));
+            assertTrue(ro.get(TEST_PART_NAME_2).equals(TEST_STR2));
+        } catch(Exception ex) {
+            fail("testMultipart_1 programing error while trying to parse JSON"
+                  + " test result, ex: " + ex);
+        }
+     }
+
+    @Test
+    public void testMultipart_2() throws Exception {
+        Client c = ClientBuilder.newBuilder()
+              .register(MultiPartFeature.class).build();
+        WebTarget webTarget = c.target(BASE_URI);
+
+        final String TEST_PART_NAME_1 = "part1test";
+        final String TEST_STR1 = "some-multipart-data-text-one";
+        final String TEST_PART_NAME_2 = MEDIA_PARAM;
+        final String TEST_STR2 = "application/vnd.fdsn.mseed";
+
+        MultiPart multiPart = new MultiPart();
+        multiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
+
+        FormDataBodyPart formPart1 = new FormDataBodyPart(TEST_PART_NAME_1,
+              TEST_STR1);
+        multiPart.bodyPart(formPart1);
+        FormDataBodyPart formPart2 = new FormDataBodyPart(TEST_PART_NAME_2,
+              TEST_STR2);
+        multiPart.bodyPart(formPart2);
+
+        Response response = webTarget.path(ENDPOINT_NAME).request()
+              .post(Entity.entity(multiPart, multiPart.getMediaType()));
+        // expecting JSON string as plain/text
+        String responseMsg = response.readEntity(String.class);
+
+        // should get 400 because application/vnd.fdsn.mseed is a mediaType,
+        // not a format type name
+        assertEquals(400, response.getStatus());
+        // another case where grizzly/jersey framework does not pass through
+        // the FDSN plain/text message, so look for 400 reason text
+        assertTrue(responseMsg.contains("Bad Request"));
+     }
+
+    @Test
+    public void testMultipart_3() throws Exception {
+        Client c = ClientBuilder.newBuilder()
+              .register(MultiPartFeature.class).build();
+        WebTarget webTarget = c.target(BASE_URI);
+
+        final String TEST_PART_NAME_1 = "part1test";
+        final String TEST_STR1 = "some-multipart-data-text-one";
+        final String TEST_PART_NAME_2 = MEDIA_PARAM;
+        final String TEST_STR2 = "miniseed";
+
+        MultiPart multiPart = new MultiPart();
+        multiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
+
+        FormDataBodyPart formPart1 = new FormDataBodyPart(TEST_PART_NAME_1,
+              TEST_STR1);
+        multiPart.bodyPart(formPart1);
+        FormDataBodyPart formPart2 = new FormDataBodyPart(TEST_PART_NAME_2,
+              TEST_STR2);
+        multiPart.bodyPart(formPart2);
+
+        Response response = webTarget.path(ENDPOINT_NAME).request()
+              .post(Entity.entity(multiPart, multiPart.getMediaType()));
+        // expecting JSON string as plain/text
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject ro = (JSONObject)parser.parse(responseMsg);
+
+            assertTrue(ro.get(TEST_PART_NAME_1).equals(TEST_STR1));
+            assertTrue(ro.get(TEST_PART_NAME_2).equals(TEST_STR2));
+
+            // MEDIA_PARAM should be recognized as a "format" replacement
+            // and put into the command line and TEST_STR2 recognized as
+            // a valid formatType name from the service.cfg file
+            JSONArray jarr = (JSONArray)ro.get("cmd");
+            assertTrue(jarr.get(1).equals("--" + MEDIA_PARAM));
+            assertTrue(jarr.get(2).equals(TEST_STR2));
+        } catch(Exception ex) {
+            fail("testMultipart_3 programing error while trying to parse JSON"
+                  + " test result, ex: " + ex);
+        }
      }
 
     @Test
@@ -203,7 +296,7 @@ public class PostTest {
         String responseMsg = response.readEntity(String.class);
 
         assertEquals(200, response.getStatus());
-        // note: this make break if IncomingHeaers is changed
+        // note: this may break if IncomingHeaers is changed
         assertTrue(responseMsg.contains("all_headers:"));
     }
 
@@ -253,6 +346,7 @@ public class PostTest {
               "    json: application/json, \\",
               "    miniseed: application/vnd.fdsn.mseed, \\",
               "    geocsv: text/plain",
+              endpointName + ".mediaParameter = " + MEDIA_PARAM,
               "",
               endpoin2Name + ".endpointClassName=" + endpoin2Class,
               endpoin2Name + ".usageLog",
@@ -275,7 +369,7 @@ public class PostTest {
         String s = String.join("\n",
               "# ----------------  endpoints",
               "",
-              endpointName + ".format=TEXT",
+              endpointName + "." + MEDIA_PARAM + "=TEXT",
               "",
               endpoin2Name + ".format=TEXT",
               endpoin2Name + ".setlogandthrow=TEXT",

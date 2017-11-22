@@ -24,11 +24,21 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.StreamingOutput;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.message.internal.MediaTypes;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -64,6 +74,9 @@ public class IncomingHeaders extends IrisProcessor {
         // is now immutable, so make a local copy
         MultivaluedMap<String, String> qps_immutable = ri.uriInfo.getQueryParameters();
         Set<String> mmKeys = qps_immutable.keySet();
+        System.out.println("************** incoming keysize: " + mmKeys.size());
+        System.out.println("************** incoming ri mediaType: " + ri.requestMediaType);
+        System.out.println("************** incoming wss mediaType: " + wssMediaType);
 
         if (mmKeys.size() == 0) {
             // handle base path
@@ -75,6 +88,27 @@ public class IncomingHeaders extends IrisProcessor {
                     ipr = handle_setlogandthrow(ri, mmkey, value);
                 }
             }
+        }
+        // "multipart/form-data"
+        if (MediaTypes.typeEqual(MediaType.MULTIPART_FORM_DATA_TYPE,
+                        ri.requestMediaType)) {
+            JSONObject jo = simple_multipart_to_json(ri.postMultipart);
+            String jsonStr = jo.toJSONString();
+
+            StreamingOutput so = new StreamingOutput() {
+                @Override
+                public void write(OutputStream output) {
+                    try {
+                        output.write(jsonStr.getBytes());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(THIS_CLASS_NAME + MediaType.MULTIPART_FORM_DATA
+                              +" test code"
+                              + " failed to do streaming output, ex: " + ex);
+                    }
+                }
+            };
+
+            ipr = IrisProcessingResult.processStream(so, MediaType.APPLICATION_JSON);
         }
 
         return ipr;
@@ -155,5 +189,25 @@ public class IncomingHeaders extends IrisProcessor {
               sb.toString());
 
         return ipr;
+    }
+
+    private JSONObject simple_multipart_to_json(FormDataMultiPart fdmp) {
+        JSONObject jo = new JSONObject();
+        Map<String, List<FormDataBodyPart>> fdmpMap = fdmp.getFields();
+
+        for (String pname : fdmpMap.keySet()) {
+            List<FormDataBodyPart> parts = fdmpMap.get(pname);
+            for (FormDataBodyPart part : parts) {
+                MediaType partMt = part.getMediaType();
+                if (MediaTypes.typeEqual(MediaType.TEXT_PLAIN_TYPE, partMt)) {
+                    Object pVal = part.getValue();
+                    jo.put(pname, pVal);
+                } else {
+                    jo.put(pname, "decoding skipped for mediaType: " + partMt);
+                }
+            }
+        }
+
+        return jo;
     }
 }

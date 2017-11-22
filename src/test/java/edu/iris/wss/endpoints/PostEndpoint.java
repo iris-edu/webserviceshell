@@ -19,7 +19,10 @@
 
 package edu.iris.wss.endpoints;
 
+import edu.iris.wss.framework.FdsnStatus;
+import edu.iris.wss.framework.ParameterTranslator;
 import edu.iris.wss.framework.RequestInfo;
+import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
 import java.io.IOException;
@@ -27,15 +30,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.message.internal.MediaTypes;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -53,13 +58,29 @@ public class PostEndpoint extends IrisProcessor {
             ipr = IrisProcessingResult.processString(ri.postBody);
         }
 
+        String epName = ri.getEndpointNameForThisRequest();
+        String handlerName = ri.appConfig.getHandlerProgram(epName);
+
+        ArrayList<String> cmd = new ArrayList<>(Arrays.asList(
+              handlerName.split(Pattern.quote(" "))));
+        try {
+            // this modifies the cmd list and adds each parameter.
+			ParameterTranslator.parseQueryParams(cmd, ri, epName);
+		} catch (Exception ex) {
+            String briefMsg = this.getClass().getName() + " parameter error: "
+                  + ex.getMessage();
+            Util.logAndThrowException(ri, FdsnStatus.Status.BAD_REQUEST, briefMsg, null);
+		}
+
         // "multipart/form-data"
         if (MediaTypes.typeEqual(MediaType.MULTIPART_FORM_DATA_TYPE,
                         ri.requestMediaType)) {
 
             //review_multipart(ri.postMultipart);
 
-            String jsonStr = simple_multipart_to_json(ri.postMultipart);
+            JSONObject jo = simple_multipart_to_json(ri.postMultipart);
+            jo.put("cmd", cmd);
+            String jsonStr = jo.toJSONString();
 
             StreamingOutput so = new StreamingOutput() {
                 @Override
@@ -129,35 +150,23 @@ public class PostEndpoint extends IrisProcessor {
         }
     }
 
-    private String simple_multipart_to_json(FormDataMultiPart fdmp) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  [\n");
+    private JSONObject simple_multipart_to_json(FormDataMultiPart fdmp) {
+        JSONObject jo = new JSONObject();
         Map<String, List<FormDataBodyPart>> fdmpMap = fdmp.getFields();
 
-        boolean firstTime = true;
         for (String pname : fdmpMap.keySet()) {
             List<FormDataBodyPart> parts = fdmpMap.get(pname);
-            if (!firstTime) {
-                sb.append("    },\n");
-            }
             for (FormDataBodyPart part : parts) {
-                sb.append("    {\"name\": \"").append(part.getName()).append("\",\n");
                 MediaType partMt = part.getMediaType();
                 if (MediaTypes.typeEqual(MediaType.TEXT_PLAIN_TYPE, partMt)) {
                     Object pVal = part.getValue();
-                    sb.append("     \"value\": \"").append(part.getValue()).append("\"\n");
+                    jo.put(pname, pVal);
                 } else {
-                    sb.append("     \"value\": \"").append("decoding skipped for mediaType: ")
-                          .append(partMt).append("\"\n");
+                    jo.put(pname, "decoding skipped for mediaType: " + partMt);
                 }
             }
-            firstTime = false;
         }
-        sb.append("    }\n");
-        sb.append("  ]\n");
-        sb.append("}\n");
 
-        return sb.toString();
+        return jo;
     }
 }

@@ -29,8 +29,12 @@ import org.apache.log4j.Logger;
 import edu.iris.wss.framework.ParamConfigurator.ConfigParam;
 import edu.iris.wss.utils.WebUtils;
 import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.message.internal.MediaTypes;
 
 public class ParameterTranslator {
 
@@ -120,6 +124,30 @@ public class ParameterTranslator {
             if (ri.postBody.contains(specifiedName)) {
                 String value = extractValueByKey(ri.postBody, specifiedName);
                 qps.add(specifiedName, value);
+            }
+        }
+        // not sure if a postBody and a multipart form can exist in the same
+        // query, but if they do, the following multipart will override the
+        // previous postBody processing.
+        if (ri.postMultipart != null) {
+            // where specifiedName is either the default "format" or some
+            // other name defined with mediaParameter in respective cfg file
+            String specifiedName = ri.appConfig.getMediaParameter(epName);
+            Map<String, List<FormDataBodyPart>> fdmpMap = ri.postMultipart.getFields();
+            for (String partName : fdmpMap.keySet()) {
+                List<FormDataBodyPart> parts = fdmpMap.get(partName);
+                for (FormDataBodyPart part : parts) {
+                    MediaType partMt = part.getMediaType();
+                    if (MediaTypes.typeEqual(MediaType.TEXT_PLAIN_TYPE, partMt)) {
+                        if (part.getName().equals(specifiedName)) {
+                            // pVal should be the media type of desired output format
+                            String pVal = part.getValue();
+                            // this should override any value set by simple postbody
+                            // or the default formatType
+                            qps.add(specifiedName, pVal);
+                        }
+                    }
+                }
             }
         }
 

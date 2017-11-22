@@ -143,7 +143,6 @@ public class IrisDynamicProvider {
         ri.requestMediaType = containerRequestContext.getMediaType();
         if (containerRequestContext.getMethod().equals("POST")) {
             if (containerRequestContext != null) {
-                ri.postBody = "";
                 if (MediaTypes.typeEqual(MediaType.MULTIPART_FORM_DATA_TYPE,
                         ri.requestMediaType)) {
                     ri.postMultipart = ((ContainerRequest) containerRequestContext)
@@ -213,9 +212,24 @@ public class IrisDynamicProvider {
         // or "output" must have been specified in the configuration file
         // in the parameter outputs.
         // the string here should be of the form "type/subtype"
+        //
+        // "wss"MediaType denotes the media type as determined by Web Service
+        // Shell, that is the valuse as determined from the initial configuration
+        // and any override from a respective query parameter. wssMediaType is
+        // provided to the application in the isdo.getProcessingResults call
+        // and my be overwritten as needed.
+        // The ipr returned from isdo.getProcessingResults was a field named
+        // wssMediaType -- this is poorly named and should be changed some day.
+        // The media type within the ipr structure might be the same as the
+        // input wssMediaType, but is could be different, and if so, it should
+        // replacde the local copy of wssMediaType assigned here.
         String wssMediaType = null;
         String formatTypeKey = null;
         try {
+            // Note: formatType is a name assigned by a user in a service.cfg
+            //       file. It is used as a key to lookup a mediaType, so rather
+            //       than two calls, this should probably be one call sinse they
+            //       should normally come in pairs when used for output control.
             formatTypeKey = ri.getPerRequestFormatTypeKey(requestedEpName);
             wssMediaType = ri.getPerRequestMediaType(requestedEpName);
         } catch (Exception ex) {
