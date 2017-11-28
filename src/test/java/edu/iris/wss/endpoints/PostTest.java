@@ -65,6 +65,7 @@ public class PostTest {
     // piggy-back some util tests using ENDPOIN2_NAME into this
     // original POST multipart test
     private static final String ENDPOIN2_NAME = "incoming";
+    private static final String ENDPOIN3_NAME = "incomtwo";
 
     private static final String BASE_HOST = "http://localhost";
     private static final Integer BASE_PORT = 8093;
@@ -91,17 +92,16 @@ public class PostTest {
     @Before
     public void setUp() throws Exception {
         String className = "edu.iris.wss.endpoints.PostEndpoint";
-//        String clas2Name = "edu.iris.wss.endpoints.UtilEndpoint";
         String clas2Name = "edu.iris.wss.endpoints.IncomingHeaders";
         String newFN = FileCreaterHelper.createFileInWssFolder(SERVICE_CONTEXT,
               AppConfigurator.SERVICE_CFG_NAME_SUFFIX,
               createServiceCfgStr(ENDPOINT_NAME, className, ENDPOIN2_NAME,
-                    clas2Name),
+                    clas2Name, ENDPOIN3_NAME, clas2Name),
               false);
 
         newFN = FileCreaterHelper.createFileInWssFolder(SERVICE_CONTEXT,
               ParamConfigurator.PARAM_CFG_NAME_SUFFIX,
-              createParamCfgStr(ENDPOINT_NAME, ENDPOIN2_NAME),
+              createParamCfgStr(ENDPOINT_NAME, ENDPOIN2_NAME, ENDPOIN3_NAME),
               false);
 
 
@@ -286,6 +286,58 @@ public class PostTest {
     }
 
     @Test
+    public void testUtil1b() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME)
+              .queryParam("try_setlogandthrow", "204");
+
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(204, response.getStatus());
+        // client should not return anything for 204 even if server
+        // is generating text
+        assertTrue(responseMsg.equals(""));
+    }
+
+    // verify that cfg setting for use404For204 = true works
+    @Test
+    public void testUtil1c() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN3_NAME)
+              .queryParam("try_setlogandthrow", "204");
+
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(404, response.getStatus());
+        // another case where ServiceShellException.logAndThrowException
+        // generates an FDSN message but Grizzly ignore or cant handle
+        // the message and instead, returns an html message
+        assertTrue(responseMsg.contains("Not Found"));
+    }
+
+    @Test
+    public void testUtil2b() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI)
+              .path(ENDPOIN2_NAME)
+              .queryParam("format", "TEXT")
+              .queryParam("try_setlogandthrow", "404");
+
+        Response response = webTarget.request().get();
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(404, response.getStatus());
+        // another case where ServiceShellException.logAndThrowException
+        // generates an FDSN message but Grizzly ignore or cant handle
+        // the message and instead, returns an html message
+        assertTrue(responseMsg.contains("Not Found"));
+    }
+
+    @Test
     public void testUtil3() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI)
@@ -297,6 +349,8 @@ public class PostTest {
 
         assertEquals(200, response.getStatus());
         // note: this may break if IncomingHeaers is changed
+        // should be all headers list, when no query parameters
+        // and no post or multi-part
         assertTrue(responseMsg.contains("all_headers:"));
     }
 
@@ -307,19 +361,20 @@ public class PostTest {
               .path(ENDPOIN2_NAME)
               .queryParam("format", "TEXT");
 
-        // get the default text from query when this query parameter is
-        // not handled
         Response response = webTarget.request().get();
-
         String responseMsg = response.readEntity(String.class);
 
         assertEquals(200, response.getStatus());
         // note: this make break if IncomingHeaers is changed
-        assertTrue(responseMsg.contains("is String, as a default IrisProcessingResult from IncomingHeaders"));
+        // it should be the default string if no handler code is executed
+        // but there is a query paramter (for now anyway)
+        assertTrue(responseMsg.contains(
+              "is String, as a default IrisProcessingResult from IncomingHeaders"));
     }
 
     private static String createServiceCfgStr(String endpointName,
-          String endpointClass, String endpoin2Name, String endpoin2Class) {
+          String endpointClass, String endpoin2Name, String endpoin2Class,
+          String endpoin3Name, String endpoin3Class) {
         String s = String.join("\n",
               "# ---------------- globals",
               "",
@@ -358,6 +413,17 @@ public class PostTest {
               "    json: application/json, \\",
               "    miniseed: application/vnd.fdsn.mseed, \\",
               "    geocsv: text/plain",
+              "",
+              endpoin3Name + ".endpointClassName=" + endpoin3Class,
+              endpoin3Name + ".usageLog",
+              endpoin3Name + ".postEnabled=false",
+              endpoin3Name + ".logMiniseedExtents = false",
+              endpoin3Name + ".use404For204=true",
+              endpoin3Name + ".formatTypes = \\",
+              "    text: text/plain,\\",
+              "    json: application/json, \\",
+              "    miniseed: application/vnd.fdsn.mseed, \\",
+              "    geocsv: text/plain",
               ""
         );
 
@@ -365,7 +431,7 @@ public class PostTest {
     }
 
     private static String createParamCfgStr(String endpointName,
-          String endpoin2Name) {
+          String endpoin2Name, String endpoin3Name) {
         String s = String.join("\n",
               "# ----------------  endpoints",
               "",
@@ -373,6 +439,11 @@ public class PostTest {
               "",
               endpoin2Name + ".format=TEXT",
               endpoin2Name + ".setlogandthrow=TEXT",
+              endpoin2Name + ".try_setlogandthrow=TEXT",
+              "",
+              endpoin3Name + ".format=TEXT",
+              endpoin3Name + ".setlogandthrow=TEXT",
+              endpoin3Name + ".try_setlogandthrow=TEXT",
               ""
         );
 

@@ -21,6 +21,7 @@ package edu.iris.wss.framework;
 
 
 import edazdarevic.commons.net.CIDRUtils;
+import edu.iris.wss.Wss;
 import edu.iris.wss.framework.AppConfigurator.InternalTypes;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
@@ -117,6 +118,13 @@ public  class RequestInfo {
 		ri.statsKeeper = sw.statsKeeper;
 
         String epName = getEndpointNameForThisRequest(ri.request);
+        if (Wss.STATIC_ENDPOINTS.contains(epName) || epName.equals("")) {
+            // static endpoints dont have an appconfig like dynamic endpoints
+            // nor default base query
+            // noop
+        } else {
+            ri.perRequestUse404for204 = ri.appConfig.isUse404For204Enabled(epName);
+        }
 
         // need this to avoid checking for endpoint information when global
         // (i.e. non-endpoint) request are being handled

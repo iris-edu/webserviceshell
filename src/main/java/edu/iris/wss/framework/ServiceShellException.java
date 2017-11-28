@@ -46,7 +46,7 @@ public class ServiceShellException extends WebApplicationException {
         // content in errMsg would cause Jersey to convert the 204 to a 200
         // Now in Jersey 2.x, the errMsg is ignored and 204 remains a 204,
         // which is the desired behaviour
-        super(new Throwable("throwable - " + message),
+        super(new Throwable("SSE - throwable - " + message),
               preConstructorReponse(status, message, ri));
     }
 
@@ -99,11 +99,12 @@ public class ServiceShellException extends WebApplicationException {
 ////    	logger.error(briefMsg + getErrorString(e));
         logger.error(briefMsg + "  detailed: " + detailedMsg);
 
+        Status adjusted_status = Util.adjustByCfg(status, ri);
         LoggerUtils.logUsageMessage(ri, null, 0L, 0L, briefMsg,
-              status.getStatusCode(), ri.getEndpointNameForThisRequest(),
+              adjusted_status.getStatusCode(), ri.getEndpointNameForThisRequest(),
               Level.ERROR);
 
-        String errMsg = createFdsnErrorMsg(status, briefMsg, detailedMsg,
+        String errMsg = createFdsnErrorMsg(adjusted_status, briefMsg, detailedMsg,
           ri.request.getRequestURL().toString(), ri.request.getQueryString(),
           ri.appConfig.getAppName(), ri.appConfig.getAppVersion());
 
@@ -112,7 +113,7 @@ public class ServiceShellException extends WebApplicationException {
         // content in errMsg would cause Jersey to convert the 204 to a 200
         // Now in Jersey 2.x, the errMsg is ignored and 204 remains a 204,
         // which is the desired behaviour
-        throw new ServiceShellException(status, errMsg, ri);
+        throw new ServiceShellException(adjusted_status, errMsg, ri);
     }
 
     public static String createFdsnErrorMsg(Status status, String briefMsg,

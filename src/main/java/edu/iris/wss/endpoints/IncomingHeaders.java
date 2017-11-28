@@ -86,6 +86,8 @@ public class IncomingHeaders extends IrisProcessor {
                 String value = qps_immutable.get(mmkey).get(0);
                 if (mmkey.equals("setlogandthrow")) {
                     ipr = handle_setlogandthrow(ri, mmkey, value);
+                } else if (mmkey.equals("try_setlogandthrow")) {
+                    ipr = handle_try_setlogandthrow(ri, mmkey, value);
                 }
             }
         }
@@ -124,7 +126,7 @@ public class IncomingHeaders extends IrisProcessor {
             status = FdsnStatus.Status.NOT_FOUND;
         } else {
             Util.logAndThrowException(ri, FdsnStatus.Status.OK,
-                  "return 200 for -- " + input);
+                  "return 200 in handle_setlogandthrow for input -- " + input);
         }
         Util.logAndThrowException(ri, status,
               "msg: log and throw executed with code: " + status.getStatusCode()
@@ -135,6 +137,55 @@ public class IncomingHeaders extends IrisProcessor {
         IrisProcessingResult ipr = IrisProcessingResult.processString(
               "is String, from class: " + THIS_CLASS_NAME
               + " method: handle_setlogandthrow, this should never execute");
+
+        return ipr;
+    }
+
+    private IrisProcessingResult handle_try_setlogandthrow(RequestInfo ri, String key,
+          String value) {
+        String input = "param: " + key + "  value: " + value;
+        FdsnStatus.Status status = FdsnStatus.Status.NOT_IMPLEMENTED;
+        if (value.equals("204")) {
+            status = FdsnStatus.Status.NO_CONTENT;
+            try {
+                Util.logAndThrowException(ri, status, "No content.  yoyo");
+            } catch (Exception e) {
+                // At a breakpoint here, 'e' is of type ServiceShellException & detailedMessage = "HTTP 204 No Content"
+                // After this throw the program finishes with the user seeing "Error 500: HTTP 204 No Content"
+                System.out.println("***********************1 e: " + e);
+                System.out.println("***********************1 e: " + e.getMessage());
+                System.out.println("***********************1 etm: " + e.getCause().getMessage());
+
+                throw e;
+            }
+        } else if ((value.equals("404"))) {
+            status = FdsnStatus.Status.NOT_FOUND;
+            try {
+                Util.logAndThrowException(ri, status, "No content.  updown");
+            } catch (Exception e) {
+                // At a breakpoint here, 'e' is of type ServiceShellException & detailedMessage = "HTTP 204 No Content"
+                // After this throw the program finishes with the user seeing "Error 500: HTTP 204 No Content"
+                System.out.println("***********************2 e: " + e);
+                System.out.println("***********************2 e: " + e.getMessage());
+                System.out.println("***********************2 etm: " + e.getCause().getMessage());
+
+                //throw e;
+                Util.logAndThrowException(ri, status, e.getCause().getMessage());
+            }
+        } else {
+            Util.logAndThrowException(ri, FdsnStatus.Status.OK,
+                  "return 200 in handle_try_setlogandthrow for input -- " + input);
+        }
+        // should never get here
+        Util.logAndThrowException(ri, status,
+              "msg: try log and throw executed with code: " + status.getStatusCode()
+              + ", reason: " + status.getReasonPhrase()
+              + "  based on input of " + input);
+
+        // should never get here
+        IrisProcessingResult ipr = IrisProcessingResult.processString(
+              "is String, from class: " + THIS_CLASS_NAME
+              + " method: handle_try_setlogandthrow, this should never execute");
 
         return ipr;
     }
