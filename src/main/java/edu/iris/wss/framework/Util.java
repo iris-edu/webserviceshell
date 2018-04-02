@@ -52,6 +52,8 @@ public class Util {
     public static final String ISO_8601_ZULU_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     public static final TimeZone UTZ_TZ = TimeZone.getTimeZone("UTC");
 
+    public static final String MEDIA_TYPE_CONTENT_TYPE = "Content-Type";
+
 	public static boolean isOkString(String s) {
 		return ((s != null) && !s.isEmpty());
 	}
@@ -226,6 +228,31 @@ public class Util {
                 updateKey = key;
             }
             headers.put(updateKey, newHeaders.get(key));
+        }
+    }
+
+    /**
+     * Do special processing for Content-Type, Do case insensitive key match.
+     * Remove the Content-Type entry if it exists.
+     *
+     * @param headers
+     */
+    public static String getContentTypeValueAndRemoveKey(Map<String, String> headers) {
+
+        String ct_key = null;
+        for (String key : headers.keySet()) {
+            if (key.toUpperCase().equals(Util.MEDIA_TYPE_CONTENT_TYPE.toUpperCase())) {
+                ct_key = key;
+                break;
+            }
+        }
+
+        if (ct_key == null) {
+            return null;
+        } else {
+            String ct_val = headers.get(ct_key);
+            headers.remove(ct_key);
+            return ct_val;
         }
     }
 

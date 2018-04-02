@@ -298,10 +298,6 @@ public class IrisDynamicProvider {
 //        logger.warn("An inconsistency has occured between endpoint code and "
 //            + "...");
 
-        Response.ResponseBuilder builder = Response.status(status)
-              .type(ipr.wssMediaType)
-              .entity(ipr.entity);
-
         // establish headers for this request, update map in order of
         // of precedence, starting with defaults.
         //
@@ -317,20 +313,36 @@ public class IrisDynamicProvider {
         // highest priority, use any headers from user processes
         Util.updateWithApplicationHeaders(headersMap, ipr.headers);
 
-
+        // Check for user provided Content-Type via a user provided header
+        // update, if present, let it override the value determined by
+        // configuration or &format value
+        String finalMediaType = Util.getContentTypeValueAndRemoveKey(headersMap);
+        if (finalMediaType == null) {
+            finalMediaType = ipr.wssMediaType;
+        }
+        Response.ResponseBuilder builder = Response.status(status)
+              .type(finalMediaType)
+              .entity(ipr.entity);
+        // the headersMap must not containe a Content-Type key else Jersey
+        // may throw an exception like:
+        // "... Cannot call sendError() after the response has been committed"
+        // The exception is probably masking a header validation error and
+        // Jersey is trying to respond with an error on the response object
+        // created here in WSS. Once a response object is created, it is
+        // considered "committed" and cannot be changed, even if there is a
+        // following error.
         Util.setResponseHeaders(builder, headersMap);
 
-////        // manual test code
-////        Response response = builder.build();
+        Response response = builder.build();
+
+        // last chance to see response before return to Jersey
 ////        MultivaluedMap<String, Object> mm = response.getHeaders();
 ////        Set<String> mmKeys = mm.keySet();
 ////        for (String mmKey : mmKeys) {
-////            System.out.println("******************** www output headers mmKey: " + mmKey
+////            System.out.println("******************** final response headers mmKey: " + mmKey
 ////                  + "         value: " + mm.get(mmKey));
 ////        }
-////        System.out.println("------ return response");
-////        return response;
 
-		return builder.build();
+        return response;
     }
 }

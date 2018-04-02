@@ -398,6 +398,25 @@ public class CmdWithHeaderTest  {
     }
 
     @Test
+    public void test_set_header_CD4() throws Exception {
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        Response response = webTarget.path("/test_CD4").request().get();
+
+        assertEquals(200, response.getStatus());
+
+        assertEquals("inline", response.getHeaderString("Content-Disposition"));
+        assertEquals("http://host.example", response.getHeaderString("Access-Control-Allow-Origin"));
+
+        // mediatype would be default value, but set_header_CD4.sh is setting
+        // content type which should override default
+        assertEquals("image/png", response.getMediaType().toString());
+
+        // should also have the extra header
+        assertEquals("value-for-test-hdr", response.getHeaderString("Test-Header"));
+    }
+
+    @Test
     public void test_set_header_CD2() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
@@ -405,7 +424,7 @@ public class CmdWithHeaderTest  {
 
         assertEquals(200, response.getStatus());
 
-        // mediatype should be default value from outputs on test_CD1
+        // mediatype should be default value from outputs on test_CD2
         assertEquals("application/octet-stream", response.getMediaType().toString());
 
         // must be binary media type in order to have WSS add "Content-Disposition"
@@ -517,6 +536,7 @@ public class CmdWithHeaderTest  {
         sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
         sb.append("test_CD1.use404For204=true").append("\n");
         sb.append("\n");
+
         sb.append("# ---------------- ").append("\n");
         sb.append("\n");
         sb.append("test_CD2.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
@@ -544,6 +564,37 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
         sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
         sb.append("test_CD2.use404For204=true").append("\n");
+
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
+        sb.append("test_CD4.endpointClassName=edu.iris.wss.endpoints.CmdProcessor").append("\n");
+
+        file = new File(filePath + File.separator + "set_header_CD4.sh");
+        file.setExecutable(true);
+        sb.append("test_CD4.handlerProgram=").append(file.getAbsolutePath()).append("\n");
+
+        sb.append("test_CD4.handlerWorkingDirectory=/tmp").append("\n");
+        sb.append("\n");
+        sb.append("# Timeout in seconds for command line implementation.  Pertains to initial and ongoing waits.").append("\n");
+        sb.append("test_CD4.handlerTimeout=40").append("\n");
+        sb.append("\n");
+        sb.append("test_CD4.formatTypes = \\").append("\n");
+        sb.append("    binary: application/octet-stream,\\").append("\n");
+        sb.append("    text: text/plain,\\").append("\n");
+        sb.append("    json: application/json, \\").append("\n");
+        sb.append("    xml: application/xml").append("\n");
+        sb.append("\n");
+        sb.append("# usageLog is true by default, set this to false to disable usage logging").append("\n");
+        sb.append("##test_CD4.usageLog=false").append("\n");
+        sb.append("\n");
+        sb.append("# Disable or remove this to disable POST processing").append("\n");
+        sb.append("test_CD4.postEnabled=true").append("\n");
+        sb.append("\n");
+        sb.append("# Enable this to return HTTP 404 in lieu of 204, NO CONTENT").append("\n");
+        sb.append("test_CD4.use404For204=true").append("\n");
+        sb.append("\n");
+        sb.append("# ---------------- ").append("\n");
+        sb.append("\n");
 
         os.write(sb.toString().getBytes());
     }
