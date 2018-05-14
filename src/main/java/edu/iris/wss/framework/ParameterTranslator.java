@@ -123,7 +123,10 @@ public class ParameterTranslator {
             String specifiedName = ri.appConfig.getMediaParameter(epName);
             if (ri.postBody.contains(specifiedName)) {
                 String value = extractValueByKey(ri.postBody, specifiedName);
-                qps.add(specifiedName, value);
+                if (value != null) {
+                    // Note: null implies the specifiedName string is on a comment line
+                    qps.add(specifiedName, value);
+                }
             }
         }
         // not sure if a postBody and a multipart form can exist in the same
@@ -277,8 +280,8 @@ public class ParameterTranslator {
      * @param postBody - the text to parse
      * @param key - the text to search for
      * @return - the value for the respective key,
-     *           or, returns null if key not found,
-     *           or, reeturns empty string if parameter found but no value
+     *           or, returns null if key not found, Note: key my be in comment
+     *           or, returns not found message if key found but no value
      * @throws Exception
      */
     static String extractValueByKey(String postBody, String key)
@@ -305,23 +308,27 @@ public class ParameterTranslator {
 
         String[] itemsByLine = urlDecoded.split("\\n");
         for (String s : itemsByLine) {
-            if (s.contains(key)) {
-                String[] t = s.split("=");
-                if (t.length > 1) {
-                    // take last item as value
-                    value = t[t.length - 1];
-                } else if (t.length == 1){
-                    value = "";
-                    logger.warn("In parsing POST body for key: " + key
-                        + "  a value was not found, postBody: " + postBody);
-                } else {
-                    // maybe never get here, but just in case
-                     throw new IllegalArgumentException("ParameterTranslator.extractValueByKey"
-                        + " parameter list postBody: "
-                        + postBody);
-               }
-
-                break;
+            if (s.startsWith("#")) {
+                // ignore comment lines
+                continue;
+            } else {
+                if (s.contains(key)) {
+                    String[] t = s.split("=");
+                    if (t.length > 1) {
+                        // take last item as value
+                        value = t[t.length - 1];
+                    } else if (t.length == 1){
+                        value = "valueNotFoundForKey:"+key;
+                        logger.warn("In parsing POST body for key: " + key
+                            + "  a value was not found, postBody: " + postBody);
+                    } else {
+                        // maybe never get here, but just in case
+                         throw new IllegalArgumentException("ParameterTranslator.extractValueByKey"
+                            + " parameter list postBody: "
+                            + postBody);
+                    }
+                    break;
+                }
             }
         }
 

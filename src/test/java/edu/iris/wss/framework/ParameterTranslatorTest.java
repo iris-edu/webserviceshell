@@ -179,7 +179,11 @@ public class ParameterTranslatorTest {
         String value = ParameterTranslator.extractValueByKey(postData,
             outputControlSignature2);
 
-        assertEquals("", value);
+        // changed to a string containing media parameter, 2018-05-14,
+        // for these tests, expecting the normal "format" name
+        String tstStr = "valueNotFoundForKey:format";
+
+        assertEquals(tstStr, value);
 
         postData =
         "latitude=30\n" +
@@ -192,7 +196,7 @@ public class ParameterTranslatorTest {
         value = ParameterTranslator.extractValueByKey(postData,
             outputControlSignature2);
 
-        assertEquals("", value);
+        assertEquals(tstStr, value);
     }
 
     /**

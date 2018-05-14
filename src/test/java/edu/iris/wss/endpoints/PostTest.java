@@ -252,6 +252,25 @@ public class PostTest {
     }
 
     @Test
+    public void testPost3() throws Exception {
+        // added for issue 939
+        Client c = ClientBuilder.newClient();
+        WebTarget webTarget = c.target(BASE_URI);
+        final String TEST_STR = "# This is a test. The new "
+              + MEDIA_PARAM + " is really great!\n"
+              + "# Bug 1234\n"
+              + "#\n"
+              +"nodata=404\n"
+              +"CI BAR -- BHE 2015-07-01T00:00:00 2015-07-30T00:00:00";
+        Response response = webTarget.path(ENDPOINT_NAME).request()
+              .post(Entity.text(TEST_STR));
+        String responseMsg = response.readEntity(String.class);
+
+        assertEquals(200, response.getStatus());
+        assertTrue(responseMsg.equals(TEST_STR));
+    }
+
+    @Test
     public void testUtil1() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI)
