@@ -96,10 +96,16 @@ public class ServiceShellException extends WebApplicationException {
             briefMsg = "null message, possible coding error";
         }
 
-////    	logger.error(briefMsg + getErrorString(e));
-        logger.error(briefMsg + "  detailed: " + detailedMsg);
-
         Status adjusted_status = Util.adjustByCfg(status, ri);
+
+        String exceptionMsg = briefMsg + "  detailed: " + detailedMsg;
+        if (adjusted_status.equals(Status.NO_CONTENT)
+              || adjusted_status.equals(Status.NOT_FOUND)) {
+            logger.info(exceptionMsg);
+        } else {
+            logger.error(exceptionMsg);
+        }
+
         LoggerUtils.logUsageMessage(ri, null, 0L, 0L, briefMsg,
               adjusted_status.getStatusCode(), ri.getEndpointNameForThisRequest(),
               Level.ERROR);
