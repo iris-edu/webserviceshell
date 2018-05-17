@@ -223,4 +223,25 @@ public class ParameterTranslatorTest {
 
         assertEquals(InternalTypes.BINARY, InternalTypes.valueOf(value.toUpperCase()));
     }
+
+    @Test
+    public void testisValidFdsnDate() throws Exception {
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22+00:00"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22Z"));
+        assertEquals(false, ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22z"));
+        assertEquals(false, ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22+Z"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22.123456+00:00"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22.123456Z"));
+        assertEquals(false, ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22.Z"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22-07:00"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22-0835"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22+06"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01T12:29:22"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-1-1T12:29:22"));
+        assertEquals(false, ParameterTranslator.isValidFdsnDate("2015-1-1T2:9:22"));
+        assertEquals(false, ParameterTranslator.isValidFdsnDate("2015-44-01"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-12-01"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-3-01"));
+        assertEquals(true,  ParameterTranslator.isValidFdsnDate("2015-3-01Z"));
+    }
 }

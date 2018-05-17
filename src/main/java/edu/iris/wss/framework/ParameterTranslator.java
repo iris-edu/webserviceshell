@@ -335,10 +335,23 @@ public class ParameterTranslator {
         return value;
     }
 
-	private static String[] regexpStrings = {
+    // 2018-05-17 keeping this for reference before adding more lenient settings
+	private static String[] regexpStrings_previous = {
 			"^\\d{4}-[01]\\d-[0-3]\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+(Z)?$",
 			"^\\d{4}-[01]\\d-[0-3]\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d(Z)?$",
 			"^\\d{4}-[01]\\d-[0-3]\\d(Z)?$" };
+
+    // 2018-05-17 allow single digit month or day, add ability to do alternate
+    // time zone, + or - hh:mm etc.
+	private static String[] regexpStrings = {
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+[Z]?$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d[Z]?$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[Z]?$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+[\\+-][0-1]\\d[:]?[0-5]\\d$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d\\.\\d+[\\+-][0-1]\\d$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d[\\+-][0-1]\\d[:]?[0-5]\\d$",
+            "^\\d{4}-[01]?\\d-[0-3]?\\d[T ][0-2]\\d:[0-5]\\d:[0-5]\\d[\\+-][0-1]\\d$"
+    };
 
 	public static Boolean isValidFdsnDate(String dateString) {
 		for (String regexp : regexpStrings) {
