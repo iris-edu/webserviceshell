@@ -24,6 +24,7 @@ import edu.iris.wss.framework.RequestInfo;
 import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
+import edu.iris.wss.utils.WebUtils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
@@ -74,9 +75,11 @@ public class IncomingHeaders extends IrisProcessor {
         // is now immutable, so make a local copy
         MultivaluedMap<String, String> qps_immutable = ri.uriInfo.getQueryParameters();
         Set<String> mmKeys = qps_immutable.keySet();
+        System.out.println("************** incoming now: " + Util.getCurrentUTCTimeISO8601_MS());
         System.out.println("************** incoming keysize: " + mmKeys.size());
         System.out.println("************** incoming ri mediaType: " + ri.requestMediaType);
         System.out.println("************** incoming wss mediaType: " + wssMediaType);
+        System.out.println("************** user-agent: " + WebUtils.getUserAgent(ri.request));
 
         if (mmKeys.size() == 0) {
             // handle base path
@@ -193,25 +196,28 @@ public class IncomingHeaders extends IrisProcessor {
     private IrisProcessingResult getHeaders(RequestInfo ri,
           String wssMediaType) {
 
-        String wssIP = "";
+        String wssIP = "not_set";
         StringBuilder sb = new StringBuilder(1024);
 
+        sb.append("*** now: " + Util.getCurrentUTCTimeISO8601_MS()).append("\n");
+        sb.append("*** wssMediaType: ").append(wssMediaType).append("\n");
+        sb.append("*** wss.getUserAgent: ").append(WebUtils.getUserAgent(ri.request))
+              .append("\n");
         try {
             wssIP = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException ex) {
             wssIP = "UnknownHostException";
-            sb.append("*** wssIP ex: ").append(ex).append("\n");
+            sb.append("*** exception getting wssIP: ").append(ex).append("\n");
         }
-        sb.append("*** wssMediaType ex: ").append(wssMediaType)
-              .append("  wssIP: ").append(wssIP).append("\n");
+        sb.append("*** wssIP: ").append(wssIP).append("\n");
         sb.append("\n");
 
         // check headers for original requesting IP - from stackoverflow example method
         for (String header : HEADERS_TO_TRY) {
-            String ip = ri.request.getHeader(header);
-            if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
-                sb.append("*** ip_header: ").append(header)
-                      .append("  IP: ").append(ip)
+            String value = ri.request.getHeader(header);
+            if (value != null && value.length() != 0 && !"unknown".equalsIgnoreCase(value)) {
+                sb.append("*** original requesting IP header: ").append(header)
+                      .append("  value: ").append(value)
                       .append("\n");
             }
         }
@@ -221,16 +227,17 @@ public class IncomingHeaders extends IrisProcessor {
         Enumeration names = ri.request.getHeaderNames();
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
-            Enumeration values = ri.request.getHeaders(name); // support multiple values
+            Enumeration values = ri.request.getHeaders(name);
             if (values != null) {
+                // support multiple values
                 while (values.hasMoreElements()) {
                     String value = (String) values.nextElement();
-                    sb.append("*** all_headers: ").append(name)
+                    sb.append("*** list all, header: ").append(name)
                           .append("  value: ").append(value)
                           .append("\n");
                 }
             } else {
-                sb.append("*** all_headers: ").append(name)
+                sb.append("*** list all, header: ").append(name)
                       .append("  value: ").append("null")
                       .append("\n");
             }

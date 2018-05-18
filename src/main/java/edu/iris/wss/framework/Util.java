@@ -50,6 +50,7 @@ public class Util {
           = "-rabbitconfig-publisher.properties";
 
     public static final String ISO_8601_ZULU_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String ISO_8601_ZULU_FORMAT_MS = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final TimeZone UTZ_TZ = TimeZone.getTimeZone("UTC");
 
     public static final String MEDIA_TYPE_CONTENT_TYPE = "Content-Type";
@@ -66,6 +67,12 @@ public class Util {
 
     public static String getCurrentUTCTimeISO8601() {
         SimpleDateFormat sdf = new SimpleDateFormat(ISO_8601_ZULU_FORMAT);
+        sdf.setTimeZone(UTZ_TZ);
+        return sdf.format((new GregorianCalendar()).getTime());
+    }
+
+    public static String getCurrentUTCTimeISO8601_MS() {
+        SimpleDateFormat sdf = new SimpleDateFormat(ISO_8601_ZULU_FORMAT_MS);
         sdf.setTimeZone(UTZ_TZ);
         return sdf.format((new GregorianCalendar()).getTime());
     }

@@ -45,7 +45,11 @@ public class WebUtils {
 	}
 
 	public static String getUserAgent(HttpServletRequest request) {
-		return request.getHeader("user-agent");
+        String userAgent = request.getHeader("user-agent");
+        if (userAgent == null) {
+            userAgent = "NOT_SET_by_client";
+        }
+		return userAgent;
 	}
 
 	public static String getClientName(HttpServletRequest request) {

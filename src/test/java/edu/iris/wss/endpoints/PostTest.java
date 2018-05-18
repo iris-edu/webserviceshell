@@ -370,7 +370,7 @@ public class PostTest {
         // note: this may break if IncomingHeaers is changed
         // should be all headers list, when no query parameters
         // and no post or multi-part
-        assertTrue(responseMsg.contains("all_headers:"));
+        assertTrue(responseMsg.contains("list all, header:"));
     }
 
     @Test
