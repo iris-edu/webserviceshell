@@ -38,7 +38,7 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
 
     @Context ServletContext context;
 
-    private WssSingleton sw;
+    protected WssSingleton sw;
 
     @Override
     public void onStartup(Container cntnr) {
@@ -118,5 +118,7 @@ public class MyContainerLifecycleListener implements ContainerLifecycleListener 
                 LOGGER.info(msg);
             }
         }
+
+        sw.destroyIrisSingleton();
     }
 }

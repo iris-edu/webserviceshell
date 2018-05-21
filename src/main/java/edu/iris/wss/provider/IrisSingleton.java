@@ -20,5 +20,7 @@
 package edu.iris.wss.provider;
 
 public interface IrisSingleton  {
-
+    default void destroy() {
+        // noop
+    }
 }

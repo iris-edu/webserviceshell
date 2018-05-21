@@ -17,18 +17,12 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.provider;
+package edu.iris.wss.framework;
 
-import org.apache.log4j.Logger;
+public class TestMyContainerLifecycleListener extends MyContainerLifecycleListener {
 
-public class TestSingleton implements IrisSingleton {
-	public static final Logger logger = Logger.getLogger(TestSingleton.class);
-
-	public void init() {
-		logger.info("initted");
-	}
-
-    public void destroy() {
-        logger.info("destroy called");
+    // for testing only
+    protected void forTestingSetSw(WssSingleton sw) {
+        this.sw=sw;
     }
 }

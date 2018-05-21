@@ -20,13 +20,8 @@
 package edu.iris.wss.framework;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import org.junit.BeforeClass;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -44,40 +39,13 @@ public class AppConfig_2x_1Test {
 
     private final String testFileName = "AppConfiguratorTest/service_mix1.cfg";
 
-    private static final String SINGLETON_CONTEXT = "/test/singleton/classname";
-    private static final String SINGLETON_CFG =
-          Util.getWssFileNameBase(SINGLETON_CONTEXT) + "-service.cfg";
-
     @BeforeClass
     public static void setUpClass() throws IOException {
-    }
-
-    // create a config file to test against on a target test path
-    private static void createTestCfgFile(String filePath, String fileName)
-          throws FileNotFoundException, IOException {
-
-        File dirs = new File(filePath);
-        if(!dirs.exists()){
-            dirs.mkdirs();
-        }
-
-        File testFile = new File(filePath + File.separator + fileName);
-        if (testFile.exists()) {
-            testFile.delete();
-        }
-        testFile.createNewFile();
-
-        OutputStream os = new FileOutputStream(testFile);
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("# ---------------- globals").append("\n");
-        sb.append("\n");
-        sb.append("appName=AppConfig_2x_1Test-noseingleton").append("\n");
-        sb.append("version=test-0.123").append("\n");
-        sb.append("\n");
-
-        os.write(sb.toString().getBytes());
+        // setup config folder for this test
+        System.setProperty(Util.WSS_OS_CONFIG_DIR,
+            "target"
+              + File.separator + "test-classes"
+              + File.separator + "AppConfig_2x_1Test");
     }
 
     @Test
@@ -290,18 +258,60 @@ public class AppConfig_2x_1Test {
 
     @Test
     public void testNoSingletonClassName() throws Exception {
-        // setup config dir for test environment
-        System.setProperty(Util.WSS_OS_CONFIG_DIR,
-            "target"
-              + File.separator + "test-classes"
-              + File.separator + "AppConfig_2x_1Test");
 
-        createTestCfgFile(System.getProperty(Util.WSS_OS_CONFIG_DIR),
-              SINGLETON_CFG);
+        // setup a simple service cfg file where singletonClassName
+        // is not set
+        String service_cfg_name = "NoSingletonClassName";
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ---------------- globals").append("\n");
+        sb.append("\n");
+        sb.append("appName=").append(service_cfg_name).append("\n");
+        sb.append("version=test-0.123").append("\n");
+        sb.append("\n");
+
+        // Note: system property Util.WSS_OS_CONFIG_DIR must be set befor now
+        FileCreaterHelper.createFileInWssFolder(service_cfg_name,
+             AppConfigurator.SERVICE_CFG_NAME_SUFFIX, sb.toString(), false);
 
         WssSingleton ws = new WssSingleton();
-        ws.configure(SINGLETON_CONTEXT);
+        // running configure will create the singleton if it is defined
+        ws.configure(service_cfg_name);
 
         assert(null == ws.singleton);
+    }
+
+    @Test
+    public void testSingletonDestroy() throws Exception {
+
+        // setup a simple service cfg file where singletonClassName
+        // is not set
+        String service_cfg_name = "SingletonDestroy";
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ---------------- globals").append("\n");
+        sb.append("\n");
+        sb.append("appName=").append(service_cfg_name).append("\n");
+        sb.append("version=test-0.123").append("\n");
+        sb.append("singletonClassName=edu.iris.wss.framework.UnitTestDestroySingleton").append("\n");
+        sb.append("\n");
+
+        // Note: system property Util.WSS_OS_CONFIG_DIR must be set befor now
+        FileCreaterHelper.createFileInWssFolder(service_cfg_name,
+             AppConfigurator.SERVICE_CFG_NAME_SUFFIX, sb.toString(), false);
+
+        WssSingleton ws = new WssSingleton();
+        // running configure will create the singleton if it is defined
+        ws.configure(service_cfg_name);
+
+        assert(((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled() == false);
+
+        // setup mock life cycle and do shutdown
+        TestMyContainerLifecycleListener tmcll = new TestMyContainerLifecycleListener();
+        tmcll.forTestingSetSw(ws);
+        tmcll.onShutdown(null);
+        assert(((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled() == true);
     }
 }

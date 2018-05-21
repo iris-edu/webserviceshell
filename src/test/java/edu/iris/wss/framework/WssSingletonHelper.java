@@ -99,7 +99,7 @@ public class WssSingletonHelper {
 
         sb.append("\n");
         sb.append("# If present, an instance of the singleton class will be created at application start").append("\n");
-        sb.append("singletonClassName=edu.iris.wss.framework.TestSingleton").append("\n");
+        sb.append("singletonClassName=edu.iris.wss.framework.UnitTestSingleton").append("\n");
         sb.append("# ----------------  endpoints").append("\n");
         sb.append("\n");
         sb.append("test_logging.endpointClassName=edu.iris.wss.endpoints.LoggingEndpoint").append("\n");

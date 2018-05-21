@@ -22,10 +22,24 @@ package edu.iris.wss.framework;
 import edu.iris.wss.provider.IrisSingleton;
 import org.apache.log4j.Logger;
 
-public class TestSingleton implements IrisSingleton {
-	public static final Logger logger = Logger.getLogger(TestSingleton.class);
+public class UnitTestDestroySingleton implements IrisSingleton {
+	public static final Logger logger = Logger.getLogger(UnitTestDestroySingleton.class);
+
+    public boolean isDestroyedCalled = false;
 
 	public void init() {
-		logger.info("TestSingleton from test code init called");
+		logger.info("UnitTestDestroySingleton from test code init called");
 	}
+
+    public UnitTestDestroySingleton() {
+        isDestroyedCalled = false;
+    }
+
+    public void destroy() {
+        isDestroyedCalled = true;
+    }
+
+    public boolean getIsDestroyedCalled() {
+        return isDestroyedCalled;
+    }
 }

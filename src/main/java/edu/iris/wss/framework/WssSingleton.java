@@ -88,6 +88,12 @@ public class WssSingleton {
         return configFileBase;
     }
 
+    public void destroyIrisSingleton() {
+        if (singleton != null) {
+            singleton.destroy();
+        }
+    }
+
 	public void configure(String configFileBase) throws Exception {
         if (appConfig == null) {
             this.configFileBase = configFileBase;

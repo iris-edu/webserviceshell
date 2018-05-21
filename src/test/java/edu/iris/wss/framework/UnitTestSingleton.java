@@ -17,18 +17,15 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.provider;
+package edu.iris.wss.framework;
 
+import edu.iris.wss.provider.IrisSingleton;
 import org.apache.log4j.Logger;
 
-public class TestSingleton implements IrisSingleton {
-	public static final Logger logger = Logger.getLogger(TestSingleton.class);
+public class UnitTestSingleton implements IrisSingleton {
+	public static final Logger logger = Logger.getLogger(UnitTestSingleton.class);
 
 	public void init() {
-		logger.info("initted");
+		logger.info("TestSingleton from test code init called");
 	}
-
-    public void destroy() {
-        logger.info("destroy called");
-    }
 }
