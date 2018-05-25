@@ -296,10 +296,6 @@ public class CmdProcessor extends IrisProcessor {
                 ExitInformation exitInfo = processExitVal(exitVal);
                 String briefMessage = getStderrMsg(exitVal);
 
-                logger.error("getProcessingResults exitStatus: " + exitInfo.status
-                      + "  briefMessage: " + briefMessage
-                      + "  detailedMsg: " + exitInfo.detailedMsg);
-
                 IrisProcessingResult ipr =
                       IrisProcessingResult.processError(exitInfo.status,
                             briefMessage, exitInfo.detailedMsg);
