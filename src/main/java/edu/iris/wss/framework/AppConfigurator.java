@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.4.4";
+	public static final String wssVersion = "2.4.5";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
