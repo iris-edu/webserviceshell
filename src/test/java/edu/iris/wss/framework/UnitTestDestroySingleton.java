@@ -20,12 +20,15 @@
 package edu.iris.wss.framework;
 
 import edu.iris.wss.provider.IrisSingleton;
+import java.util.Properties;
 import org.apache.log4j.Logger;
 
 public class UnitTestDestroySingleton implements IrisSingleton {
 	public static final Logger logger = Logger.getLogger(UnitTestDestroySingleton.class);
 
-    public boolean isDestroyedCalled = false;
+    private boolean isDestroyedCalled = false;
+    private Properties appinitProp = null;
+
 
 	public void init() {
 		logger.info("UnitTestDestroySingleton from test code init called");
@@ -35,11 +38,21 @@ public class UnitTestDestroySingleton implements IrisSingleton {
         isDestroyedCalled = false;
     }
 
+    @Override
     public void destroy() {
         isDestroyedCalled = true;
     }
 
     public boolean getIsDestroyedCalled() {
         return isDestroyedCalled;
+    }
+
+    @Override
+    public void setAppinit(Properties prop) {
+        appinitProp = prop;
+    }
+
+    public Properties getAppinitProperties() {
+        return appinitProp;
     }
 }

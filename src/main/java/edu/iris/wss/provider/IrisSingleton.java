@@ -19,8 +19,15 @@
 
 package edu.iris.wss.provider;
 
+import java.util.Properties;
+
 public interface IrisSingleton  {
+
     default void destroy() {
+        // noop
+    }
+
+    default void setAppinit(Properties prop) {
         // noop
     }
 }

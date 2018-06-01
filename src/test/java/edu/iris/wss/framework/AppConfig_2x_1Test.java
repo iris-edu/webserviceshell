@@ -21,6 +21,8 @@ package edu.iris.wss.framework;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.junit.BeforeClass;
 import static org.junit.Assert.assertNotNull;
@@ -285,8 +287,7 @@ public class AppConfig_2x_1Test {
     @Test
     public void testSingletonDestroy() throws Exception {
 
-        // setup a simple service cfg file where singletonClassName
-        // is not set
+        // setup a simple service cfg
         String service_cfg_name = "SingletonDestroy";
 
         StringBuilder sb = new StringBuilder();
@@ -306,12 +307,51 @@ public class AppConfig_2x_1Test {
         // running configure will create the singleton if it is defined
         ws.configure(service_cfg_name);
 
-        assert(((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled() == false);
+        assertEquals(false, ((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled());
 
-        // setup mock life cycle and do shutdown
+        // setup a life cycle object and do shutdown
         TestMyContainerLifecycleListener tmcll = new TestMyContainerLifecycleListener();
         tmcll.forTestingSetSw(ws);
         tmcll.onShutdown(null);
-        assert(((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled() == true);
+        assertEquals(true, ((UnitTestDestroySingleton)ws.singleton).getIsDestroyedCalled());
+    }
+
+    @Test
+    public void testAppinitFileRead() throws Exception {
+
+        // setup a simple service cfg file
+        String service_cfg_name = "SingletonAppinitFileRead";
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("# ---------------- globals").append("\n");
+        sb.append("\n");
+        sb.append("appName=").append(service_cfg_name).append("\n");
+        sb.append("version=test-0.124").append("\n");
+        sb.append("singletonClassName=edu.iris.wss.framework.UnitTestDestroySingleton").append("\n");
+        sb.append("\n");
+
+        // Note: system property Util.WSS_OS_CONFIG_DIR must be set befor now
+        FileCreaterHelper.createFileInWssFolder(service_cfg_name,
+             AppConfigurator.SERVICE_CFG_NAME_SUFFIX, sb.toString(), false);
+
+        sb.setLength(0);
+
+        sb.append("# ---------------- test propertes file").append("\n");
+        sb.append("\n");
+        sb.append("testline1=").append("valueofline1").append("\n");
+        sb.append("testline2=").append("line2value").append("\n");
+        sb.append("\n");
+
+        // Note: system property Util.WSS_OS_CONFIG_DIR must be set befor now
+        FileCreaterHelper.createFileInWssFolder(service_cfg_name,
+             WssSingleton.APPINIT_CFG_NAME_SUFFIX, sb.toString(), false);
+
+        WssSingleton ws = new WssSingleton();
+        // running configure will create the singleton if it is defined
+        ws.configure(service_cfg_name);
+
+        Properties prop = ((UnitTestDestroySingleton)ws.singleton).getAppinitProperties();
+        assertEquals("line2value", prop.getProperty("testline2"));
     }
 }

@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 
 import edu.iris.wss.provider.IrisSingleton;
 import java.io.UnsupportedEncodingException;
+import java.util.Properties;
 
 /**
  *  A top level class used by Web Service Shell to create and hold objects
@@ -67,6 +68,13 @@ public class WssSingleton {
     public final static String ACCESS_CONTROL_ALLOW_ORIGIN =
           "Access-Control-Allow-Origin";
 
+    private static final String DEFAULT_APPINIT_FILE_NAME = "META-INF/appinit.cfg";
+    public static final String APPINIT_CFG_NAME_SUFFIX = "-appinit.cfg";
+
+    // these need to be object variables to support unittest
+    private Properties appinitProps = null;
+    private Boolean isAppinitFileLoaded = false;
+
     private String configFileBase = "notDefinedYet";
 
 	public WssSingleton(){
@@ -94,6 +102,31 @@ public class WssSingleton {
         }
     }
 
+    public void loadAppinitPropertiesFile(String configBase) {
+
+        // Depending on the way the servlet context starts, this can be called
+        // multiple times via SingletonWrapper class.
+        if (isAppinitFileLoaded) {
+            return;
+        }
+        isAppinitFileLoaded = true;
+
+        Class thisRunTimeClass = this.getClass();
+
+        try {
+            appinitProps = AppConfigurator.loadPropertiesFile(configBase,
+                  thisRunTimeClass, APPINIT_CFG_NAME_SUFFIX,
+                  DEFAULT_APPINIT_FILE_NAME);
+        } catch (Exception ex) {
+            String msg = "----------- Error - possible programming error,"
+                  + " this should not occurr if this exists: "
+                  + DEFAULT_APPINIT_FILE_NAME + "  exception: "
+                  + ex.getMessage();
+            System.out.println(msg);
+            logger.error(msg);
+        }
+    }
+
 	public void configure(String configFileBase) throws Exception {
         if (appConfig == null) {
             this.configFileBase = configFileBase;
@@ -105,11 +138,13 @@ public class WssSingleton {
 			return;
 		}
 
+        loadAppinitPropertiesFile(configFileBase);
+
     	try {
             appConfig.loadConfigFile(configFileBase);
         } catch (Exception ex) {
             String msg = "----------- Error loading "
-                  + AppConfigurator.getConfigFileNamed() + " file, message: "
+                  + AppConfigurator.getConfigFileNamed(configFileBase) + " file, message: "
                   + ex.getMessage();
             System.out.println(msg);
             logger.error(msg);
@@ -133,6 +168,10 @@ public class WssSingleton {
         } else {
             singleton = appConfig.getIrisSingletonInstance(
                   appConfig.getSingletonClassName());
+
+            if (null != singleton) {
+                singleton.setAppinit(appinitProps);
+            }
         }
 
         if (appConfig.getLoggingType().equals(

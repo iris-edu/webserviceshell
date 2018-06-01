@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.4.5";
+	public static final String wssVersion = "2.4.6";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
@@ -70,9 +70,6 @@ public class AppConfigurator {
 
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
-
-    // store name for possible error message later in process
-    private static String configFileName = null;
 
     public AppConfigurator() throws Exception {
         init();
@@ -278,10 +275,6 @@ public class AppConfigurator {
         }
 
         return headers;
-    }
-
-    public static String getConfigFileNamed() {
-        return configFileName;
     }
 
 	public String getAppName() {
@@ -604,6 +597,18 @@ public class AppConfigurator {
         }
     }
 
+    // help with error reporting, TBD merge name handling and error
+    // reporting with loadPropertiesFile
+    public static String getConfigFileNamed(String configBase) {
+        String wssConfigDir = System.getProperty(Util.WSS_OS_CONFIG_DIR);
+        if (!wssConfigDir.endsWith("/")) {
+            wssConfigDir += "/";
+        }
+        String configFileName = wssConfigDir + configBase
+            + SERVICE_CFG_NAME_SUFFIX;
+        return configFileName;
+    }
+
 	public static Properties loadPropertiesFile(String configBase,
           Class runtTimeClass, String cfgNameSuffix, String defaultCfgName)
 			throws Exception {
@@ -628,7 +633,7 @@ public class AppConfigurator {
                 wssConfigDir += "/";
             }
 
-            configFileName = wssConfigDir + configBase
+            String configFileName = wssConfigDir + configBase
                 + cfgNameSuffix;
             logger.info("Attempting to load application configuration file from: "
                 + configFileName);

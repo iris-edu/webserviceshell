@@ -19,16 +19,23 @@
 
 package edu.iris.wss.provider;
 
+import java.util.Properties;
 import org.apache.log4j.Logger;
 
 public class TestSingleton implements IrisSingleton {
 	public static final Logger logger = Logger.getLogger(TestSingleton.class);
 
 	public void init() {
-		logger.info("initted");
+		logger.info("TestSingleton initted");
 	}
 
+    @Override
     public void destroy() {
-        logger.info("destroy called");
+        logger.info("TestSingleton destroy called");
+    }
+
+    @Override
+    public void setAppinit(Properties prop) {
+        logger.info("TestSingleton setAppinit called");
     }
 }
