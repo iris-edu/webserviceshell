@@ -48,6 +48,10 @@ import edu.sc.seis.seisFile.mseed.SeedRecord;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
@@ -656,7 +660,7 @@ public class CmdProcessor extends IrisProcessor {
                           + "  detailedMsg: " + exitInfo.detailedMsg);
                     try {
                         output.write(AppConfigurator
-                                .miniseedStreamInterruptionIndicator.getBytes());
+                                .STREAM_INTERRUPT_INDICATOR.getBytes());
                         output.flush();
                     } catch (IOException ex) {
                         // noop, already trying to handle an error, so nothing else to do
@@ -845,7 +849,7 @@ public class CmdProcessor extends IrisProcessor {
                           + "  detailedMsg: " + exitInfo.detailedMsg);
                     try {
                         output.write(AppConfigurator
-                                .miniseedStreamInterruptionIndicator.getBytes());
+                                .STREAM_INTERRUPT_INDICATOR.getBytes());
                         //output.write(msg.getBytes());
                         output.flush();
                     } catch (IOException ex) {
@@ -918,29 +922,58 @@ public class CmdProcessor extends IrisProcessor {
         }
     };
 
+    private static String writeInterruptedMsg(OutputStream output) {
+        if (output != null) {
+            // My assumption, if Jersey framework never recieves data, the
+            // output stream will have never been opened, so if this method
+            // is called previous to output stream open, output will be null.
+
+            try {
+                logger.error("stopProcess called for timeout or exception,"
+                        + " an error message is being appended"
+                        + " to the output stream before killing the handler.");
+                output.write(AppConfigurator.STREAM_INTERRUPT_INDICATOR.getBytes());
+                output.flush();
+            } catch (IOException ex) {
+                // noop, already trying to handle an error, so nothing else to do
+            }
+
+        } else {
+            logger.error("stopProcess called for timeout or exception, outputStream"
+            + " is null, this indicates the handler never wrote data.");
+        }
+
+        return "no writeInterruptedMsg message";
+    }
+
 	private static void stopProcess(Process process, Integer sigkillDelay,
             OutputStream output) {
 
         // writing non-miniseed data to end of stream as flag to indicate that
         // probably the desired data transfer was not completed and
-        // webserviceshell is about the stop the connection.
+        // the process is about to be killed.
 
-        if (output != null) {
-            // My assumption, if Jersey framework never recieves data, the
-            // output stream will have never been opened, so if this method
-            // is called previous to output stream open, output will be null.
-            try {
-                logger.error("stopProcess called for timeout or exception,"
-                        + " an error message is being appended"
-                        + " to the output stream before killing the handler.");
-                output.write(AppConfigurator.miniseedStreamInterruptionIndicator.getBytes());
-                output.flush();
-            } catch (IOException ex) {
-                // noop, already trying to handle an error, so nothing else to do
+        // from https://stackoverflow.com/questions/19456313/simple-timeout-in-java
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        final Future<String> handler = executor.submit(new Callable() {
+            @Override
+            public String call() throws Exception {
+                return writeInterruptedMsg(output);
             }
-        } else {
-            logger.error("stopProcess called for timeout or exception, outputStream"
-            + " is null, this indicates the handler never wrote data.");
+        });
+
+        try {
+            handler.get(AppConfigurator.INTERRUPT_WRITE_TIMEOUT.toMillis(),
+                  TimeUnit.MILLISECONDS);
+        }
+        catch (Exception ex) {
+            // this is to avoid deadlock when writting to output stream, which
+            // can cause a stalled request.  It should be relatively rare,
+            // re-evaluate if this log message shows up frequently
+            handler.cancel(true);
+            logger.info("The executor timer tripped while trying to write"
+                  + " interrupt message, ignore and continue");
         }
 
 		// Send a SIGTERM (friendly-like) via the destroy() method.

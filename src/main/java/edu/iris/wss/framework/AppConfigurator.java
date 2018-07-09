@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -51,7 +52,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.4.6";
+	public static final String wssVersion = "2.4.7";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
@@ -62,11 +63,14 @@ public class AppConfigurator {
     // this particular string is purposely matched is an error indicator
     // for timeout on miniseed data, although, unless changed, it will
     // also be used for writeNormal
-    public static final String miniseedStreamInterruptionIndicator =
+    public static final String STREAM_INTERRUPT_INDICATOR =
             "000000##ERROR#######ERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
             "This data stream was interrupted and is likely incomplete.     \n" +
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n" +
             "#STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n";
+
+    public static final Duration INTERRUPT_WRITE_TIMEOUT = Duration.ofSeconds(0,
+          200 * 1000 * 1000);
 
 	private Boolean isLoaded = false;
 	private Boolean isValid = false;
