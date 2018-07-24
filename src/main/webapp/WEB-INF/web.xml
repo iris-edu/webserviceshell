@@ -26,7 +26,11 @@
         <tracking-mode>URL</tracking-mode>
     </session-config>
 
-<!--
+<!-- Note: this became unneccessary with the introduction of allowedIPs
+           capability, however, if this line
+           wssstatus.allowedIPs=127.0.0.1/32,::1/128,172.17.0.0/24
+           is not in a respective service.cfg, this filter should be
+           activated for wssstatus.
 	<filter>
 		<filter-name>Remote Address Filter</filter-name>
 		<filter-class>org.apache.catalina.filters.RemoteAddrFilter</filter-class>
