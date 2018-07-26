@@ -75,10 +75,8 @@ public class StreamEater2Test {
     @Before
     public void setUp() throws Exception {
         String handlerName = Util.createCfgFileName("wsstest", ".py");
-        System.out.println("*************************** handlerName: " + handlerName);
         File newFile = new File(handlerName);
         newFile.setExecutable(true);
-        System.out.println("*************************** path: " + newFile.getAbsolutePath());
 
         GrizzlyContainerHelper.setUpServer(BASE_URI, this.getClass().getName(),
               SERVICE_CONTEXT);
@@ -98,8 +96,6 @@ public class StreamEater2Test {
               .queryParam("format", "text");
 
         Response response = webTarget.request().get();
-//        System.out.println("^^^^^^^^^^^^^^^^ test: " + "not specified param" +
-//              "  text: " + response.readEntity(String.class));
 
         assertEquals(200, response.getStatus());
         assertEquals("text/plain", response.getMediaType().toString());
@@ -115,11 +111,8 @@ public class StreamEater2Test {
               .queryParam("runtime_error_level", "2");
 
         Response response = webTarget.request().get();
-        System.out.println("^^^^^^^^^^^^^^^^ test: " + "not specified param" +
-              "  text: " + response.readEntity(String.class));
 
         assertEquals(500, response.getStatus());
-        //assertEquals("text/html", response.getMediaType().toString());
     }
 
 ////    @Test
@@ -132,54 +125,7 @@ public class StreamEater2Test {
               .queryParam("runtime_error_level", "2");
 
         Response response = webTarget.request().get();
-//        System.out.println("^^^^^^^^^^^^^^^^ test: " + "not specified param" +
-//              "  text: " + response.readEntity(String.class));
 
         assertEquals(200, response.getStatus());
-        //assertEquals("text/html", response.getMediaType().toString());
     }
-////
-////    public void test_3_with_err_msg() throws Exception {
-////        Response response = do_GET(TEST_PARAM.EXIT_3_WITH_ERR_MSG);
-////
-////        assertEquals(400, response.getStatus());
-////
-//////      possible Grizzley shortcoming, I expect standard FDSN error message
-//////      as type text/plain, does not happen in the unittest
-////////        assertEquals("text/plain", response.getMediaType().toString());
-//////      instead, get this html message
-//////        String testMsg = response.readEntity(String.class);
-//////        System.out.println("* -----------------------------------------test_3_with_err_msg - text: " + testMsg);
-////    }
-
-////    public void test_3_with_no_err_msg() throws Exception {
-////        Response response = do_GET(TEST_PARAM.EXIT_3_WITH_NO_ERR_MSG);
-////
-////        assertEquals(400, response.getStatus());
-//////        assertEquals("text/plain", response.getMediaType().toString());
-////    }
-////
-////    public void test_1234_no_output() throws Exception {
-////        Response response = do_GET(TEST_PARAM.EXIT_1234_NO_OUTPUT);
-////
-////        assertEquals(500, response.getStatus());
-//////        assertEquals("text/plain", response.getMediaType().toString());
-////    }
-
-////    private Response do_GET(TEST_PARAM tparm) throws Exception {
-////        Client c = ClientBuilder.newClient();
-////
-////        WebTarget webTarget = c.target(BASE_URI)
-////              .path(ENDPOINT_NAME)
-////              .queryParam(tparm.toString(), "no_val")
-////              .queryParam("format", "TEXT");
-////
-////        Response response = webTarget.request().get();
-////
-////        // This should be true for all queries when corsEnabled=false
-////        assertEquals(null, response.getHeaderString("access-control-allow-origin"));
-////
-////        return response;
-////    }
-
 }

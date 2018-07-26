@@ -187,21 +187,19 @@ public class StreamEaterTest {
 ////        assertEquals("text/plain", response.getMediaType().toString());
 //      instead, get this html message
 //        String testMsg = response.readEntity(String.class);
-//        System.out.println("* -----------------------------------------test_3_with_err_msg - text: " + testMsg);
+//        System.out.println("* -------test_3_with_err_msg - text: " + testMsg);
     }
 
     public void test_3_with_no_err_msg() throws Exception {
         Response response = do_GET(TEST_PARAM.EXIT_3_WITH_NO_ERR_MSG);
 
         assertEquals(400, response.getStatus());
-//        assertEquals("text/plain", response.getMediaType().toString());
     }
 
     public void test_1234_no_output() throws Exception {
         Response response = do_GET(TEST_PARAM.EXIT_1234_NO_OUTPUT);
 
         assertEquals(500, response.getStatus());
-//        assertEquals("text/plain", response.getMediaType().toString());
     }
 
     public void test_3_with_no_param() throws Exception {
@@ -215,23 +213,16 @@ public class StreamEaterTest {
 
         Response response = webTarget.request().get();
 
-//        System.out.println("^^^^^^^^^^^^^^^^ test: " + "not specified param" +
-//              "  text: " + response.readEntity(String.class));
-
         assertEquals(400, response.getStatus());
-//        assertEquals("text/plain", response.getMediaType().toString());
     }
 
     public void test_4_stdout_then_stderr() throws Exception {
         Response response = do_GET(TEST_PARAM.EXIT_4_STDOUT_THEN_STDERR);
 
         String answer = response.readEntity(String.class);
-//        System.out.println("^^^^^^^^^^^^^^^^ test: " +
-//              TEST_PARAM.EXIT_4_STDOUT_THEN_STDERR.toString() +
-//              "  text: " + answer);
 
         // normal - CmdProcessor returns 200 before starting to stream
-        // even though a latter error occurs, causes STREAMERROR to data
+        // even though a later error occurs, causes STREAMERROR to data
         // stream. Eventully fails with exit code 4, see junit_wss_log
         assertEquals(200, response.getStatus());
         assertEquals("text/plain", response.getMediaType().toString());

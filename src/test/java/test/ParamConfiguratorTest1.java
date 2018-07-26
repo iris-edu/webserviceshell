@@ -57,8 +57,6 @@ public class ParamConfiguratorTest1 {
 
         Map<String, String> aliases =
                 thisParamCfg.createAliasesMap((String)props.get("endpt1.aliases"));
-
-        System.out.println("********\n aliases" + aliases);
     }
 
     @Test

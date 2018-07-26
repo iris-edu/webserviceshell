@@ -54,7 +54,8 @@ public class GrizzlyContainerHelper {
             MyApplication.class.getName());
 
         String msg = "********** starting GrizzlyWebContainerFactory";
-        System.out.println(msg + ", BASE_URI: " + base_uri);
+        // uncoment to view on command line
+//        System.out.println(msg + ", BASE_URI: " + base_uri);
         LOGGER.info(msg + ", BASE_URI: " + base_uri);
         LOGGER.info(msg + ", parameters: " + initParams);
 
@@ -68,8 +69,9 @@ public class GrizzlyContainerHelper {
         server = GrizzlyWebContainerFactory.create(base_uri, initParams);
         server.start();
 
-        msg = "********** started GrizzlyWebServer";
-        System.out.println(msg + ", from class: " + callerClassName);
+        // uncomment to view server starts
+//        msg = "********** started GrizzlyWebServer";
+//        System.out.println(msg + ", from class: " + callerClassName);
 //        System.out.println(msg + ", config: " + server.getServerConfiguration());
 
         // for manual test of server, uncomment this code then mvn clean install
@@ -81,7 +83,8 @@ public class GrizzlyContainerHelper {
     public static void tearDownServer(String callerClassName) throws Exception {
         String msg = "********** stopping grizzlyWebServer, class: "
             + callerClassName;
-        System.out.println(msg);
+        // uncomment to see server stop on stdout
+//        System.out.println(msg);
         LOGGER.info(msg);
         server.shutdownNow();
         server = null;

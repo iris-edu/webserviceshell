@@ -141,11 +141,7 @@ public class PostEndpoint extends IrisProcessor {
                     }
 
                 }
-
-                //                                             System.out.println("-------------- part fdisp: " + part.);
-                    //MediaType.
-            System.out.println("************** form parts: " + fdmp.getBodyParts());
-
+                System.out.println("************** form parts: " + fdmp.getBodyParts());
             }
         }
     }

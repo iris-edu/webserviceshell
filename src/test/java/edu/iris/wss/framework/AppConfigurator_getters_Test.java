@@ -260,8 +260,7 @@ public class AppConfigurator_getters_Test {
         try {
             appCfg.loadConfigurationParameters(props);
         } catch(Exception ex) {
-//            assert(ex.toString().contains("java.io.FileNotFoundException"));
-//          accept when possible approach 11-Jan-2017
+//          accept when possible approach new on 11-Jan-2017
             fail("Unexpected exception, load should exceed with incorrect proxyURL value.");
         }
 
@@ -369,9 +368,7 @@ public class AppConfigurator_getters_Test {
         assert(cdu.isInRange("238f:3::2"));
         assert(cdu.isInRange("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"));
 
-
         // test for bad address in string
-
         String testWith = "192.166.166.12/24, 192:166.167.1/24, 127.0.0.1/32";
         props.setProperty(propName, testWith);
         try {

@@ -92,8 +92,6 @@ public class ParamConfiguratorTest2 {
         ParamConfigurator paramCfg = new ParamConfigurator(setOfEndpointNames);
         paramCfg.loadConfigurationParameters(props);
 
-        //System.out.println("***************** param_mix1.cfg toString\n" + paramCfg.toString());
-
         assert(paramCfg.getConfigParamValue("intermag", "endtime").type
               == ParamConfigurator.ConfigParam.ParamType.DATE);
         assert(paramCfg.getConfigParamValue("v99/utepgm", "maxlatitude").type

@@ -54,9 +54,6 @@ public class UtilTest {
 
     @Test
     public void test_FileNameBase() {
-        System.out.println("* ------------------------- base: "
-        + Util.getWssFileNameBase("/geows-uf/aaa/bbb/cccc/ddddd"));
-
         assert("geows-uf.aaa.bbb.cccc.ddddd".equals(
               Util.getWssFileNameBase("/geows-uf/aaa/bbb/cccc/ddddd")));
     }

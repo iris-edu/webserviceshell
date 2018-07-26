@@ -18,12 +18,7 @@
  ******************************************************************************/
 
 package edu.iris.wss.framework;
-/*
-import com.sun.grizzly.http.embed.GrizzlyWebServer;
-import com.sun.grizzly.http.servlet.ServletAdapter;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.spi.container.servlet.ServletContainer;*/
+
 import edu.iris.wss.endpoints.CmdProcessor;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -60,7 +55,6 @@ public class CmdWithHeaderTest  {
     private static final Integer BASE_PORT = 8093;
 
     // set notional webapp name
-//    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
     private static final String SOME_CONTEXT = "/tstcmd";
 
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
@@ -497,7 +491,6 @@ public class CmdWithHeaderTest  {
         sb.append("\n");
 
         file = new File(filePath + File.separator + "testdata1.json");
-        System.out.println("* ------------------------------------- pfilenamea : " + file.getAbsolutePath());
 
         sb.append("jsonproxy.proxyURL=file://").append(file.getAbsolutePath()).append("\n");
         sb.append("\n");

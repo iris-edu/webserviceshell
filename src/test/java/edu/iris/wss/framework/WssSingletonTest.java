@@ -122,8 +122,6 @@ public class WssSingletonTest {
 
     @Test
     public void test_log_types_2() throws Exception {
-        System.out.println(")))))))))))))))))))))))))))))))) TEST_TYPE: " +
-              NAME_TYPES_TO_TEST.get(nameCounter - 1));
         // this test should run for TEST_TYPE.CONFIG_BOGUS_URL and fail to
         // initialize rabbit publisher, but continute to run while writing
         // error log messages to the log file for each publish attempt
@@ -251,7 +249,6 @@ public class WssSingletonTest {
               .queryParam("messageType", "log_and_throw_test_null_briefMsg");
 
         Response response = webTarget.request().get();
-System.out.println("****************************** respb: " + response);
         assertEquals(400, response.getStatus());
 
         // can't pass this test because apparently exception handling with junit
@@ -274,7 +271,6 @@ System.out.println("****************************** respb: " + response);
               .queryParam("messageType", "log_and_throw_test_null_detailMsg");
 
         Response response = webTarget.request().get();
-System.out.println("****************************** respd: " + response);
         assertEquals(400, response.getStatus());
 
         // can't pass this test because apparently exception handling with junit

@@ -42,8 +42,6 @@ public class AppConfig_WorkingDirTest {
 
         String currentDir = System.getProperty("user.dir");
         String targetPath = currentDir + File.separator + endPath;
-//        System.out.println("** tp: " + targetPath);
-//        System.out.println("** env: " + System.getenv());
 
         System.setProperty("something", "orother");
         AppConfigurator appCfg = new AppConfigurator();

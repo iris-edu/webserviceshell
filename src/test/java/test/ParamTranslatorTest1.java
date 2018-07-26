@@ -20,18 +20,10 @@
 package test;
 
 import edu.iris.wss.framework.ParamConfigurator;
-import edu.iris.wss.framework.ParameterTranslator;
-import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.WssSingleton;
 import java.util.HashSet;
 import java.util.Set;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.UriInfo;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  *
@@ -58,8 +50,6 @@ public class ParamTranslatorTest1 {
 
         ParamConfigurator paramCfg = new ParamConfigurator(setOfEndpointNames);
         paramCfg.loadConfigurationParameters(props);
-
-        //System.out.println("***************** param_mix1.cfg toString\n" + paramCfg.toString());
 
         assert(paramCfg.getConfigParamValue("intermag", "endtime").type
               == ParamConfigurator.ConfigParam.ParamType.DATE);

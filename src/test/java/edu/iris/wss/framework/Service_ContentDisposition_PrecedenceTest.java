@@ -18,12 +18,7 @@
  ******************************************************************************/
 
 package edu.iris.wss.framework;
-/*
-import com.sun.grizzly.http.embed.GrizzlyWebServer;
-import com.sun.grizzly.http.servlet.ServletAdapter;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.spi.container.servlet.ServletContainer;*/
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -57,7 +52,6 @@ public class Service_ContentDisposition_PrecedenceTest  {
     private static final Integer BASE_PORT = 8093;
 
     // set notional webapp name
-//    private static final String SOME_CONTEXT = "/testservice/dataselect/1";
     private static final String SOME_CONTEXT = "/tstcm2";
 
     private static final URI BASE_URI = URI.create(BASE_HOST + ":"
@@ -215,10 +209,6 @@ public class Service_ContentDisposition_PrecedenceTest  {
         response = webTarget.request().get();
 
         assertEquals(200, response.getStatus());
-//        System.out.println("*************************** entity20: "
-//              + response.readEntity(String.class));
-//        System.out.println("*************************** contDisp200: "
-//              + response.getHeaderString("Content-Disposition"));
         assertEquals("application/json", response.getMediaType().toString());
         assertTrue(response.getHeaderString("Content-Disposition").equals("override-json-settings"));
         assertTrue(response.getHeaderString("dummy-header").equals("dummy-value"));

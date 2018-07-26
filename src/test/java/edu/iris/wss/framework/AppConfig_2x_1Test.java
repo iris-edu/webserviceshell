@@ -52,7 +52,6 @@ public class AppConfig_2x_1Test {
 
     @Test
     public void testAppConfigLoad() throws Exception {
-        //System.out.println("-------------------- user.dir: " + System.getProperty("user.dir"));
         java.util.Properties props = new java.util.Properties();
         java.net.URL url = ClassLoader.getSystemResource(testFileName);
         assertNotNull(url);
@@ -72,8 +71,6 @@ public class AppConfig_2x_1Test {
                       ex);
             }
         }
-
-        //System.out.println("******* ** ** toString\n" + appCfg.toString());
 
         // match output to values in cfg file
         assert(appCfg.isUsageLogEnabled(v99) == true);
@@ -176,7 +173,7 @@ public class AppConfig_2x_1Test {
     }
 
     // changed 2016-02-11 when V1CmdProcessor was removed, may reinstate
-    // if config load is changed to know when and endpoint does not
+    // if config load is changed to know when an endpoint does not
     // require a command line handler
     @Test
     public void testHandlerFileExistException() throws Exception {
@@ -200,7 +197,7 @@ public class AppConfig_2x_1Test {
     }
 
     // changed 2016-02-11 when V1CmdProcessor was removed, may reinstate
-    // if config load is changed to know when and endpoint does not
+    // if config load is changed to know when an endpoint does not
     // require a command line handler
     @Test
     public void testHandlerFileExistsAndExecuteException() throws Exception {

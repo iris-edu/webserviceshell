@@ -18,12 +18,7 @@
  ******************************************************************************/
 
 package edu.iris.wss.framework;
-/*
-import com.sun.grizzly.http.embed.GrizzlyWebServer;
-import com.sun.grizzly.http.servlet.ServletAdapter;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.spi.container.servlet.ServletContainer;*/
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -101,7 +96,6 @@ public class ServiceConfigTest  {
     public void testGet_wssversion() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        System.out.println("************** wT: " + webTarget);
         Response response = webTarget.path("wssversion").request().get();
 
         assertNotNull(response);
@@ -120,7 +114,6 @@ public class ServiceConfigTest  {
         assertEquals(200, response.getStatus());
 
         // test for some basic known content
-//        System.out.println("* -------------------------------------------- testMsg: " + testMsg);
         assertTrue(testMsg.contains("<TD>URL</TD><TD>" + SOME_CONTEXT + "/wssstatus</TD>"));
         assertTrue(testMsg.contains("<TD>Port</TD><TD>" + BASE_PORT + "</TD>"));
     }
@@ -147,8 +140,6 @@ public class ServiceConfigTest  {
 
         // cannot test for FDSN message in junit because Grizzly server does
         // not pass the plain text message through
-//        String testMsg = response.readEntity(String.class);
-//        System.out.println("* -----------------------------------------cn2- testMsg: " + testMsg);
         assertEquals(403, response.getStatus());
 
         // note: for default setting of true for corsEnabled,
@@ -160,7 +151,6 @@ public class ServiceConfigTest  {
     public void testGet_IPfilter_whoami() throws Exception {
         Client c = ClientBuilder.newClient();
         WebTarget webTarget = c.target(BASE_URI);
-        System.out.println("************** whoami wT: " + webTarget);
         Response response = webTarget.path("whoami").request().get();
 
         assertNotNull(response);
@@ -179,8 +169,6 @@ public class ServiceConfigTest  {
 
         assertNotNull(response);
         // don't care about payload for this test
-//        String testMsg = response.readEntity(String.class);
-//        System.out.println("* -----------------------------------------mt1- text: " + testMsg);
         assertEquals(200, response.getStatus());
         assertEquals("application/json", response.getMediaType().toString());
         assertTrue(response.getHeaderString("Content-Disposition").contains("inline; filename="));

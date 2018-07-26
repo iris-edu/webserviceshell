@@ -66,7 +66,6 @@ public class RecordMetaDataTest {
      */
     @Test
     public void testGetSize() {
-        System.out.println("getSize");
         RecordMetaData instance = new RecordMetaData();
         Long expResult = null;
         Long result = instance.getSize();

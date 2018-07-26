@@ -48,8 +48,6 @@ public class WssTest  {
     private static final String BASE_PORT = "8093";
 
     // set notional webapp name
-    // grizzley only seems to recognize the first path element
-//    private static final String SOME_CONTEXT = "/wsstest/wsstservice/1";
     private static final String SOME_CONTEXT = "/";
 
     private static final URI BASE_URI = URI.create("http://localhost:"

@@ -135,12 +135,6 @@ public class PostTest {
               TEST_STR2);
         multiPart.bodyPart(formPart2);
 
-//        FileDataBodyPart fileDataBodyPart = new FileDataBodyPart("file",
-//            new File("/Users/mike/c2_iris_d/code/webserviceshell/pom.xml"),
-//            MediaType.APPLICATION_OCTET_STREAM_TYPE);
-//        multiPart.bodyPart(fileDataBodyPart);
-
-//        Response response = webTarget.path(ENDPOINT_NAME).request(MediaType.APPLICATION_JSON_TYPE)
         Response response = webTarget.path(ENDPOINT_NAME).request()
               .post(Entity.entity(multiPart, multiPart.getMediaType()));
         // expecting JSON string as plain/text
