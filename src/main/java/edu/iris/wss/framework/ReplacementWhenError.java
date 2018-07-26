@@ -17,11 +17,8 @@
  * <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package edu.iris.wss.endpoints;
+package edu.iris.wss.framework;
 
-import edu.iris.wss.framework.FdsnStatus;
-import edu.iris.wss.framework.RequestInfo;
-import edu.iris.wss.framework.Util;
 import edu.iris.wss.provider.IrisProcessingResult;
 import edu.iris.wss.provider.IrisProcessor;
 import java.util.Map;

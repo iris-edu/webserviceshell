@@ -29,7 +29,8 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * Defined as a listener in web.xml
+ * Defined as a listener in web.xml. Also used to assist unit test.
+ *
  */
 public class AppContextListener implements ServletContextListener {
     public static final Logger logger = Logger.getLogger(AppContextListener.class);

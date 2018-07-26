@@ -45,16 +45,12 @@ public class MyApplication extends ResourceConfig {
   private WssSingleton sw;
 
   public void SetupWSS(String configBase) throws Exception {
-////    // always setup log4j first
-////    Util.myNewInitLog4j(configBase);
 
     // get configuration information next
     sw = new WssSingleton();
-//System.out.println("************************* SetupWSS sw: " + sw);
     Map<String, edu.iris.wss.framework.WssSingleton> swprop = new HashMap();
     swprop.put(WSS_SINGLETON_KEYWORD, sw);
     sw.configure(configBase);
-//System.out.println("************************* SetupWSS after sw configure ");
 
     // store reference to WssSinglton so that it can be bound
     // for injection with each request and its reference to rabbitmq can be
@@ -63,34 +59,24 @@ public class MyApplication extends ResourceConfig {
 
     MyContainerLifecycleListener mCLL = new MyContainerLifecycleListener();
     this.registerInstances(mCLL);
-//System.out.println("************************* SetupWSS after registerInstances ");
-
-    // bind classes as needed to make other objects be available to the
-    // framework via a CONTEXT annotation
-////    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
-////    Injections.addBinding(
-////        Injections.newBinder(sw).to(WssSingleton.class), dc);
-////    dc.commit();
 
     // add in classes which have static endpoints defined with annotations
     register(edu.iris.wss.Wss.class);
-//System.out.println("************************* SetupWSS after register Wss ");
 
     // register Multipart for use in IrisDynamicProvider
     packages("org.glassfish.jersey.examples.multipart");
     register(MultiPartFeature.class);
 
-////    // example for adding an endpoint from a basic pojo class
-////    // that may not use annotations, e.g. Info1.java
-////    addEndpoint("info1", edu.iris.wss.Info1.class, "getDyWssVersion", "GET");
-
     // add dynamic endpoints as defined in -service.cfg file
     Set<String> epNames = sw.appConfig.getEndpoints();
     for (String epName : epNames) {
-        // don't try to make a static endpoint dynamic
-        if (Wss.STATIC_ENDPOINTS.contains(epName)) { continue; }
+        if (Wss.STATIC_ENDPOINTS.contains(epName)) {
+            // don't try to make a static endpoint dynamic
+            continue;
+        }
 
-        String methodName = "doIrisStreaming";
+        // Update here is a new type of processing is added
+        String methodName = "doUndefinedMethod";
         if (sw.appConfig.getIrisEndpointClass(epName) instanceof
               edu.iris.wss.provider.IrisProcessor) {
             methodName = "doIrisProcessing";
@@ -106,18 +92,11 @@ public class MyApplication extends ResourceConfig {
             addEndpoint(epName, edu.iris.wss.provider.IrisDynamicProvider.class,
                   methodName, "POST", mediaTypes);
 
-////            // saved for now for future post request testing, see
-////            // echoPostString method in IrisDynamicProvider class
-////            addEndpoint(epName + "postecho",
-////                  edu.iris.wss.provider.IrisDynamicProvider.class,
-////                  "echoPostString", "POST");
         }
     }
   }
 
   public MyApplication() {
-//    System.out.println("--------------- ************** " + CLASS_NAME
-//          + " constructor");
 
     String configBase = AppContextListener.globalConfigBase;
 
@@ -173,35 +152,4 @@ public class MyApplication extends ResourceConfig {
     logger.info(msg);
   }
 }
-
-// example of alternate implemenation using ResourceConfig
-
-//@ApplicationPath("/")
-//public class MyApplicationAlt3 extends ResourceConfig {
-//
-//  public static final Logger logger = Logger.getLogger(MyApplicationAlt3.class);
-//
-//  public static class MyHK2Binder extends AbstractBinder {
-//
-//    @Override
-//    protected void configure() {
-//      System.out.println("***** MyApplicationAlt3 static MyHK2Binder configure start");
-//
-//      //bindAsContract(AppScope.class).in(Singleton.class);
-//      // singleton instance binding
-//      AppScope appScope = new AppScope();
-//      bind(appScope).to(AppScope.class);
-//      bind(appScope.getSingletonWrapper()).to(SingletonWrapper.class);
-//      System.out.println("***** MyApplicationAlt3 MyHK2Binder configure");
-//    }
-//  }
-//
-//  public MyApplicationAlt3() {
-//    System.out.println("***** MyApplicationAlt3 extends ResourceConfig construct");
-//    register(Wss.class);
-//    register(new MyHK2Binder());
-//    System.out.println("***** MyApplicationAlt3 regular constructor end");
-//  }
-//}
-
 

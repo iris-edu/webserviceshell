@@ -27,6 +27,9 @@ import javax.ws.rs.core.StreamingOutput;
 /**
  *
  * @author mike
+ *
+ * Required result for public interface IRISProcessor. It is the responsibility
+ * of the endpoint code to provide this object.
  */
 public class IrisProcessingResult {
     // Entities are objects that the Jersey framework can use to
@@ -65,15 +68,6 @@ public class IrisProcessingResult {
 
         return s;
     }
-
-////    // another version with StreamingOutput type for entity
-////    public IrisProcessingResult(StreamingOutput so, String wssMediaType,
-////          FdsnStatus.Status fdsnSS, Map<String, String> headers) {
-////        this.entity = so;
-////        this.wssMediaType = wssMediaType;
-////        this.fdsnSS = fdsnSS;
-////        this.headers = headers;
-////    }
 
     /**
      * Method for standard FDSN error messages.

@@ -64,8 +64,9 @@ public  class RequestInfo {
     public byte[] HEADER_START_IDENTIFIER_BYTES;
     public byte[] HEADER_END_IDENTIFIER_BYTES;
 
-    // as per StackOverflow, make sure the object is fully created before
-    // passing it to another constructor, use createInstance factory to create.
+    // as per StackOverflow, dont use constructor, but rather use
+    // createInstance factory to make sure object is fully created before
+    // passing it to another constructor.
     private RequestInfo() {
     }
 
@@ -121,6 +122,7 @@ public  class RequestInfo {
         if (Wss.STATIC_ENDPOINTS.contains(epName) || epName.equals("")) {
             // static endpoints dont have an appconfig like dynamic endpoints
             // nor default base query
+
             // noop
         } else {
             ri.perRequestUse404for204 = ri.appConfig.isUse404For204Enabled(epName);
@@ -149,13 +151,9 @@ public  class RequestInfo {
             }
         }
 
-//        System.out.println("-*-*-*--*-*-*--*-*-*- epName: " + epName
-//        + "  ri.appConfig null?: " + (ri.appConfig == null));
-
         List<CIDRUtils> allowedCidrs = ri.appConfig.getAllowedIPs(epName);
         if (isIPAllowed(ri, allowedCidrs)) {
-            // is allowed, continue
-//            System.out.println("-*-*-*- cidrList: " + allowedCidrs + "  for ep: " + epName);
+            // is allowed means ok, so noop and continue
         } else {
             String ipInQuestion = ri.request.getRemoteAddr();
             Util.logAndThrowException(ri, Status.FORBIDDEN, "IP: " + ipInQuestion
@@ -186,12 +184,6 @@ public  class RequestInfo {
                     Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
                            "Error resolving remote address: " + ipInQuestion, "");
                 }
-//                System.out.println("--chk- "
-//                  + "  cidr: " + cidr
-//                  + "  startAddr: " + cidr.getStartAddress()
-//                  + "  endAddr: " + cidr.getEndAddress()
-//                  + "  ipInQuestion: " + ipInQuestion
-//                  + "  CIDR: " + cidr.getCIDR());
             }
         }
 

@@ -47,8 +47,6 @@ public class Wss {
 
     @Context 	WssSingleton sw;
 
-    //private RequestInfo ri;
-
 	public static final Logger logger = Logger.getLogger(Wss.class);
 
     public static final String WSSSTATUS = "wssstatus";

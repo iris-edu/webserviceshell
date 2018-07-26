@@ -21,6 +21,14 @@ package edu.iris.wss.provider;
 
 import java.util.Properties;
 
+/**
+ *
+ * @author mike
+ *
+ * The interface for an addition application singleton, if specified in
+ * a service.cfg file.
+ *
+ */
 public interface IrisSingleton  {
 
     default void destroy() {

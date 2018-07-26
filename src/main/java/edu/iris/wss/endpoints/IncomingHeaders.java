@@ -44,6 +44,10 @@ import org.json.simple.JSONObject;
 /**
  *
  * @author mike
+ *
+ * This endpoint is not active unless explicitly configured in service.cfg.
+ * It can be used to print information to stdout about incoming headers and
+ * to show output of some combinations of multipart with HTTP 204 or 500 codes.
  */
 public class IncomingHeaders extends IrisProcessor {
     public static final String THIS_CLASS_NAME = IncomingHeaders.class.getSimpleName();

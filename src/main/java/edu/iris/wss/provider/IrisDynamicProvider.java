@@ -41,6 +41,14 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
 
+/**
+ *
+ * @author mike
+ *
+ * The wrapper for handling each request from Jersey. Everything needed to
+ * process a request must be available via a Context variable.
+ *
+ */
 public class IrisDynamicProvider {
 	public static final Logger logger = Logger.getLogger(IrisDynamicProvider.class);
 
@@ -54,73 +62,13 @@ public class IrisDynamicProvider {
     @Context    ContainerRequestContext containerRequestContext;
 
 	public IrisDynamicProvider() {
-        //System.out.println("***************&&& IrisDynamicExecutor constr");
+        // noop
     }
 
-////    /**
-////     * A test function, which echos back the contents of a post request.
-////     *
-////     * @return
-////     * @throws IOException
-////     */
-////    public Response echoPostString() throws IOException {
-////        // when run dynamically, this method does all the abstract methods,
-////        // so ri needs to be set here and past in.
-////        RequestInfo ri = RequestInfo.createInstance(sw, uriInfo, request,
-////              requestHeaders);
-////
-////        String requestedEpName = ri.getEndpointNameForThisRequest();
-////
-////        if (!ri.isThisEndpointConfigured()) {
-//////            Util.shellException(Status.INTERNAL_SERVER_ERROR,
-//////                  "Error, there is no configuration information for"
-//////                        + " endpoint: " + requestedEpName, ri);
-////            System.out.println("* echoPostString warning, no configuration for endpoint: "
-////                  + requestedEpName);
-////        }
-////
-////        System.out.println("* echoPostString method: " + containerRequestContext.getMethod());
-////        System.out.println("* echoPostString toString: " + containerRequestContext.toString());
-////        System.out.println("* echoPostString getLength: " + containerRequestContext.getLength());
-////
-//////        String postContent = ((ContainerRequest) containerRequestContext).readEntity(String.class);
-//////        System.out.println("* echoPostString readEntity: " + postContent);
-////
-////        // cannot do both readEntity and read InputStream
-////		StringBuilder sb = new StringBuilder(2048);
-////
-////        InputStream is = containerRequestContext.getEntityStream();
-////		byte [] buffer = new byte[1024];
-////
-////		try {
-////			int nRead;
-////			while ((nRead = is.read(buffer, 0, buffer.length)) != -1) {
-////				sb.append(new String(buffer, 0, nRead));
-////			}
-////		} catch(IOException ex) {
-////			System.out.println("Got IO exception in doIrisStreamin2, ex: " + ex);
-////		} finally {s
-////			try{ is.close(); } catch( Exception ex) {;}
-////		}
-////
-////        System.out.println("* echoPostString entityStream: " + sb.toString());
-////
-////        Response.ResponseBuilder builder = Response.status(Status.OK)
-////                  .type("text/plain")
-////                  .entity(sb.toString());
-////
-////
-////        Map<String, String> headersMap = new HashMap<>();
-////        Util.updateWithCORSHeadersIfConfigured(ri, headersMap);
-////        Util.setResponseHeaders(builder, headersMap);
-////
-////        return builder.build();
-////    }
-
     /**
-     * An updated version of doIrisStreaming which only needs two user
-     * methods and returns more information in the user response for
-     * better control of application output.
+     * This method is used in MyApplication to define actionable code for
+     * handling each request. It executes endpoint code and implements FDSN
+     * rules for processing headers and creating error messages.
      *
      * @return
      * @throws Exception

@@ -38,6 +38,8 @@ import org.apache.log4j.PropertyConfigurator;
 /**
  *
  * @author mike
+ *
+ * Functions and constants should be used for consistently everywhere.
  */
 public class Util {
     public static final Logger LOGGER = Logger.getLogger(Util.class);

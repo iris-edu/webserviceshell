@@ -24,7 +24,12 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 
-
+/**
+ *
+ * This object created when the service starts, its contents are not
+ * preserved when the service is removed. The contents is presented when
+ * wssstatus endpoint is requested.
+ */
 public class StatsKeeper {
 
 	public static final Logger logger = Logger.getLogger(StatsKeeper.class);

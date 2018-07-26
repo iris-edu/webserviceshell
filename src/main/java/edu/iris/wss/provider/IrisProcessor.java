@@ -22,6 +22,13 @@ package edu.iris.wss.provider;
 import edu.iris.wss.framework.RequestInfo;
 import org.apache.log4j.Logger;
 
+/**
+ *
+ * @author mike
+ *
+ * The interface for endpoint code. IrisDynamicProvider sets up context,
+ * then calls getProcessingResults.
+ */
 public abstract class IrisProcessor implements IrisProcessMarker {
 	public static final Logger logger = Logger.getLogger(IrisProcessor.class);
 
@@ -29,6 +36,4 @@ public abstract class IrisProcessor implements IrisProcessMarker {
 
 	public abstract IrisProcessingResult getProcessingResults(RequestInfo ri,
           String wssMediaType);
-
-    //public abstract String getErrorString();
 }

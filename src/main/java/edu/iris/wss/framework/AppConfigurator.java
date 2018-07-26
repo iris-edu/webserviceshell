@@ -21,7 +21,6 @@ package edu.iris.wss.framework;
 
 import edazdarevic.commons.net.CIDRUtils;
 import edu.iris.wss.Wss;
-import edu.iris.wss.endpoints.ReplacementWhenError;
 import edu.iris.wss.provider.IrisProcessMarker;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
@@ -95,7 +94,6 @@ public class AppConfigurator {
         // a slight dissonance, endpointClassName will appear as a
         // string externally, but an instatiated object internally
         ep_defaults.cfgMap.put(EP_CFGS.endpointClassName,
-//              getIrisProcessorInstance("edu.iris.wss.endpoints.CmdProcessor")
               getClassInstance("edu.iris.wss.endpoints.CmdProcessor",
                     IrisProcessMarker.class));
         ep_defaults.cfgMap.put(EP_CFGS.handlerProgram, "nonespecified");
@@ -1142,36 +1140,6 @@ public class AppConfigurator {
 
         return iso;
     }
-
-////    public static IrisProcessMarker getIrisProcessorInstance(String className) {
-////        Class<?> irisClass = null;
-////        IrisProcessor iso = null;
-////        try {
-////            irisClass = Class.forName(className);
-////            iso = (IrisProcessor) irisClass.newInstance();
-////        } catch (ClassNotFoundException ex) {
-////            String msg = "getIrisProcessorInstance could not find "
-////                  + EP_CFGS.endpointClassName + ": " + className;
-////            logger.fatal(msg);
-////            throw new RuntimeException(msg, ex);
-////        } catch (InstantiationException ex) {
-////            String msg = "getIrisProcessorInstance could not instantiate "
-////                  + EP_CFGS.endpointClassName + ": " + className;
-////            logger.fatal(msg);
-////            throw new RuntimeException(msg, ex);
-////        } catch (IllegalAccessException ex) {
-////            String msg = "getIrisProcessorInstance illegal access while instantiating "
-////                  + EP_CFGS.endpointClassName + ": " + className;
-////            logger.fatal(msg);
-////            throw new RuntimeException(msg, ex);
-////        } catch (ClassCastException ex) {
-////            String msg = "getIrisProcessorInstance ClassCastException while instantiating "
-////                  + EP_CFGS.endpointClassName + ": " + className;
-////            logger.fatal(msg);
-////            throw new RuntimeException(msg, ex);
-////        }
-////        return iso;
-////    }
 
     public static IrisSingleton getIrisSingletonInstance(String className) {
         Class<?> irisClass = null;

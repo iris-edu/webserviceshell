@@ -160,8 +160,8 @@ public class CmdProcessor extends IrisProcessor {
         if (ri.postBody != null) {
             try {
 
-// mls 2014-06-19 - code to make post from html forms work... worked once with curl as well
-// not implementing until time to test for side affects related to url encoding or not.
+// mls 2014-06-19 - code to make post from html forms work. Not implementing
+// until a policy is decided on when to url encoding or not on post data.
 // CONTENT_TYPE may not match encoding from curl, depending on the combination
 //  of curl options. e.g. curl does not set "query=" like
 // htmls forms, but CONTENT_TYPE is set to application/x-www-form-urlencoded
@@ -486,15 +486,6 @@ public class CmdProcessor extends IrisProcessor {
 
     return headersMap;
 }
-
-////    @Override
-////    public void write(OutputStream output) {
-////        if (isWriteToMiniseed) {
-////            writeMiniSeed(output);
-////        } else {
-////            writeNormal(output);
-////        }
-////    }
 
     /**
      * Reads stdin and writes to stdout, To capture processing statistics, the

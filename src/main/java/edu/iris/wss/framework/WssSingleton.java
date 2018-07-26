@@ -40,8 +40,8 @@ import java.util.Properties;
  *  WssSingleton is used to:
  *  - contain StatsKeeper
  *  - contain JMS logging object if needed
- *  - load service.cfg and param.cfg information
- *  - instantiate an application IrisSingleton if specified in service.cfg
+ *  - load and store service.cfg and param.cfg information
+ *  - store an application IrisSingleton if specified in service.cfg
  *
  */
 
@@ -78,12 +78,10 @@ public class WssSingleton {
     private String configFileBase = "notDefinedYet";
 
 	public WssSingleton(){
-//        System.out.println("***** ***** ***** ***** ***** "
-//              + this.getClass().getSimpleName()+ " no-arg construct");
-        // Create these for CmdProcessor, they are used =on every request
-        // Note: These only work for an encoding with one byte per character,
-        // so let it throw and exception if some representive byte encoding
-        // i.e. like UTF-8 is not handled.
+        // Create this object only once, it is used on every request.
+
+        // Note: HEADER_START_IDENTIFIER_BYTES only work for an encoding with
+        // one byte per character,
         try {
             HEADER_START_IDENTIFIER_BYTES = HEADER_START_IDENTIFIER.getBytes("UTF-8");
             HEADER_END_IDENTIFIER_BYTES = HEADER_END_IDENTIFIER.getBytes("UTF-8");
@@ -206,7 +204,9 @@ public class WssSingleton {
             // this implies that more than one WssSingleton object is seeing
             // this class variable. It should be refactored or there should
             // be different classloaders used to isolate this class from another
-            String msg = "POSSIBLE ERROR, rabbitAsyncPublisher object already exists, null was expected for rabbitAsyncPublisher, rabbitAsyncPublisher: "
+            String msg = "POSSIBLE ERROR, rabbitAsyncPublisher object already"
+                  + " exists, null was expected for rabbitAsyncPublisher,"
+                  + " rabbitAsyncPublisher: "
                   + rabbitAsyncPublisher;
             System.out.println(msg);
             logger.error(msg);
@@ -254,7 +254,8 @@ public class WssSingleton {
             // this implies that more than one WssSingleton object is seeing
             // this class variable. It should be refactored or there should
             // be different classloaders used to isolate this class from another
-            String msg = "POSSIBLE ERROR, JMS object already exists, null was expected for webLogService, webLogService: "
+            String msg = "POSSIBLE ERROR, JMS object already exists, null was"
+                  + " expected for webLogService, webLogService: "
                   + webLogService;
             System.out.println(msg);
             logger.error(msg);
