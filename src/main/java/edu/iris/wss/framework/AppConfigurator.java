@@ -186,11 +186,6 @@ public class AppConfigurator {
                 try {
                     // netAddress.getByName does not like leading space
                     CIDRUtils cidrUtils = new CIDRUtils(cidr.trim());
-//                    System.out.println("--- ok - "
-//                          + "  cidr: " + cidr
-//                          + "  startAddr: " + cidrUtils.getStartAddress()
-//                          + "  endAddr: " + cidrUtils.getEndAddress()
-//                          + "  CIDR: " + cidrUtils.getCIDR());
                     allowed.add(cidrUtils);
                 } catch (UnknownHostException ex) {
                     throw new UnknownHostException(ex.getMessage()
@@ -336,9 +331,7 @@ public class AppConfigurator {
 
     // the return of an empty list means all IPs allowed
     public List<CIDRUtils> getAllowedIPs(String epName) {
-//        System.out.println("**************************** endpt: " + epName);
         if (endpoints.get(epName) == null) {
-//            System.out.println("**************************** no map entry for CIDRList for epName: " + epName);
             return new ArrayList<CIDRUtils>();
         } else {
             return (List<CIDRUtils>) endpoints.get(epName).cfgMap.get(EP_CFGS.allowedIPs);
@@ -829,8 +822,6 @@ public class AppConfigurator {
                 } else if(currentVal instanceof URL) {
                     try {
                         URL trial = new URL(newVal);
-                        System.out.println("------------------------000--- newVal: " + newVal);
-                        System.out.println("------------------------000--- trial: " + trial);
                         cfgs.put(key, trial);
                     } catch (Exception ex) {
                         throw new Exception("Error for URL paramater: " + key

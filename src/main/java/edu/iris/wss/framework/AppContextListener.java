@@ -43,9 +43,6 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent arg0) {
-//        System.out.println("**************************** AppContextListener"
-//              + " contextInitialized, arg0: " + arg0);
-
         synchronized(this) {
             ServletContext sc = arg0.getServletContext();
             String configBase = Util.getWssFileNameBase(sc.getContextPath());
@@ -69,8 +66,6 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent arg0) {
-//        System.out.println("**************************** AppContextListener "
-//              + " contextDestroyedc, arg0: " + arg0);
         logger.info("contextDestroyed called, context: "
               + arg0.getServletContext().getContextPath());
         if (WssSingleton.webLogService != null) {
