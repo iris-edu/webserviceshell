@@ -4,9 +4,13 @@ target/
 # osx noise
 .DS_Store
 
+# vi
+**/*.*.swp
+
 # netbeans noise
 nbactions.xml
 nb-configuration.xml
+/nbproject/
 
 #eclipse noise
 .settings
@@ -17,7 +21,13 @@ nb-configuration.xml
 # subversion
 .svn
 
-/nbproject/
-
 # visual studio code
 .vscode
+
+# python
+**/*.pyc
+
+# others
+**/*.tar
+**/*.log
+**/*.war
