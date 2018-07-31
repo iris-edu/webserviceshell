@@ -16,8 +16,7 @@ of an HTTP server.
 
 The WSS can also be configured to use a Java class rather than a command
 line program to fulfill the data retrieval. More details about using
-Java classes with the WSS can be found in the [release-specific
-documentation](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/)
+Java classes with the WSS can be found in the [documentation](./)
 
 Additionally, more information about FDSN web services can be found
 here: [FDSN WS

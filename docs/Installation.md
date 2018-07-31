@@ -5,7 +5,7 @@ Shell instances to run FDSN web services. Each service requires that a
 "handler" is available to process the request, development of such a
 handler is not covered here. More information about handlers can be
 found here: [**WSS
-handlers**](HandlerRequirements).
+handlers**](HandlerRequirements.md).
 
 These instructions are for Unix-like operating systems with a working
 Java installation (1.8 is the current version). These instructions use

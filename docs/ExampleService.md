@@ -21,16 +21,17 @@ WSS service given the following:
 
 Step | Action
 ---- | -----
-if not installed, install Apache Tomcat | see [Quick installation instructions](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/Web_Service_Shell#FDSN-Services-Using-the-Web-Service-Shell)
+if not installed, install Apache Tomcat | see [Installation instructions](Installation.md)
+
 create WSS configuration folder: **/WSSHOME/config** | for this example: <br />```mkdir /WSSHOME/config```
-configure folder location | Add to, or edit file **/WSSHOME/tomcat/bin/setenv.sh** with this content: <br />``` JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'" ``` <br />as described in [Quick Installation Instructions](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/Web_Service_Shell#FDSN-Services-Using-the-Web-Service-Shell)
+configure folder location | Add to, or edit file **/WSSHOME/tomcat/bin/setenv.sh** with this content: <br />``` JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'" ``` <br />as described in [Installation Instructions](Installation.md)
 
 ### Configure WSS
 Step | Action
 ----- | -----
 choose service name | for this example: **mysrv/sample/1**
 deploy script | - The script must be executable <br /> - for this example, copy sample.py to **/WSSHOME/config/sample.py**
-create WSS config files | - copy [Parameter File Examples](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/WSS_22_Documentation#Parameter-File-Examples) to create, respectively: **mysrv.sample.1-service.cfg**, **mysrv.sample.1-param.cfg**, and **mysrv.sample.1-log4j.properties** <br /> - for naming rules see [Conventions and Configuration Concepts](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/WSS_22_Documentation#Conventions-and-Configuration-Concepts) <br /> - for parameter definitions, see [WSS Configuration](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/WSS_22_Documentation#WSS-Configuration)
+create WSS config files | - copy [Parameter File Examples](WebServiceShell-2.4.x.md#paramcfg) to create, respectively: **mysrv.sample.1-service.cfg**, **mysrv.sample.1-param.cfg**, and **mysrv.sample.1-log4j.properties** <br /> - for naming rules see [WSS Operation and Configuration](WebServiceShell-2.4.x.md#wss-operation-and-configuration) <br /> - for parameter definitions, see [WSS Configuration Reference](WebServiceShell-2.4.x.md#wss-configuration-reference)
 edit WSS config file **mysrv.sample.1-service.cfg** | - set parameter **appName**: appName=mysrv-sample-1 <br /> - set parameter **version**: version=1.0.0 <br /> - set parameter **query.handlerProgram**: query.handlerProgram=/WSSHOME/config/sample.py <br /> - set parameter **query.formatTypes**: query.formatTypes = \ <br /> xml: application/xml, \ <br /> text: text/plain, \ <br /> zip: application/zip <br /> - set parameter **query.formatDispositions**: query.formatDispositions= \ <br /> zip: attachment; filename="data.zip"
 edit WSS config file **mysrv.sample.1-param.cfg** | - replace line **query.type=TEXT** with query.num\_values=NUMBER <br /> - remove lines with **query.minlongitude, query.maxlongitude, query.minlatitude,** and **query.maxlatitude** <br /> - add lines: query.aliases = \ <br /> num\_values: num
 edit WSS config file **mysrv.sample.1-log4j.properties** | - set parameter **log4j.appender.ShellAppender.File**: log4j.appender.ShellAppender.File=\${catalina.home}/logs/sample.log <br /> - set parameter **log4j.appender.UsageAppender.File**: log4j.appender.UsageAppender.File=\${catalina.home}/logs/sample\_usage.log

@@ -152,8 +152,7 @@ property **wssConfigDir**.
     **asadmin create-system-properties
     wssConfigDir=$(pwd)/glassfish/domains/domain1/wss_config**
 
-For more details see -
-https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/Quick_installation_instructions
+For more details see - Installation.md
 
 #### Service and Configuration File Setup
 
