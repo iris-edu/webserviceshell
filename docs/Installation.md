@@ -1,5 +1,4 @@
-Quick Installation Instructions
-===============================
+# Installation Instructions
 
 These instructions cover the installation of Tomcat and the Web Service
 Shell instances to run FDSN web services. Each service requires that a
@@ -46,12 +45,12 @@ untarred/unpacked.
 
 6. Create and edit **\_WSSHOME\_/tomcat/bin/setenv.sh** to contain the
 following line.
-``` bash
-    JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'"
-```
-These Java options
-  - increases maximum memory to 512 MB (adjust as needed) and
-  - defines the folder "'/WSSHOME/config" as the location for WSS
+    ``` bash
+        JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'"
+    ```
+    These Java options
+        - increases maximum memory to 512 MB (adjust as needed) and
+        - defines the folder "'/WSSHOME/config" as the location for WSS
 configuration files.
 
 
@@ -107,37 +106,41 @@ being inserted in place of '\#'.\
 Download from [**Support files for FDSN
 services**](/projects/webserviceshell/wiki/Support_files_for_FDSN_services)
 and copy to the **/WSSHOME/config** directory the files:
-  - Service configuration file (e.g. fdsnws.dataselect.1-service.cfg)
-  - Client interface parameter definition file (e.g.
+    - Service configuration file (e.g. fdsnws.dataselect.1-service.cfg)
+    - Client interface parameter definition file (e.g.
 fdsnws.dataselect.1-param.cfg)
-  - Logging configuration (e.g. fdsnws.dataselect.1-log4j.properties)
+    - Logging configuration (e.g. fdsnws.dataselect.1-log4j.properties)
 
 
 12. Edit the Service configuration file (e.g.
 fdsnws.dataselect.1-service.cfg), in particular:
-  1. Change the **rootServiceDoc** to a URL that contains HTML that
+    1. Change the **rootServiceDoc** to a URL that contains HTML that
 should be returned when the root page of the service is accessed.
-  2. Change the **loggingMethod** to LOG4J unless JMS or RabbitMQ is to
+    2. Change the **loggingMethod** to LOG4J unless JMS or RabbitMQ is to
 be used for usage logging.
-  3. Set endpoint-specific **handlerProgram** to the location of a
+    3. Set endpoint-specific **handlerProgram** to the location of a
 program that will handle requests and return data in expected format.
-  4. Set endpoint-specific **handlerWorkingDirectory** to a directory
+    4. Set endpoint-specific **handlerWorkingDirectory** to a directory
 from which to run the handler. This can be a directory such as `/tmp`
-  5. Verify that the global parameters **appName** and **version** match
+    5. Verify that the global parameters **appName** and **version** match
 the intended name and version
-  6. Check remaining options, the defaults contained in the examples
+    6. Check remaining options, the defaults contained in the examples
 should be fine in most cases.
 
 
 13. Edit the Logging configuration file (e.g.
 fdsnws.dataselect.1-log4j.properties) and set the desired full path and
 filename for the respective log files. Set the properties
-```
+    ```
     log4j.appender.ShellAppender.File=/WSSHOME/dataselect.log
     log4j.appender.UsageAppender.File=/WSSHOME/dataselect_usage.log
-```
-An alternative location for service logs is to keep them with Tomcat
+    ```
+    An alternative location for service logs is to keep them with Tomcat
 logs i.e. *${catalina.home}/logs/"*
+    ```
+    log4j.appender.ShellAppender.File=/${catalina.home}/logs/dataselect.log
+    log4j.appender.UsageAppender.File=/${catalina.home}/logs/dataselect_usage.log
+    ```
 
 14. Start Tomcat:
 ``` bash

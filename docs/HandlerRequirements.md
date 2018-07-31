@@ -36,7 +36,7 @@ handler, and return a respective error message to the client
 
 2. Phase 2
 
-  Once a handler starts writing data to stdout, the Tomcat framework
+ Once a handler starts writing data to stdout, the Tomcat framework
 starts streaming the data to a client.
   - If the handler exits, log messages are written out and the process
 ends.
@@ -44,12 +44,12 @@ ends.
 that exceeds the timeout period, the handler process is killed, log
 messages are written out, and WSS attempts to write this 256 byte error
 string to the client:
-
+```
     000000##ERROR#######ERROR##STREAMERROR##STREAMERROR#STREAMERROR\n
     This data stream was interrupted and is likely incomplete.     \n
     #STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n
     #STREAMERROR##STREAMERROR##STREAMERROR##STREAMERROR#STREAMERROR\n
-
+```
   Because the HTTP protocol does not allow a return code to the client at
 this point (it had to be sent prior to data streaming) it is suggested
 that clients check for this error string to help detect interrupted data
@@ -95,13 +95,13 @@ WSS translates the following exit status codes from a handler into the
 respective HTTP Status for the WSS client. Additionally for errors, a
 handler should write a short, user oriented error message to `stderr`.
 
-  Exit Status | HTTP STATUS | Description
-  ------------- | ------------- | ---------------------------------------------------------------
-  0 | 200 | Successfully processed request, data returned via stdout
-  1 | 500 | General error. An error description may be provided on stderr
-  2 | 204 | No data. Request was successful but results in no data
-  3 | 400 | Invalid or unsupported argument/parameter
-  4 | 413 | Too much data requested
+Exit Status | HTTP STATUS | Description
+---- | ---- |----
+0 | 200 | Successfully processed request, data returned via stdout
+1 | 500 | General error. An error description may be provided on stderr
+2 | 204 | No data. Request was successful but results in no data
+3 | 400 | Invalid or unsupported argument/parameter
+4 | 413 | Too much data requested
 
 Note: For exit status code 2, query parameter `nodata` can be used to
 have WSS return a 404 to the WSS client rather than 204.
@@ -139,7 +139,7 @@ WSS will terminate it. If the interruption is upstream from WSS, i.e the
 client appears to disconnect, WSS will attempt to terminate its handler.
 This prevents zombie handler processes.
 
-#### Error Text
+### Error Text
 
 If the handler program writes text to `stderr` during Phase 1 **and** an
 error code is received by the WSS, WSS will include the error text in
@@ -160,13 +160,13 @@ by using the `&format=formatType` query parameter. The possible options
 should be defined with the `formatTypes` parameter in the `service.cfg`
 file, a typical list might be:
 
-  formatType |  Media type
-  ------------ | ----------------------------
-  xml         | application/xml
-  mseed       | application/vnd.fdsn.mseed
-  text        | text/plain
-  texttree    | text/plain
-  json        | application/json
+formatType  |  Media type
+---- | ---- |----
+xml         | application/xml
+mseed       | application/vnd.fdsn.mseed
+text        | text/plain
+texttree    | text/plain
+json        | application/json
 
 By default without configuration, WSS defines one formatType, "binary"
 corresponding to media type "application/octet-stream".
@@ -188,13 +188,13 @@ e.g. if a handler program wished to perform its own 'per request'
 logging, this information would be vital. Below is a table with the
 environment variables.
 
-  Variable name | Value
-  ----------------------- | -----------------------------------------------------------------------------------------
-  REQUESTURL              | The URL of the incoming request
-  USERAGENT               | User agent string supplied in the HTTP header for this request
-  IPADDRESS               | IP Address of the request's client
-  APPNAME                 | Application name supplied via the `appName` parameter from the service configuration
-  VERSION                 | Application version supplied via the `version` parameter from the service configuration
-  CLIENTNAME              | not currently in use
-  HOSTNAME                | host name of WSS server
-  AUTHENTICATEDUSERNAME   | Authenticated user name, only present if a user was authenticated
+Variable name         | Value
+---- | ---- |----
+REQUESTURL            | The URL of the incoming request
+USERAGENT             | User agent string supplied in the HTTP header for this request
+IPADDRESS             | IP Address of the request's client
+APPNAME               | Application name supplied via the `appName` parameter from the service configuration
+VERSION               | Application version supplied via the `version` parameter from the service configuration
+CLIENTNAME            | not currently in use
+HOSTNAME              | host name of WSS server
+AUTHENTICATEDUSERNAME | Authenticated user name, only present if a user was authenticated

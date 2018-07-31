@@ -413,8 +413,8 @@ list that relates a defined parameter to one or more alternate parameter
 names. For example, to define mnlg and minlong as short names for
 minlongitude; and mxlong for maxlongitude, add the following:
 
-**query.aliases = \**<br />
-**minlongitude: (mnlg, minlong), \**<br />
+**query.aliases = \ **<br />
+**minlongitude: (mnlg, minlong), **\ <br />
 **maxlongitude: mxlong**
 
 #### relaxedValidation - Adding Operational Flexibility when calling Handlers
@@ -570,7 +570,7 @@ HOSTNAME - host name of WSS server<br />
 If a user is authenticated, then this value is included:
 AUTHENTICATEDUSERNAME - authenticated user name
 
-### Changes from version 2.x previous to 2.4
+### Changes from version 2.0 to 2.4
 
 WSS has changes to:
 
@@ -602,17 +602,17 @@ The general steps needed to change a Web Service Shell 1.x configuration
 to 2.x are:
 
 1.  service.cfg file
-  - change web service part of config file name as needed
-  - create global parameters
-  - create endpoint for "query"
-  - create endpoints for "application.wadl" or "v2/swagger" as
+    - change web service part of config file name as needed
+    - create global parameters
+    - create endpoint for "query"
+    - create endpoints for "application.wadl" or "v2/swagger" as
         needed and set respective proxyURL
 2.  param.cfg file
-  - change web service part of config file name as needed
-  - change parameter names by prepending endpoint name
+    - change web service part of config file name as needed
+    - change parameter names by prepending endpoint name
 3.  log4j.properties
-  - change web service part of config file name as needed
-  - change output log file names as needed
+    - change web service part of config file name as needed
+    - change output log file names as needed
 
 #### Changes for built in endpoints
 
@@ -637,7 +637,7 @@ version               |     same as 1.x    |
 corsEnabled           |     same as 1.x    |
 rootServiceDoc        |     same as 1.x    |
 loggingMethod         |     same as 1.x    | with addition of RABBIT_ASYNC option
--                     |   loggingConfig    | new with 2.1, only applies to loggingMethod RABBIT_ASYNC
+--                     |   loggingConfig    | new with 2.1, only applies to loggingMethod RABBIT_ASYNC
 sigkillDelay          |     same as 1.x    |
 singletonClassName    |     same as 1.x    |
 rootServicePath       |     removed        | not needed
@@ -656,15 +656,15 @@ handlerTimeout           |  same as 1.x        |
 handlerWorkingDirectory  |  same as 1.x        |  
 usageLog                 |  same as 1.x        |  
 outputTypes              |  formatTypes        |  parameter renamed
--                        | mediaParameter      | new parameter
--                        | formatDispositions  | new parameter
--                        | addHeaders          | new parameter
+--                       | mediaParameter      | new parameter
+--                       | formatDispositions  | new parameter
+--                       | addHeaders          | new parameter
 postEnabled              | same as 1.x         |  
--                        | logMiniseedExtents  | new parameter - extra processing and usage logging for Miniseed channel information is **no longer** performed by CmdProcessor unless this parameter is added
+none                     | logMiniseedExtents  | new parameter - extra processing and usage logging for Miniseed channel information is **no longer** performed by CmdProcessor unless this parameter is added
 use404For204             | same as 1.x         |  
--                        | relaxedValidation   | new parameter
--                        | allowedIPs          | new parameter
--                        | proxyURL            | new parameter, must be used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource
+none                     | relaxedValidation   | new parameter
+na                       | allowedIPs          | new parameter
+na                       | proxyURL            | new parameter, must be used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource
 
 #### param.cfg configuration changes
 

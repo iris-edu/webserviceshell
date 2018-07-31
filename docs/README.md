@@ -1,6 +1,12 @@
-# WebServiceShell
+# WebServiceShell (WSS)
 
-### WebServiceShell (WSS)
+### Introduction
+
+The Web Service Shell (WSS) is a web service that can be configured via
+simple properties files to utilize external resources (either
+command-line programs or Java classes) to fulfill web service requests.
+
+### Goals
 
 WSS was written with the goal of removing the barriers to creating a
 modern web service (under certain constraints) for delivering data. It allows
@@ -16,5 +22,4 @@ of an HTTP server.
 
 The WSS can also be configured to use a Java class rather than a command
 line program to fulfill the data retrieval. More details about using
-Java classes with the WSS can be found in the [release-specific
-documentation](https://seiscode.iris.washington.edu/projects/webserviceshell/wiki/)
+Java classes with the WSS can be found in the [documentation](./)
