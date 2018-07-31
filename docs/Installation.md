@@ -5,7 +5,7 @@ Shell instances to run FDSN web services. Each service requires that a
 "handler" is available to process the request, development of such a
 handler is not covered here. More information about handlers can be
 found here: [**WSS
-handlers**](/projects/webserviceshell/wiki/Working_with_Handlers).
+handlers**](HandlerRequirements).
 
 These instructions are for Unix-like operating systems with a working
 Java installation (1.8 is the current version). These instructions use
@@ -31,44 +31,44 @@ See the [WSS Downloads](/projects/webserviceshell/files) page for the
 latest version.
 
 4. Untar/unpack Tomcat in installation directory:
-``` bash
+    ``` bash
     tar -xzf apache-tomcat-8.0.33.tar.gz
-```
-It should not be necessary to follow any further installation
-instructions for Tomcat, it should be able to run from where is was
-untarred/unpacked.
+    ```
+    It should not be necessary to follow any further installation
+    instructions for Tomcat, it should be able to run from where is was
+    untarred/unpacked.
 
 5. Create a link for the version-ed Tomcat directory:
-``` bash
+    ``` bash
     ln -s apache-tomcat-8.0.33 tomcat
-```
+    ```
 
 6. Create and edit **\_WSSHOME\_/tomcat/bin/setenv.sh** to contain the
 following line.
     ``` bash
-        JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'"
+    JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'"
     ```
-    These Java options
-        - increases maximum memory to 512 MB (adjust as needed) and
-        - defines the folder "'/WSSHOME/config" as the location for WSS
-configuration files.
+    These JAVA_OPTS
+      - increases maximum memory to 512 MB (adjust as needed) and
+      - defines the folder "'/WSSHOME/config" as the location for WSS
+      configuration files.
 
 
 7. Add an admin user to the Tomcat password file for the manager
 application. Edit **/WSSHOME\_/tomcat/conf/tomcat-users.xml** and add
 the <user> line within the <tomcat-users> tag:
-``` XML
+    ``` XML
     <tomcat-users>
       ...
       <user username="admin" password="password" roles="tomcat,manager-gui"/>
     </tomcat-users>
-```
+    ```
 
 8. Configure the manager webapp (included with Tomcat) to use the
 password file for authentication. Edit
 **\_WSSHOME\_/tomcat/webapps/manager/META-INF/context.xml** and add the
 <Realm> section below within the <Context> tag:
-``` XML
+    ``` XML
     <Context>
       ...
       <Realm className="org.apache.catalina.realm.LockOutRealm">
@@ -80,7 +80,7 @@ password file for authentication. Edit
                 resourceName="UserDatabase"/>
       </Realm>
     </Context>
-```
+   ```
 
 9. Copy, with a rename, the downloaded Web Service Shell WAR file
 (version 2.2.2 in this example) into Tomcat deployment directory (e.g.,
@@ -88,23 +88,22 @@ password file for authentication. Edit
 in this case, the service name is to be fdsnws/dataselect/1, so,
 inserting '\#' where '/' is desired in the service name, the new war
 file name is "fdsnws\#dataselect\#1.war":
-``` bash
+    ``` bash
     cp webserviceshell_2.2.2.war WSSHOME/tomcat/webapps/fdsnws#dataselect#1.war
-```
-In this example the web application will be deployed at
-*http://hostname:port/fdsnws/dataselect/1/*.
+    ```
+    In this example the web application will be deployed at *http://hostname:port/fdsnws/dataselect/1/*
 
 10. Create a directory to store service configuration files:
-``` bash
+    ``` bash
     mkdir WSSHOME/config
-```
+    ```
 
 11. Download appropriate template WSS configuration files for each
 service you plan to implement. Note: the leading part of the
 configuration file name must match the name of the war file with "."
 being inserted in place of '\#'.\
 Download from [**Support files for FDSN
-services**](/projects/webserviceshell/wiki/Support_files_for_FDSN_services)
+services**](WebServiceShell-2.4.x.md#servicecfg)
 and copy to the **/WSSHOME/config** directory the files:
     - Service configuration file (e.g. fdsnws.dataselect.1-service.cfg)
     - Client interface parameter definition file (e.g.
@@ -143,9 +142,9 @@ logs i.e. *${catalina.home}/logs/"*
     ```
 
 14. Start Tomcat:
-``` bash
+    ``` bash
     $ WSSHOME/tomcat/bin/startup.sh
-```
+    ```
 
 15. Verify Tomcat is running by browsing
 [**http://localhost:8080/**](http://localhost:8080/) (adjust host in URL
@@ -156,14 +155,14 @@ as necessary).
 (adjust host and service path in URL as necessary).
 
 17. To stop Tomcat you may execute:
-``` bash
+    ``` bash
     $ WSSHOME/tomcat/bin/shutdown.sh
-```
-At this point the Tomcat container and FDSN web service applications are
-installed and running, if you did not change the default Tomcat port
-they are accessible on port 8080.
+    ```
+    At this point the Tomcat container and FDSN web service applications are
+    installed and running, if you did not change the default Tomcat port
+    they are accessible on port 8080.
 
-Further configuration and considerations:
+#### Further configuration and considerations:
 - Setup an HTML "root" page as documentation to serve from the root of the web
  service, possibly directing users to further documentation. A template root page
  for the FDSN dataselect service is available
@@ -181,11 +180,10 @@ Further configuration and considerations:
  also allows more flexible configuration options such as having multiple Tomcats
  installed but reachable via the same port (80).
 
-  In Apache HTTPD, the
- following are examples of ProxyPass directives for an httpd server on the
- same host as the Tomcat servers (both forward and reverse proxy options are
- needed):
-```
+    In Apache HTTPD, the following are examples of ProxyPass directives for an
+    httpd server on the same host as the Tomcat servers (both forward and reverse
+    proxy options are needed):
+    ```
     ProxyPass               /fdsnws/dataselect/1 http://localhost:8080/fdsnws/dataselect/1
     ProxyPassReverse        /fdsnws/dataselect/1 http://localhost:8080/fdsnws/dataselect/1
-```
+    ```
