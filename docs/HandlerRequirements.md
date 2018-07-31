@@ -161,7 +161,7 @@ should be defined with the `formatTypes` parameter in the `service.cfg`
 file, a typical list might be:
 
 formatType  |  Media type
----- | ---- |----
+---- | ----
 xml         | application/xml
 mseed       | application/vnd.fdsn.mseed
 text        | text/plain
@@ -189,7 +189,7 @@ logging, this information would be vital. Below is a table with the
 environment variables.
 
 Variable Name         | Value
----- | ---- | ----
+---- | ----
 REQUESTURL            | The URL of the incoming request
 USERAGENT             | User agent string supplied in the HTTP header for this request
 IPADDRESS             | IP Address of the request's client
