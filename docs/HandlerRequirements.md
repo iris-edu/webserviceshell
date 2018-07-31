@@ -188,8 +188,8 @@ e.g. if a handler program wished to perform its own 'per request'
 logging, this information would be vital. Below is a table with the
 environment variables.
 
-Variable name         | Value
----- | ---- |----
+Variable Name         | Value
+---- | ---- | ----
 REQUESTURL            | The URL of the incoming request
 USERAGENT             | User agent string supplied in the HTTP header for this request
 IPADDRESS             | IP Address of the request's client
