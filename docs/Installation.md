@@ -25,10 +25,9 @@ See the [Apache Tomcat
 Downloads](http://tomcat.apache.org/download-80.cgi) page for the latest
 version, the version 8.0.33 is used for this document.
 
-3. Download latest Web Service Shell WAR file
-(webserviceshell\_VERSION.war) and save in *WSSHOME*:\
-See the [WSS Downloads](/projects/webserviceshell/files) page for the
-latest version.
+3. Download latest WebServiceShell WAR file (webserviceshell_VERSION.war)
+and save in *WSSHOME*. See the [WSS Downloads](/projects/webserviceshell/files)
+page for the latest version.
 
 4. Untar/unpack Tomcat in installation directory:
     ``` bash
@@ -43,7 +42,7 @@ latest version.
     ln -s apache-tomcat-8.0.33 tomcat
     ```
 
-6. Create and edit **\_WSSHOME\_/tomcat/bin/setenv.sh** to contain the
+6. Create and edit **WSSHOME/tomcat/bin/setenv.sh** to contain the
 following line.
     ``` bash
     JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'"
@@ -55,7 +54,7 @@ following line.
 
 
 7. Add an admin user to the Tomcat password file for the manager
-application. Edit **/WSSHOME\_/tomcat/conf/tomcat-users.xml** and add
+application. Edit **WSSHOME/tomcat/conf/tomcat-users.xml** and add
 the <user> line within the <tomcat-users> tag:
     ``` XML
     <tomcat-users>
@@ -66,7 +65,7 @@ the <user> line within the <tomcat-users> tag:
 
 8. Configure the manager webapp (included with Tomcat) to use the
 password file for authentication. Edit
-**\_WSSHOME\_/tomcat/webapps/manager/META-INF/context.xml** and add the
+**WSSHOME/tomcat/webapps/manager/META-INF/context.xml** and add the
 <Realm> section below within the <Context> tag:
     ``` XML
     <Context>
