@@ -6,6 +6,7 @@ WSS service given the following:
 
 - A command-line script called **sample.py** - see listing below.
 - That Tomcat is installed.
+- A folder is available for storing files, in this example the fo/der is called /WSSHOME
 
 #### This procedure's objective is to:
 
@@ -22,27 +23,25 @@ WSS service given the following:
 Step | Action
 ---- | -----
 if not installed, install Apache Tomcat | see [Installation instructions](Installation.md)
-
 create WSS configuration folder: **/WSSHOME/config** | for this example: <br />```mkdir /WSSHOME/config```
-configure folder location | Add to, or edit file **/WSSHOME/tomcat/bin/setenv.sh** with this content: <br />``` JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'" ``` <br />as described in [Installation Instructions](Installation.md)
+specify the configure folder path | Add to, or edit file **/WSSHOME/tomcat/bin/setenv.sh** with this content: <br />``` JAVA_OPTS="-Xmx512m -DwssConfigDir='/WSSHOME/config'" ``` <br />as described in [Installation Instructions](Installation.md)
 
 ### Configure WSS
 Step | Action
 ----- | -----
 choose service name | for this example: **mysrv/sample/1**
 deploy script | - The script must be executable <br /> - for this example, copy sample.py to **/WSSHOME/config/sample.py**
-create WSS config files | - copy [Parameter File Examples](WebServiceShell-2.4.x.md#paramcfg) to create, respectively: **mysrv.sample.1-service.cfg**, **mysrv.sample.1-param.cfg**, and **mysrv.sample.1-log4j.properties** <br /> - for naming rules see [WSS Operation and Configuration](WebServiceShell-2.4.x.md#wss-operation-and-configuration) <br /> - for parameter definitions, see [WSS Configuration Reference](WebServiceShell-2.4.x.md#wss-configuration-reference)
-edit WSS config file **mysrv.sample.1-service.cfg** | - set parameter **appName**: appName=mysrv-sample-1 <br /> - set parameter **version**: version=1.0.0 <br /> - set parameter **query.handlerProgram**: query.handlerProgram=/WSSHOME/config/sample.py <br /> - set parameter **query.formatTypes**: query.formatTypes = \ <br /> xml: application/xml, \ <br /> text: text/plain, \ <br /> zip: application/zip <br /> - set parameter **query.formatDispositions**: query.formatDispositions= \ <br /> zip: attachment; filename="data.zip"
-edit WSS config file **mysrv.sample.1-param.cfg** | - replace line **query.type=TEXT** with query.num\_values=NUMBER <br /> - remove lines with **query.minlongitude, query.maxlongitude, query.minlatitude,** and **query.maxlatitude** <br /> - add lines: query.aliases = \ <br /> num\_values: num
-edit WSS config file **mysrv.sample.1-log4j.properties** | - set parameter **log4j.appender.ShellAppender.File**: log4j.appender.ShellAppender.File=\${catalina.home}/logs/sample.log <br /> - set parameter **log4j.appender.UsageAppender.File**: log4j.appender.UsageAppender.File=\${catalina.home}/logs/sample\_usage.log
-deploy WSS config files | copy configuration files into folder **/WSSHOME/config**
-copy and name WSS war file | - download the WSS war file from [Web Service Shell files](https://seiscode.iris.washington.edu/projects/webserviceshell/files) <br /> - copy the WSS war to a war file with the desired service name i.e. **mysrv\#sample\#1.war** <br /> ```cp webserviceshell_2.2.2.war/WSSHOME/tomcat/mysrv#sample#1.war```
+deploy WSS config files | - copy [WSS cfg Files](WebServiceShell-2.4.x.md#paramcfg) to folder **/WSSHOME/config** -- with the names, respectively: **mysrv.sample.1-service.cfg**, **mysrv.sample.1-param.cfg**, and **mysrv.sample.1-log4j.properties** <br /> - for naming rules see [WSS Operation and Configuration](WebServiceShell-2.4.x.md#wss-operation-and-configuration) <br /> - for parameter definitions, see [WSS Configuration Reference](WebServiceShell-2.4.x.md#wss-configuration-reference)
+edit file **mysrv.sample.1-service.cfg** | - set parameter **appName**: appName=mysrv-sample-1 <br /> - set parameter **version**: version=1.0.0 <br /> - set parameter **query.handlerProgram**: query.handlerProgram=/WSSHOME/config/sample.py <br /> - set parameter **query.formatTypes**: query.formatTypes = \ <br /> xml: application/xml, \ <br /> text: text/plain, \ <br /> zip: application/zip <br /> - set parameter **query.formatDispositions**: query.formatDispositions= \ <br /> zip: attachment; filename="data.zip"
+edit file **mysrv.sample.1-param.cfg** | - replace line **query.type=TEXT** with query.num\_values=NUMBER <br /> - remove lines with **query.minlongitude, query.maxlongitude, query.minlatitude,** and **query.maxlatitude** <br /> - add lines: query.aliases = \ <br /> num\_values: num
+edit file **mysrv.sample.1-log4j.properties** | - set parameter **log4j.appender.ShellAppender.File**: log4j.appender.ShellAppender.File=${catalina.home}/logs/sample.log <br /> - set parameter **log4j.appender.UsageAppender.File**: log4j.appender.UsageAppender.File=${catalina.home}/logs/sample\_usage.log
+download and rename WSS war file | - download the WSS war file from [Web Service Shell files](https://seiscode.iris.washington.edu/projects/webserviceshell/files) <br /> - copy the WSS war to the desired service name i.e. **mysrv\#sample\#1.war** <br /> ```cp webserviceshell_2.2.2.war /WSSHOME/tomcat/mysrv#sample#1.war```
 
 ### Startup and deploy WSS
 Step | Action
 ----- | -----
-start tomcat | run <br /> ```/WSSHOME/tomcat/bin/startup.sh``` <br /> then check that tomcat started, <br /> ```tail -f /WSSHOME/tomcat/logs/catalina.out```
-deploy WSS for **mysrv/sample/1** | ```mv /WSSHOME/tomcat/mysrv#sample#1.war /WSSHOME/tomcat/webapps``` <br /> note that catalina.out shows that the service started|\
+start tomcat | run <br /> ```/WSSHOME/tomcat/bin/startup.sh``` <br /> then check that tomcat started, <br /> ```tail -f tomcat/logs/catalina.out```
+deploy WSS for **mysrv/sample/1** | ```mv /WSSHOME/tomcat/mysrv#sample#1.war tomcat/webapps``` <br /> note that catalina.out shows that the service started|\
 check operation with browser or curl | example URLs for testing, <br />  # check for plain text output <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=text** <br /> #check for error handling <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=-25&format=text** <br /> check for xml output <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=xml** <br /> check for zip output of multiple files <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=zip** <br /> check for "num" alias <br /> **http://localhost:8080/mysrv/sample/1/query?num=25&format=zip**
 
 ### Handler File

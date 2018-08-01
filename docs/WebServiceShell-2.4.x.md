@@ -1,8 +1,6 @@
-# WSS 2.4 Documentation
+# WebServiceShell (WSS0) 2.4.x Documentation
 
-### Webserviceshell 2.4 User Documentation
-
-24 Jul 2018
+01 Aug 2018
 
 ### Introduction
 
@@ -20,9 +18,20 @@ command-line programs or Java classes) to fulfill web service requests.
 - handle, via the servlet container, HTTP authentication
 
 #### WSS 2.x change overview
-see the [Issues page](https://seiscode.iris.washington.edu/projects/webserviceshell/issues) for more details:
+Prior to the move to github, see the [Issues page](https://seiscode.iris.washington.edu/projects/webserviceshell/issues) for more details:
 
-- Version 2.x
+- Version 2.4.7
+  - prevent deadlock when monitor tries to stop process blocked on write
+  - add new appinit.cfg file for custom properties for station singleton
+  - remove duplicate error messages for CmdProcessor
+  - changed sendError timing to prevent conflict with Jersey content-type
+  - change post read to skip lines starting with #
+  - changed NO_CONTENT log message to INFO level
+  - changed start, end time checks to allow additional datetime formats
+  - add support for multipart form for validator
+  - adjusted not content message to use same logic as not found
+  - created default user-agent value when client does not set a value
+- Version 2.4
   - enable queries to multiple endpoints
   - add more flexibility for service naming convention
   - add selected new configuration options, standardize naming convention
@@ -141,6 +150,11 @@ endpoint is "query".
 
 ### WSS Configuration Details
 
+Properties controlling the behavior of WSS are specified in a set of files
+whose name end in service.cfg, param.cfg, or log4j.properties. Optionally,
+if WSS is extended with Java code, an -appinit.cfg may be included if a
+singleton Java class is specified in singletonClassName.
+
 #### Configuring configuration files location
 
 WSS configuration files must be contained in a folder defined by system
@@ -152,7 +166,7 @@ property **wssConfigDir**.
     **asadmin create-system-properties
     wssConfigDir=$(pwd)/glassfish/domains/domain1/wss_config**
 
-For more details see - Installation.md
+For more details see the [installation guide](Installation.md)
 
 #### Service and Configuration File Setup
 
@@ -161,51 +175,44 @@ configuration files. As the container starts the service, first the file
 names are determined, then WSS opens each file and acquires the
 configuration information.
 
-- For **Tomcat**, these file names are derived from the deployed .war
-    file name.
-  - Tomcat create a context name, then WSS uses the context name to
-create a filename
-  - Tomcat creates a context name by replacing any hash character, i.e.
-    in the war file name with a slash character ‘/’, the context name
-    also determining the **service** part of the URL.
-  - WSS uses the context name and replaces any slash character ‘/’ in the
-file name with a dot character ‘.’ then generates a complete file name
-by appending -service.cfg, -param.cfg, or -log4j.properties. For
-example, a war file with name **fdsnws#event#1.war**, determines:
-  - **fdsnws/event/1** - for a **service** name
-  - **fdsnws.event.1-service.cfg** - for the name of file which contains
-operational and endpoint parameters
-  - **fdsnws.event.1-param.cfg** - for the name of file which contains
-client interface parameters for each defined endpoints
-  - **fdsnws.event.1-log4j.properties** - for the name of file which
-contains log4j information
-- For **Glassfish**, the same pattern applies, the context name may be
+For **Tomcat**, these file names are derived from the deployed .war file name.
+  - Tomcat creates a **context name** from the war file name when the war file is loaded.
+    - A context name is created by replacing any hash character
+    with a slash ('/') character
+    - **The context name also determines the *service* part of the URL.**
+  - **WSS uses the context name** and replaces any slash (‘/’) character with a
+   dot (‘.’) character
+    - for example, given a war file name of **fdsnws#event#1.war**
+    - the service part is **fdsnws/event/1**
+    - expected cfg files names are **fdsnws.event.1-service.cfg,
+    fdsnws.event.1-param.cfg etc.**
+
+For **Glassfish**, the same pattern applies, however, the context name must be
     set with an administrative command,
-  - something like **asadmin deploy --contextroot fdsnws/event/1
+  - an example deploy command: **asadmin deploy --contextroot fdsnws/event/1
 /path/to/webserviceshell-2.4.war**
 
 **Note**: For the initial deployment of any service, the respective log
 files (as defined in the log4j.properties file) should be reviewed to
-see that there are any file protection or location problems, and if all
-of the parameters are processes successfully.
+see if there are any file or folder protection problems, and if all
+of the configuration parameters are processed successfully.
 
 #### Endpoint and Client Interface Parameter Setup
 
-Endpoints are defined by setting WSS properties in a **service.cfg**
-file. Client interface parameters are added as needed per endpoint by
-adding properties in a **param.cfg** file. For example, to add an
-endpoint called "query" which will run a script called "getMyData.sh"
-and allow two interface parameters, "minmagnitude" and "format", to be
-specified in a request, do the following:
+Endpoints are defined by setting properties in a **service.cfg**
+file. Once an endpoint is defined, respective, access parameters are
+specified by adding respective properties in a **param.cfg** file.
+For example, to add an endpoint called "query", which will run a script called "getMyData.sh",
+and allow two access parameters called "minmagnitude" and "format", do the following:
 
 add these lines to a respective service.cfg file
 
-**query.endpointClassName=edu.iris.wss.endpoints.CmdProcessor**\
+**query.endpointClassName=edu.iris.wss.endpoints.CmdProcessor**<br />
 **query.handlerProgram="/some/path/getMyData.sh"**
 
-and add these lines to a param.cfg file
+and add these lines to the respective param.cfg file
 
-**query.minmagnitude=NUMBER**\
+**query.minmagnitude=NUMBER**<br />
 **query.format=TEXT**
 
 Note: - endpoint names may include slashes or dots. For example,
@@ -213,10 +220,10 @@ endpoints named "query", "v2/swagger" and "application.wadl" result in
 these URLs, respectively:
 
 http://service.iris.edu/fdsnws/event/1/query<br />
-http://service.iris.edu/fdsnws/event/1/v2/swagger<br />http://service.iris.edu/fdsnws/event/1/application.wadl
+http://service.iris.edu/fdsnws/event/1/v2/swagger<br />
+http://service.iris.edu/fdsnws/event/1/application.wadl
 
-**In summary**:
-
+**In summary:**
 - setup a folder to hold all configuration files
 - In Tomcat, a war file name may be chosen as needed to get a desired
     context name, in Glassfish, the contextroot must be set
@@ -264,13 +271,14 @@ rootServiceDoc     | null           | a URL providing information about the appl
 loggingMethod      | "LOG4J"        | choices are LOG4J or JMS or RABBIT_ASYNC.
 loggingConfig      | null           | a file name or URL referencing an IRIS RabbitMQ configuration file. Only required if loggingMethod is set to RABBIT_ASYNC
 sigkillDelay       | 30             | time in seconds before a handler process is sent a SIGKILL, see section "Command-Line Process Time Limits", time starts after handlerTimeout (see Endpoint Parameter table)
-singletonClassName | null           | optional - A user provided Java class that will be instantiated once when the service starts. A service can use this class to provide capability that may be needed by individual endpoints in the application.
+singletonClassName | null           | optional - A user provided Java class that will be instantiated once when the service starts. A service can use this class to provide capability that may be needed by individual endpoints in the application.<br />Note: An appinit.cfg file
+may be added if needed to specify singleton specific properties.
 
 #### Setting up Endpoints
 
 The flexibility to set multiple arbitrary endpoints within the
-service.cfg file is a primary benefit to the 2.x version of the Web
-Service Shell. An endpoint is defined and configured within the
+service.cfg file is a primary benefit to the 2.x version of the WebServiceShell.
+An endpoint is defined and configured within the
 service.cfg file by prepending a string, which is the endpoint name, in
 front of the properties described in this section.
 
@@ -413,7 +421,7 @@ names. For example, to define mnlg and minlong as short names for
 minlongitude; and mxlong for maxlongitude, add the following:
 
 **query.aliases = \ **<br />
-**minlongitude: (mnlg, minlong), **\ <br />
+**minlongitude: (mnlg, minlong), \** <br />
 **maxlongitude: mxlong**
 
 #### relaxedValidation - Adding Operational Flexibility when calling Handlers
@@ -452,26 +460,21 @@ started.
     # Application|Host Name|Access Date|Client Name|Client IP|Data Length|Processing Time (ms)|Error Type|User Agent|HTTP Status|User|Network|Station|Location|Channel|Quality|Start Time|End Time|Extra|Message Type
 ```
 
-#### Notes on data values
+#### Notes on usage log values
 
-Application - is the value given to property appName in service.cfg
-
-"Host Name" and "Client Name" values are not always the names expected
+**Application** - is the value given to property appName in service.cfg<br />
+**Host Name** and **Client Name** values are not always the names expected
 because they can be affected by network configurations external to WSS,
 such as load balancers, firewalls, etc., also DNS lookup performance may
-be too slow, so IPs are not necessarily resolved to names
-
-"Data Length" is bytes
-
-"Processing Time (ms)" is in milliseconds
-
-"Extra", is for experimental uses, right now, it shows the name of the
-endpoint providing the log entry
-
-"Message Type" is routing information for miniseed related information
-- "usage" is a summary of all the channels of miniseed data for one
+be too slow, so IPs are not necessarily resolved to respective names<br />
+**Data Length** is in bytes<br />
+**Processing Time (ms)** is in milliseconds<br />
+**Extra** is for experimental uses, right now, it shows the name of the
+endpoint providing the log entry<br />
+**Message Type** is message routing information for miniseed related information
+- "usage" type is a summary of all the channels of miniseed data for one
     request
-- "wfstat" is information for one channel of miniseed data
+- "wfstat" type is information for one channel of miniseed data
 
 #### Miniseed information
 
@@ -636,7 +639,7 @@ version               |     same as 1.x    |
 corsEnabled           |     same as 1.x    |
 rootServiceDoc        |     same as 1.x    |
 loggingMethod         |     same as 1.x    | with addition of RABBIT_ASYNC option
---                     |   loggingConfig    | new with 2.1, only applies to loggingMethod RABBIT_ASYNC
+*none*                |   loggingConfig    | new with 2.1, only applies to loggingMethod RABBIT_ASYNC
 sigkillDelay          |     same as 1.x    |
 singletonClassName    |     same as 1.x    |
 rootServicePath       |     removed        | not needed
@@ -655,15 +658,15 @@ handlerTimeout           |  same as 1.x        |
 handlerWorkingDirectory  |  same as 1.x        |  
 usageLog                 |  same as 1.x        |  
 outputTypes              |  formatTypes        |  parameter renamed
---                       | mediaParameter      | new parameter
---                       | formatDispositions  | new parameter
---                       | addHeaders          | new parameter
+*none*                       | mediaParameter      | new parameter
+*none*                   | formatDispositions  | new parameter
+*none*                   | addHeaders          | new parameter
 postEnabled              | same as 1.x         |  
 none                     | logMiniseedExtents  | new parameter - extra processing and usage logging for Miniseed channel information is **no longer** performed by CmdProcessor unless this parameter is added
 use404For204             | same as 1.x         |  
-none                     | relaxedValidation   | new parameter
-na                       | allowedIPs          | new parameter
-na                       | proxyURL            | new parameter, must be used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource
+*none*                   | relaxedValidation   | new parameter
+*none*                   | allowedIPs          | new parameter
+*none*                   | proxyURL            | new parameter, must be used when endpointClassName is set to edu.iris.wss.endpoints.ProxyResource
 
 #### param.cfg configuration changes
 
