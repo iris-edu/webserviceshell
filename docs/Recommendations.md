@@ -14,10 +14,6 @@ authentication (via the servlet container). It also provides usage
 logging, standard logging, and various other mundane functions required
 of an HTTP server.
 
-WSS can also be configured to use a Java class rather than a command
-line program to fulfill the data retrieval. More details about using
-Java classes with the WSS can be found in the [documentation](./)
-
 Additionally, more information about FDSN web services can be found
 here: [FDSN WS
 Specifications](http://www.fdsn.org/webservices/FDSN-WS-Specifications-1.1.pdf)

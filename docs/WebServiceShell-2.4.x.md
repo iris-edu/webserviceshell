@@ -1,16 +1,18 @@
 # WebServiceShell (WSS) 2.4.x Documentation
 
-01 Aug 2018
+02 Aug 2018
 
 ## Table of contents
 - [Introduction](#introduction)
 - [WSS Concepts](#wss-concepts)
-- [WSS Configuration Reference](wss-configuration-reference)
+- [WSS Configuration Reference](#wss-configuration-reference)
   - [Service configuration file (*servicename*-service.cfg)](#service-configuration-file-servicename-servicecfg)
+    - [Managing HTTP headers for a client response](#managing-http-headers-for-a-client-response)
   - [Param configuration file (*servicename*-param.cfg))](#param-configuration-file-servicename-paramcfg)
+    - [Reserved Parameters](#reserved-parameters)
+    - [relaxedValidation - Adding Operational Flexibility when calling Handlers](#relaxedvalidation---adding-operational-flexibility-when-calling-handlers)
   - [Log4j properties file (*servicename*-log4j.properties)](#log4j-properties-file-servicename-log4jproperties)
-- [cfg File Examples](cfg-file-examples)
-
+- [cfg File Examples](#cfg-file-examples)
 
 ### Introduction
 
