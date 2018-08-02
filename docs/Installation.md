@@ -25,7 +25,8 @@ See the [Apache Tomcat Downloads](http://tomcat.apache.org/download-80.cgi)
 page for the latest version, the version 8.0.33 is used for this document.
 
 3. Download the latest WebServiceShell WAR file (webserviceshell-VERSION.war)
-and save in *WSSHOME*. See the [releases page](../releases)
+and save in *WSSHOME*. See the
+[releases page](https://github.com/iris-edu/webserviceshell/releases)
 page for the latest version.
 
 4. Untar/unpack Tomcat in installation directory:
@@ -161,15 +162,13 @@ as necessary).
 #### Further configuration and considerations:
 
 
-- WSS expects an HTML page (as specified in property **rootServiceDoc**) to serve
-from the root of the web service, possibly directing users to further
-documentation. [Here](https://seiscode.iris.washington.edu/attachments/1127/dataselect_root.html) is a sample root page for the FDSN dataselect service.
+- WSS expects an HTML page (as specified in property **rootServiceDoc**) to be
+served from the root of the web service, possibly directing users to further
+documentation. Here is a sample of [**FDSN dataselect documentation**](https://seiscode.iris.washington.edu/attachments/1127/dataselect_root.html).
 
-- Installation of a system init script to start the Tomcat container on system
- boot and perform clean shutdowns, more information [**here**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Tomcat_setup#Step-6-Create-startup-script)
-- Configuration of authentication mechanisms for Tomcat to authenticate users
- requesting via the /queryauth service method (for access to restricted data).
- Details [**here**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Authentication)
+- Consider installation of a [**system init script**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Tomcat_setup#Step-6-Create-startup-script) to start the Tomcat container on system
+ boot and perform clean shutdowns.
+- Consider adding a [**Tomcat authentication mechanisms**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Authentication) to authenticate users making request via the /queryauth service method (for access to restricted data).
 
 - Configure an Apache web server to proxy requests made on port 80 to
  a Tomcat instances on port 8080. Apache HTTPD is known to work,

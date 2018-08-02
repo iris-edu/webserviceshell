@@ -2,6 +2,16 @@
 
 01 Aug 2018
 
+## Table of contents
+- [Introduction](#introduction)
+- [WSS Concepts](#wss-concepts)
+- [WSS Configuration Reference](wss-configuration-reference)
+  - [Service configuration file (*servicename*-service.cfg)](#service-configuration-file-servicename-servicecfg)
+  - [Param configuration file (*servicename*-param.cfg))](#param-configuration-file-servicename-paramcfg)
+  - [Log4j properties file (*servicename*-log4j.properties)](#log4j-properties-file-servicename-log4jproperties)
+- [cfg File Examples](cfg-file-examples)
+
+
 ### Introduction
 
 The Web Service Shell (WSS) is a web service that can be configured via
@@ -18,7 +28,8 @@ command-line programs or Java classes) to fulfill web service requests.
 - handle, via the servlet container, HTTP authentication
 
 #### WSS 2.x change overview
-Prior to the move to github, see the [Issues page](https://seiscode.iris.washington.edu/projects/webserviceshell/issues) for more details:
+Prior to the move to github, see the [prior issues page](https://seiscode.iris.washington.edu/projects/webserviceshell/issues) for
+more details:
 
 - Version 2.4.7
   - prevent deadlock when monitor tries to stop process blocked on write
@@ -254,7 +265,7 @@ and therefor should not be generally available all client request. To
 address this concern, a new property, allowedIPs, has been added. See
 Endpoint Properties below.
 
-#### Service configuration file (*servicename*-service.cfg)
+### Service configuration file (*servicename*-service.cfg)
 
 The service.cfg file is composed of two types of properties: global and
 endpoint properties. Global properties apply to the application as a
@@ -698,7 +709,7 @@ answer.format=TEXT<br />
 answer.minlongitude=NUMBER<br />
 answer.maxlongitude=NUMBER
 
-#### cfg File Examples
+### cfg File Examples
 
 #### service.cfg
 ```
@@ -777,6 +788,15 @@ query.minlongitude=NUMBER
 query.maxlongitude=NUMBER
 query.minlatitude=NUMBER
 query.maxlatitude=NUMBER
+```
+
+#### appinit.cfg
+```
+# -------- properties to support singletonClassName --------
+# This file is optional, although not having it will generate
+# a warning log message
+# Properties provided are defined by the needs of an optional
+# Java singleton class, should one be provided
 ```
 
 #### log4j.properties

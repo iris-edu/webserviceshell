@@ -175,7 +175,7 @@ mseed      | application/vnd.fdsn.mseed
 text       | text/plain
 texttree   | text/plain
 json       | application/json
-binary     | application/octet-stream<br /><br />**Note:** This option is builtin <br />always available, and is the<br />default when `formatTypes`<br />is not configured.
+binary     | application/octet-stream<br /><br />**Note:** This option is builtin and always <br />available. It is the default when `formatTypes` <br />is not configured.
 
 Note:
 
