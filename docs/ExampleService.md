@@ -44,6 +44,16 @@ start tomcat | run <br /> ```/WSSHOME/tomcat/bin/startup.sh``` <br /> then check
 deploy WSS for **mysrv/sample/1** | ```mv /WSSHOME/tomcat/mysrv#sample#1.war tomcat/webapps``` <br /> note that catalina.out shows that the service started|\
 check operation with browser or curl | example URLs for testing, <br />  # check for plain text output <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=text** <br /> #check for error handling <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=-25&format=text** <br /> check for xml output <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=xml** <br /> check for zip output of multiple files <br /> **http://localhost:8080/mysrv/sample/1/query?num_values=25&format=zip** <br /> check for "num" alias <br /> **http://localhost:8080/mysrv/sample/1/query?num=25&format=zip**
 
+[releases1](/releases)<br />
+[releases2](/releases/)<br />
+[releases3](../releases/)<br />
+[releases4](../../releases/)<br />
+[releases5](iris-edu/webserviceshell/releases)<br />
+[releasesa](https://github.com/iris-edu/webserviceshell/releases)
+
+
+
+
 ### Handler File
 
 #### sample.py
