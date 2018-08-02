@@ -2,19 +2,19 @@
 
 ### Web Service Shell
 
-The WSS was written towards the goal of removing the barriers to
+WSS was written towards the goal of removing the barriers to
 creating a modern web service (under certain constraints). It allows
 command line, \*nix-based, programs to be *wrapped* in a pre-written
-Java servlet. Moreover, the WSS can be configured via simple properties
+Java servlet. Moreover, the WSS can be configured via properties
 files to *wrap* any command line programming conforming to its
 requirements.
 
-The WSS provides basic parameter validation as well as HTTP
+WSS provides basic parameter validation as well as HTTP
 authentication (via the servlet container). It also provides usage
 logging, standard logging, and various other mundane functions required
 of an HTTP server.
 
-The WSS can also be configured to use a Java class rather than a command
+WSS can also be configured to use a Java class rather than a command
 line program to fulfill the data retrieval. More details about using
 Java classes with the WSS can be found in the [documentation](./)
 

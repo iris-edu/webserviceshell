@@ -1,4 +1,4 @@
-# WebServiceShell (WSS0) 2.4.x Documentation
+# WebServiceShell (WSS) 2.4.x Documentation
 
 01 Aug 2018
 
@@ -52,7 +52,7 @@ Prior to the move to github, see the [Issues page](https://seiscode.iris.washing
     usage log output
   - Bug fix 883 - enable corsEnabled property for error handling so
     error handling works the same as success handling
-  - Feature 875 - add relaxed-validation mode to enable operational
+  - Feature 875 - add relaxedValidation mode to enable operational
     flexibility with handler program changes
   - Feature 863 - add IP filtering property per endpoint
   - Feature 862 - add ability to complete loading of configuration
@@ -567,7 +567,7 @@ USERAGENT - value from request HTTP header User-Agent<br />
 IPADDRESS - client IP, may be affected by network topology<br />
 APPNAME - value from appName configuration parameter<br />
 VERSION - value from version configuration parameter<br />
-CLIENTNAME - dummy string, not currently in use<br />
+CLIENTNAME - returns the remote host name, usually as an IP<br />
 HOSTNAME - host name of WSS server<br />
 If a user is authenticated, then this value is included:
 AUTHENTICATEDUSERNAME - authenticated user name
@@ -679,7 +679,7 @@ be specified.
 For example, to change parameters for endpoint "query":
 
 original form        | is now
----- | ---- | ----
+---- | ----
 format=TEXT          | query.format=TEXT
 minlongitude=NUMBER  | query.minlongitude=NUMBER
 maxlongitude=NUMBER  | query.maxlongitude=NUMBER

@@ -1,32 +1,31 @@
 # Installation Instructions
 
-These instructions cover the installation of Tomcat and the Web Service
-Shell instances to run FDSN web services. Each service requires that a
-"handler" is available to process the request, development of such a
-handler is not covered here. More information about handlers can be
-found here: [**WSS
-handlers**](HandlerRequirements.md).
+These instructions cover the installation of Tomcat and the WebServiceShell(WSS)
+application for running a data delivery web service. The conventions shown here
+follow the [FDSN Web Service](http://www.fdsn.org/webservices/FDSN-WS-Specifications-1.1.pdf),
+however, WSS can be adapted to most data delivery needs. Each service requires
+that a "handler" is available to process the request. More information about
+developing and using handlers can be found in [**handler requirements**](HandlerRequirements.md) and [**handler example and service configuration**](ExampleService.md).
 
 These instructions are for Unix-like operating systems with a working
 Java installation (1.8 is the current version). These instructions use
 the term *WSSHOME* to refer to your installation folder. Please replace
-*WSSHOME* with your path name where you are installing the Tomcat.
+*WSSHOME* with your path name where you are installing Tomcat.
 
 This example uses fdsnws-dataselect for a specific example of a web
 service deployed using WSS, but the installation instructions can apply
 to any web service.
 
-1. Create a user account, for example 'tomcat', to run the
+1. Create an OS user account, for example 'tomcat', to run the
 web application container. This is highly recommended for long-term,
 production environments.
 
-2. Download an Apache Tomcat installer file and save it in *WSSHOME*:\
-See the [Apache Tomcat
-Downloads](http://tomcat.apache.org/download-80.cgi) page for the latest
-version, the version 8.0.33 is used for this document.
+2. Download an Apache Tomcat installer file and save it in *WSSHOME*:
+See the [Apache Tomcat Downloads](http://tomcat.apache.org/download-80.cgi)
+page for the latest version, the version 8.0.33 is used for this document.
 
-3. Download latest WebServiceShell WAR file (webserviceshell_VERSION.war)
-and save in *WSSHOME*. See the [WSS Downloads](/projects/webserviceshell/files)
+3. Download the latest WebServiceShell WAR file (webserviceshell-VERSION.war)
+and save in *WSSHOME*. See the [releases page](../releases)
 page for the latest version.
 
 4. Untar/unpack Tomcat in installation directory:
@@ -54,7 +53,7 @@ following line.
 
 
 7. Add an admin user to the Tomcat password file for the manager
-application. Edit **WSSHOME/tomcat/conf/tomcat-users.xml** and add
+application. Edit **/WSSHOME/tomcat/conf/tomcat-users.xml** and add
 the <user> line within the <tomcat-users> tag:
     ``` XML
     <tomcat-users>
@@ -65,7 +64,7 @@ the <user> line within the <tomcat-users> tag:
 
 8. Configure the manager webapp (included with Tomcat) to use the
 password file for authentication. Edit
-**WSSHOME/tomcat/webapps/manager/META-INF/context.xml** and add the
+**/WSSHOME/tomcat/webapps/manager/META-INF/context.xml** and add the
 <Realm> section below within the <Context> tag:
     ``` XML
     <Context>
@@ -84,9 +83,9 @@ password file for authentication. Edit
 9. Copy, with a rename, the downloaded Web Service Shell WAR file
 (version 2.2.2 in this example) into Tomcat deployment directory (e.g.,
 `tomcat/webapps`). The new name should reflect the desired service name,
-in this case, the service name is to be fdsnws/dataselect/1, so,
-inserting '\#' where '/' is desired in the service name, the new war
-file name is "fdsnws\#dataselect\#1.war":
+in this case, the desired service name is to be fdsnws/dataselect/1, so,
+inserting '#' where '/' is desired in the service name, the new war
+file name is "fdsnws#dataselect#1.war":
     ``` bash
     cp webserviceshell_2.2.2.war WSSHOME/tomcat/webapps/fdsnws#dataselect#1.war
     ```
@@ -94,36 +93,35 @@ file name is "fdsnws\#dataselect\#1.war":
 
 10. Create a directory to store service configuration files:
     ``` bash
-    mkdir WSSHOME/config
+    mkdir /WSSHOME/config
     ```
 
 11. Download appropriate template WSS configuration files for each
-service you plan to implement. Note: the leading part of the
-configuration file name must match the name of the war file with "."
-being inserted in place of '\#'.\
-Download from [**Support files for FDSN
-services**](WebServiceShell-2.4.x.md#servicecfg)
-and copy to the **/WSSHOME/config** directory the files:
-    - Service configuration file (e.g. fdsnws.dataselect.1-service.cfg)
-    - Client interface parameter definition file (e.g.
-fdsnws.dataselect.1-param.cfg)
-    - Logging configuration (e.g. fdsnws.dataselect.1-log4j.properties)
+service you plan to implement. Download from [**Support files for FDSN
+services**](WebServiceShell-2.4.x.md#servicecfg) and copy to
+the **/WSSHOME/config** folder.
+
+    Rename the files, the leading part of the configuration file name must
+    match the name of the war file with "." being inserted in place of '#', in
+    this example, the files should be:
+    - Service configuration: **fdsnws.dataselect.1-service.cfg**
+    - Client interface parameter definitions: **fsnws.dataselect.1-param.cfg**
+    - Logging configuration: **fdsnws.dataselect.1-log4j.properties**
 
 
-12. Edit the Service configuration file (e.g.
-fdsnws.dataselect.1-service.cfg), in particular:
-    1. Change the **rootServiceDoc** to a URL that contains HTML that
-should be returned when the root page of the service is accessed.
-    2. Change the **loggingMethod** to LOG4J unless JMS or RabbitMQ is to
-be used for usage logging.
-    3. Set endpoint-specific **handlerProgram** to the location of a
-program that will handle requests and return data in expected format.
-    4. Set endpoint-specific **handlerWorkingDirectory** to a directory
-from which to run the handler. This can be a directory such as `/tmp`
-    5. Verify that the global parameters **appName** and **version** match
-the intended name and version
-    6. Check remaining options, the defaults contained in the examples
-should be fine in most cases.
+12. Edit the Service configuration file (e.g. fdsnws.dataselect.1-service.cfg):
+    1. Change properties **appName** and **version** as needed for the
+    intended name and version
+    2. Change the **rootServiceDoc** to a URL (can be a file or web page) that
+    contains HTML describing this service.
+    3. Change the **loggingMethod** to LOG4J unless JMS or RabbitMQ is to
+    be used for usage logging.
+    4. Set **query.handlerProgram** to the path of the program that will  
+    handle requests and return data in expected format.
+    5. Set **query.handlerWorkingDirectory** to a directory from which to run
+    the handler. This can be `/tmp`
+    6. Check remaining options, the defaults contained in the examples should
+    be fine in most cases.
 
 
 13. Edit the Logging configuration file (e.g.
@@ -142,8 +140,11 @@ logs i.e. *${catalina.home}/logs/"*
 
 14. Start Tomcat:
     ``` bash
-    $ WSSHOME/tomcat/bin/startup.sh
+    /WSSHOME/tomcat/bin/startup.sh
     ```
+    At this point the Tomcat container and FDSN web service applications are
+    installed and running, if you did not change the default Tomcat port
+    the service is accessible on port 8080.
 
 15. Verify Tomcat is running by browsing
 [**http://localhost:8080/**](http://localhost:8080/) (adjust host in URL
@@ -155,23 +156,20 @@ as necessary).
 
 17. To stop Tomcat you may execute:
     ``` bash
-    $ WSSHOME/tomcat/bin/shutdown.sh
+    /WSSHOME/tomcat/bin/shutdown.sh
     ```
-    At this point the Tomcat container and FDSN web service applications are
-    installed and running, if you did not change the default Tomcat port
-    they are accessible on port 8080.
-
 #### Further configuration and considerations:
-- Setup an HTML "root" page as documentation to serve from the root of the web
- service, possibly directing users to further documentation. A template root page
- for the FDSN dataselect service is available
- \[\[Sample\_Configuration\_Files\_for\_FDSN\_services|here\]\]
+
+
+- WSS expects an HTML page (as specified in property **rootServiceDoc**) to serve
+from the root of the web service, possibly directing users to further
+documentation. [Here](https://seiscode.iris.washington.edu/attachments/1127/dataselect_root.html) is a sample root page for the FDSN dataselect service.
 
 - Installation of a system init script to start the Tomcat container on system
- boot and perform clean shutdowns, more information [**here**](/projects/webserviceshell/wiki/Tomcat_setup#Step-6-Create-startup-script)
+ boot and perform clean shutdowns, more information [**here**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Tomcat_setup#Step-6-Create-startup-script)
 - Configuration of authentication mechanisms for Tomcat to authenticate users
  requesting via the /queryauth service method (for access to restricted data).
- Details [**here**](/projects/webserviceshell/wiki/Authentication)
+ Details [**here**](https://seiscode.iris.washington.edu//projects/webserviceshell/wiki/Authentication)
 
 - Configure an Apache web server to proxy requests made on port 80 to
  a Tomcat instances on port 8080. Apache HTTPD is known to work,
