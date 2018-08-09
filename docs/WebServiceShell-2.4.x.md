@@ -7,6 +7,8 @@
 - [WSS Concepts](#wss-concepts)
 - [WSS Configuration Reference](#wss-configuration-reference)
   - [Service configuration file (*servicename*-service.cfg)](#service-configuration-file-servicename-servicecfg)
+    - [Global Properties](#global-properties)
+    - [Endpoint Properties](#endpoint-properties)
     - [Managing HTTP headers for a client response](#managing-http-headers-for-a-client-response)
   - [Param configuration file (*servicename*-param.cfg))](#param-configuration-file-servicename-paramcfg)
     - [Reserved Parameters](#reserved-parameters)
