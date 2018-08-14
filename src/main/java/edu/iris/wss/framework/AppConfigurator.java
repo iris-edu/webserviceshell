@@ -24,10 +24,13 @@ import edu.iris.wss.Wss;
 import edu.iris.wss.provider.IrisProcessMarker;
 import edu.iris.wss.provider.IrisProcessor;
 import edu.iris.wss.provider.IrisSingleton;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -51,11 +54,11 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.4.8-SNAPSHOT";
+	public static final String wssVersion = "2.4.9";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
-	private static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
+	protected static final String DEFAULT_SERVICE_FILE_NAME = "META-INF/service.cfg";
 	public static final String SERVICE_CFG_NAME_SUFFIX = "-service.cfg";
     public static final String ENDPOINT_TO_PROPERTIES_DELIMITER = ".";
 
@@ -634,7 +637,8 @@ public class AppConfigurator {
                 + configFileName);
 
             try {
-                configurationProps.load(new FileInputStream(configFileName));
+                InputStream inStream = new FileInputStream(configFileName);
+                loadWithBackslashFix(configurationProps, inStream);
                 userConfig = true;
             } catch (IOException ex) {
                 logger.warn("***** could not read cfg file: " + configFileName);
@@ -660,13 +664,43 @@ public class AppConfigurator {
             logger.info("Attempting to load default application"
                 + " configuration from here: " + defaultCfgName);
 
-            configurationProps.load(inStream);
+            loadWithBackslashFix(configurationProps, inStream);
             logger.info("Default application properties loaded, file: "
                 + defaultCfgName);
 
             inStream.close();
         }
         return configurationProps;
+    }
+
+    public static void loadWithBackslashFix(Properties prop, InputStream is)
+          throws IOException {
+        // before loading check for any character after any backslash
+        // and before the end of line, and remove it
+        StringBuilder sb = new StringBuilder();
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader br = new BufferedReader(isr);
+        String readLine = "";
+        while ((readLine = br.readLine()) != null) {
+          int idxback = readLine.indexOf("\\");
+          int idxEOL =  readLine.length() - 1;
+
+          if(idxback > -1) {
+            if (idxEOL > idxback) {
+              // fixit
+              readLine = readLine.substring(0,idxback+1);
+              int fidxback = readLine.indexOf("\\");
+              int fidxEOL =  readLine.length() - 1;
+            }
+          }
+          // put back the EOL since readLine removed it
+          sb.append(readLine).append("\n");
+        }
+
+        ByteArrayInputStream sbis = new ByteArrayInputStream(
+                sb.toString().getBytes("UTF-8"));
+
+        prop.load(sbis);
     }
 
 	public void loadConfigurationParameters(Properties inputProps)
