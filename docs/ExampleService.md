@@ -6,11 +6,11 @@ WSS service given the following:
 
 - A command-line script called **sample.py** - see listing below.
 - That Tomcat is installed.
-- A folder is available for storing files, in this example the fo/der is called /WSSHOME
+- A folder is available for storing files, in this example the folder is called /WSSHOME
 
 #### This procedure's objective is to:
 
-- create a web service called **mysrv/sample/1**, accessable at
+- create a web service called **mysrv/sample/1**, accessible at
     http://localhost:8080/mysrv/sample/1
 - have the web service deliver random numbers using parameter
     **num\_values**

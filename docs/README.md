@@ -1,5 +1,12 @@
 # WebServiceShell (WSS)
 
+
+## Documentation
+- [User](WebServiceShell-2.4.x.md)
+- [Example Service](ExampleService.md)
+- [Working with Handler Programs](HandlerRequirements.md)
+- [Setup Recommendations](Recommendations.md)
+
 ### Introduction
 
 The Web Service Shell (WSS) is a web service that can be configured via
@@ -22,4 +29,4 @@ of an HTTP server.
 
 The WSS can also be configured to use a Java class rather than a command
 line program to fulfill the data retrieval. More details about using
-Java classes with the WSS can be found in the [documentation](./)
+Java classes with the WSS can be found in the [developer notes](docs/README.md)

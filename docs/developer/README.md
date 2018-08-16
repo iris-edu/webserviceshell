@@ -1,28 +1,35 @@
-# Web Service Shell (WSS) Developer Notes
+# WebServiceShell (WSS) Developer Notes
 
-This document describes selected components of WSS and hints for implementing an endpoint.
+This document provides a developer overview of WSS components and key operational sequences.
 
-- repository: ssh://dmscode/repos/webserviceshell
+- 2018-08-15 - latest updates
+- 2018-07-17 - add sequence diagrams
 - 2016-03-09 - initial version
-- 2018-07-17 - updates
 
-## Key Components
+## Introduction
+
+WSS uses Java and Jersey to provide RESTful (GET, POST, and HEAD) web services middleware for streaming data. WSS does not accessed data directly, but leverages backend applications to request data and then return the resulting data to an HTTP client request.
+
+WSS is designed to stream any kind of data, plus it has an optional capability to provided usage log information specifically related to seismological SEED (Standard for the Exchange of Earthquake Data) data.
+
+## Package Overview
 
 Folder |  Description
 ---- | ----
 com.Ostermiller.util ``<<package>>`` | Code used to interpret miniseed data and generate summary information. This code is run in the CmdProcessor when a **format=mseed** request is made. It is used to generate miniseed usage log information.
-edazdarevic.commons.net ``<<package>>`` | Code for white list capabilities.
+edazdarevic.commons.net ``<<package>>`` | Code for white list capabilities with CIDR notation.
 edu.iris.wss ``<<package>>`` |
-<i></i>             | ``Wss`` - Contains WSS builtin functions like version, wssversion, etc.
-edu.iris.wss.endpoints ``<<package>>`` | Builtin WSS endpoint code and dependencies. These code is not runnable until configured in service.cfg and param.cfg.
+<i></i>             | ``Wss`` - Contains WSS builtin functions to service request for version, wssversion, etc.
+edu.iris.wss.endpoints ``<<package>>`` | This code provides the implementation for CmdProcessor and ProxyResource. This code is dynamically loaded based on configuration settings, it is not loaded by default and must be configured in service.cfg and param.cfg.
 <i></i>         | ``CmdProcessor`` - Creates and runs external process i.e. "handlers"
 <i></i>         | ``ProxyResource`` - Reads data from the source defined by property **proxyURL** and streams the data out with the media type specified in a **format** request parameter.
 <i></i>         | ``IncomingHeaders`` - shows HTTP headers coming into WSS, it is not normally needed or configured.
 edu.iris.wss.framework ``<<package>>`` | Provides core features of WSS
 <i></i>         | ``AppConfigurator`` - Reads and stores service.cfg properties.
-<i></i>         | ``MyApplication`` - First code to execute when application is started. It creates WssSingleton and dynamically binds configured endpoints.
+<i></i>         | ``AppContextListener`` - First code to execute when application is started. It configures log4j.
+<i></i>         | ``MyApplication`` - Main code to execute when application is started. It creates WssSingleton and dynamically binds configured endpoints. Is specified in web.xml.
 <i></i>         | ``ParamConfigurator`` - Reads and stores param.cfg properties.
-<i></i>         | ``ParameterTranslator`` - Performs parameter existance and type checks for each request.
+<i></i>         | ``ParameterTranslator`` - Performs parameter existence and type checks for each request.
 <i></i>         | ``RequestInfo`` - Stores application state information, it is needed for processing every request.
 <i></i>         | ``ServiceShellException`` - Used for error handling and generating standard FDSN error messages.
 <i></i>         | ``WssSingleton`` - It loads properties from cfg files and sets up logging.
@@ -39,19 +46,22 @@ webapp/WEB-INF ``<<webapp>>`` |
 
 ## Operating Sequences
 
-When a WSS web application starts, it interacts with Jersey framework in a sequence of operations to get and set information. The interaction with Jersey must accomplish the registration of the desired functionality and make available application state information needed when request are handled. Once the startup sequence finishes, Jersey is able to pass each request to the appropriate endpoint along with the information that WSS needs to handle each request.
+When a war file is loaded into a running container, or the container itself is started, respective WSS code is called as defined by the Jersey framework. The following sequences, describe, at a high level, the two main operating sequences, startup, and handling requests.
 
-#### WSS startup
+When a WSS web application starts, it interacts with the Jersey framework in a sequence of operations to discover its name (i.e. context), find respective configuration files, and register endpoints. At the end of the startup sequence, static and dynamic endpoints must be registered, along with respective parameter information. Once the startup sequence finishes, Jersey passes each request to the appropriate endpoint along with parameter information to validate names and value types.
 
-The following **WSS Startup Sequence** diagram highlights key steps in the startup sequence. The code implementing Startup Items 1,3, and 4 are subject to needing changed when new versions of Tomcat or Glassfish are introduced.
+### WSS startup
+
+The following **WSS Startup Sequence** diagram highlights key steps in the startup sequence. The code implementing **Startup Items 1,3, and 4 are subject to startup errors when new versions of Tomcat or Glassfish are introduced**.
 
 ![WSS_startup](WSS_startup_sequence.png)
 
 #### Startup Item 1 - Initializing log4j
 
-**AppContextListener** is a standalone class driven by the Tomcat/Jersey framework. It initializes log4j. Key startup information is written to stdout as logging initialization is performed, so checking catalina.out or Glassfish logs will help determine configuration problems. Setting up log4j depends on:
-- the system property **wssConfigDir** being set in setenv.sh in Tomcat or in Glassfish, with an admin command starting with `asadmin create-system-properties ...` respectively.
+**AppContextListener** is a standalone class driven by the Tomcat/Jersey framework. It initializes log4j. Additionally, key startup information is written to stdout as logging initialization is performed, so checking catalina.out or Glassfish logs will help determine configuration problems. Setting up log4j depends on:
+- the system property **wssConfigDir** being set in setenv.sh in Tomcat or in [Glassfish](#../docs/glassfish/README.md), with an admin command starting with `asadmin create-system-properties ...` respectively.
 - the **context** path is determined by Tomcat war file name, or in Glassfish, with an admin command starting with `asadmin deploy --contextroot ...``
+- the log4j properties file has the correct *service.base*-log4j.properties file name and that respective logger File names and paths are set correctly.
 
 #### Startup Item 2 - Configuration
 
@@ -59,45 +69,87 @@ When the **MyApplication** object is created, it in turn, creates a **WssSinglet
 
 #### Startup Item 3 - Registration
 
-Once configuration information is processed, **MyApplication** registers the WSS class which contains static endpoints. Based on configuration information, dynamic endpoints are created and added also.
+Once configuration information is processed, **MyApplication** registers the Wss.class, which contains static endpoints. Then, based on configuration information, dynamic endpoints are created and added also.
 
 #### Startup Item 4 - Finishing the Startup Sequences
 
 The Jersey framework calls `onStartup` on the **MyContainerLifecycleListener** object near the end of the startup sequence. The **WssSingleton** object **sw** is registered as a context object, making it available for request handling.
 
+### WSS Request
 
-The **WSS Request Sequence** diagram highlights key steps in the response to a client request.
+The **WSS Request Sequence** diagram highlights key steps in the response to a client request. After the web application has successfully started, Tomcat (or Glassfish) can respond to client request with configured endpoints.
 
-#### WSS Request
-
-After the web application has successfully started, Tomcat (or Glassfish) can respond to client request. For dynamically defined classes, the entry point from Jersey is to call an **IrisDynamicProvider** object, which in turn calls one object which has implemented the **IrisProcessor** interface. IrisDynamicProvider, and the support objects it uses provides most of the core behavior of WSS. As the first implementation of IrisProcessor, the **CmdProcessor** has some behaviors that are unique to it as compared to other IrisProcessors. For example, the timeout behavior is unique to CmdProcessor and other IrisProcessors do not do this unless explicitly coded to do so.
+For dynamically defined classes, Jersey calls an **IrisDynamicProvider** object, which in turn calls the respective, **IrisProcessor** object. IrisDynamicProvider provides most of the core behavior of WSS. One item of note, different IrisProcessor endpoints may have slightly different behavior, depending on respective implementations. For instance **CmdProcessor** uses a timer to stop halted requests, while ProxyResource does not.
 
 ![WSS_request](WSS_request_sequence.png)
 
 #### Request Item 1 - Context information
 
-Each request can take advantage of the WssSingleton object, sw, established at startup. For example all the parameters and their types, media types, etc. as defined in configuration, per endpoint, are available to the IrisProcessor.
+The Jersey framework delivers the WssSingleton object by context. Each endpoint uses this object to get respective parameter names and types, media types, etc. as defined by configuration.
 
 #### Request Item 2 - Setup for Jersey call
 
-Processor specific error checking, data structure setup, etc. should be done here. The entity returned in **IrisProcessingResult** may contain simple objects, but if a StreamingOutput object is used, it will not be executed until later. Do the definition of the HTTP protocol, the HTTP return code and any header information must be defined here, even though data is not being delivered
+Processor specific error checking and the definition of an output entity must be done here. The entity returned in **IrisProcessingResult** may contain simple objects like Strings, but if a StreamingOutput object is declared, it will not be executed until later in the sequence. Based on HTTP protocol interaction, the HTTP return code and any header information must be defined here, even though data may not be delivered at this time.
 
 #### Request Item 3 - Streaming data
 
-**IrisDynamicProvider** must return control to the Jersey frame work with the appropriate Response object. Jersey returns the HTTP information to the client, and if a StreamingOutput entity is defined, calls the write method of the respective object, i.e. code within an IrisProcessor. At this point, the client can only read the streaming data until the stream is closed or an I/O error occurs.
+**IrisDynamicProvider** must return control and a Response object which contains the HTTP return code and declared output entity. Jersey returns the HTTP information to the client.
+
+#### Request Item 4 - Streaming data
+
+If a StreamingOutput entity is declared, Jersey calls the write method of the respective object, i.e. executes the code within an IrisProcessor. At this point, the client can only read the streaming data until the stream is closed or an I/O error occurs.
 
 ## General WSS Support Considerations
 
 - The entry point classes, **AppContextListener** and **MyApplication** are explicitly maintained in the web.xml for ease of support and avoiding possible differences in startup sequences between Tomcat and Glassfish.
-- Glassfish setup and operation information are in the docs/glassfish folder.
-- Changes to **** will affect all dynamic endpoints.
+- Glassfish setup and operation information are in the [docs/glassfish](docs/glassfish/README.md) folder.
+- Changes to **IrisDynamicProvider** will affect all dynamic endpoints, while changes to any IrisProcessor only affects that endpoint.
+- In the current WSS design, endpoint configuration properties only apply to an endpoint if that endpoint uses a respective property. One exception is property `allowedIPs`, which applies to each endpoint respectively.
+- When mis-configurations occurs, the WSS implementation substitutes "dummy" content in to prevent hard-to-trace null pointer exceptions at run time. When the string "dummy" is observed embedded in log messages or object names, almost certainly something is wrong with the specification of:
+  -  **wssConfigDir** - check catalina.out
+  - inaccessible paths - i.e. no read access, mis-named path
+  - incorrectly named cfg files - check name against war file name
+  - mis-named configuration elements - check respective log files, check log4j.properties for location of log files
 
+## Creating a Release
 
+When all the updates for a given version are committed, and there are no outstanding changes in the code tree, verify that unit test pass.
+
+```
+mvn clean package
+```
+
+**Set the desired version number** in files, these strings should be identical:
+- **version** element in **pom.xml**
+- **wssVersion** value in src/main/java/edu/iris/wss/framework/**AppConfigurator.java**
+
+**Add, commit, and push** the version updated with reference to a respective issue and comment.
+```
+git add pom.xml
+git add src/main/java/edu/iris/wss/framework/AppConfigurator.java
+git commit -m "issue #1234, yada yada"
+git push
+```
+
+**Tag** with the same version string (e.g. x.y.z) placed in the pom and AppConfigurator files. It may be helpful to precede the comment with "tag" for future reference.
+```
+git tag -a vx.y.z -m "tag - possibly same as last commit i.e. issue #1234, yada yada"
+git push origin vx.y.z
+```
+
+**Deploy internally** to Nexus repo, note that messages starting with "Uploaded ..." are occurring.
+```
+mvn clean Deploy
+```
+**Deploy to github** as needed for public release, copy jar and war file to releases area.
 
 ## Implementing an endpoint
-To create a WSS endpoint, create a Java class which extends edu.iris.wss.provider.IrisProcessor.
 
-See edu.iris.wss.endpoints.CmdProcessor for a more complex example and ProxyResource for a more simple example.
+To create a WSS endpoint, create a Java class which extends edu.iris.wss.provider.IrisProcessor. Write the desired code for getProcessingResults method and IrisProcessingResult object. When possible, the IrisProcessingResult should also be used to return error results.
+
+The following code creates a JSON object, "jo", which is then returned to a client when Jersey runs the write method in the StreamingOutput object. See edu.iris.wss.endpoints.CmdProcessor for a complex example and ProxyResource for a simple example.
+
+- extend IrisProcessor
 
 ``` java
 public class MyNewEndpoint extends IrisProcessor {
@@ -132,16 +184,15 @@ public class MyNewEndpoint extends IrisProcessor {
 
       return ipr;
  }
-
 ```
-- An **IrisProcessingResult** object must be returned, depending on procession results, here are the constructors.
 
+An **IrisProcessingResult** object must be returned, depending on procession results, here are the constructors.
   - **processError** - create error return with our without detailed message
   - **processStream** - simple successful string return to http client
   - **processString** - successful streaming object returned with mediaType and optionally updated http headers
 
-#### Other public API
-To create regular DMC - FDSN error handling and usage logging output (for usage log file, JMS, or RabbitMQ), use these methods from edu.iris.wss.framework.Util
-
+When an exception is needed,
 - **Util.logAndThrowException** - makes standard FDSN HTTP error text message and logs to file, JMS or RabbitMQ
+
+For usage logging output (for log4j, JMS, or RabbitMQ), use methods from edu.iris.wss.framework.Util,
 - **Util.logUsageMessage** - logs to file, JMS or RabbitMQ

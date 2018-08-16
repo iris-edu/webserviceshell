@@ -558,10 +558,10 @@ The following restrictions apply:
     header information before writing any other output
 - The header information must be text between marker strings in the
   following form:
-  - starts with "HTTP\_HEADERS\_START"
+  - starts with "HTTP_HEADERS_START"
   - followed by each header in regular HTTP format, terminated with
     linefeed or carriage return linefeed
-  - ends with "HTTP\_HEADERS\_END"
+  - ends with "HTTP_HEADERS_END"
 - The marker strings **must not** be followed by linefeed or carriage
   return linefeed.
 

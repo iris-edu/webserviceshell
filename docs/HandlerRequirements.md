@@ -77,7 +77,7 @@ URL is translated into a respective command line form, e.g.
 **Only** parameters configured via `param.cfg` are passed to the
 handler, however, `relaxedValidation` maybe used to bypass this restriction.
 This may be useful for testing new options or enabling more flexibility in
-hanlders. The CmdProcessor will add the following parameters as needed.
+handlers. The CmdProcessor will add the following parameters as needed.
 
 1.  `--username USER` is added by the CmdProcessor when a user has been
 successfully authenticated.
