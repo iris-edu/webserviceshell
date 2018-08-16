@@ -29,4 +29,4 @@ of an HTTP server.
 
 The WSS can also be configured to use a Java class rather than a command
 line program to fulfill the data retrieval. More details about using
-Java classes with the WSS can be found in the [developer notes](docs/README.md)
+Java classes with the WSS can be found in the [developer notes](developer/README.md)
