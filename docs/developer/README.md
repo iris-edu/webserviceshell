@@ -59,7 +59,7 @@ The following **WSS Startup Sequence** diagram highlights key steps in the start
 #### Startup Item 1 - Initializing log4j
 
 **AppContextListener** is a standalone class driven by the Tomcat/Jersey framework. It initializes log4j. Additionally, key startup information is written to stdout as logging initialization is performed, so checking catalina.out or Glassfish logs will help determine configuration problems. Setting up log4j depends on:
-- the system property **wssConfigDir** being set in setenv.sh in Tomcat or in [Glassfish](#../docs/glassfish/README.md), with an admin command starting with `asadmin create-system-properties ...` respectively.
+- the system property **wssConfigDir** being set in setenv.sh in Tomcat or in [Glassfish](../glassfish/README.md), with an admin command starting with `asadmin create-system-properties ...` respectively.
 - the **context** path is determined by Tomcat war file name, or in Glassfish, with an admin command starting with `asadmin deploy --contextroot ...``
 - the log4j properties file has the correct *service.base*-log4j.properties file name and that respective logger File names and paths are set correctly.
 
@@ -102,7 +102,7 @@ If a StreamingOutput entity is declared, Jersey calls the write method of the re
 ## General WSS Support Considerations
 
 - The entry point classes, **AppContextListener** and **MyApplication** are explicitly maintained in the web.xml for ease of support and avoiding possible differences in startup sequences between Tomcat and Glassfish.
-- Glassfish setup and operation information are in the [docs/glassfish](docs/glassfish/README.md) folder.
+- Glassfish setup and operation information are in the [docs/glassfish](../glassfish/README.md) folder.
 - Changes to **IrisDynamicProvider** will affect all dynamic endpoints, while changes to any IrisProcessor only affects that endpoint.
 - In the current WSS design, endpoint configuration properties only apply to an endpoint if that endpoint uses a respective property. One exception is property `allowedIPs`, which applies to each endpoint respectively.
 - When mis-configurations occurs, the WSS implementation substitutes "dummy" content in to prevent hard-to-trace null pointer exceptions at run time. When the string "dummy" is observed embedded in log messages or object names, almost certainly something is wrong with the specification of:
