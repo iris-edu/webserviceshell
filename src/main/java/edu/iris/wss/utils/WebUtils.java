@@ -1,4 +1,4 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright (c) 2018 IRIS DMC supported by the National Science Foundation.
  *
  * This file is part of the Web Service Shell (WSS).
@@ -15,11 +15,13 @@
  *
  * A copy of the GNU Lesser General Public License is available at
  * <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
+ *****************************************************************************
+ */
 package edu.iris.wss.utils;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -29,157 +31,178 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.log4j.Logger;
 
-
 public class WebUtils {
-	public static final Logger logger = Logger.getLogger(WebUtils.class);
 
-	public static String getHostname() {
-		String hostname = "";
-		try {
-			hostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();//.getHostName();
+    public static final Logger LOGGER = Logger.getLogger(WebUtils.class);
 
-		} catch (Exception e) {
-			hostname = "unknown";
-		}
-		return hostname;
-	}
+    public static String getHostname() {
+        String hostname;
+        try {
+            hostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();//.getHostName();
 
-	public static String getUserAgent(HttpServletRequest request) {
+        } catch (UnknownHostException e) {
+            hostname = "unknown";
+        }
+        return hostname;
+    }
+
+    public static String getUserAgent(HttpServletRequest request) {
         String userAgent = request.getHeader("user-agent");
         if (userAgent == null) {
             userAgent = "NOT_SET_by_client";
         }
-		return userAgent;
-	}
+        return userAgent;
+    }
 
-	public static String getClientName(HttpServletRequest request) {
-		return request.getRemoteHost();
-	}
+    public static String getClientName(HttpServletRequest request) {
+        return request.getRemoteHost();
+    }
 
-	public static String getClientIp(HttpServletRequest request) {
-		String xfIp = getXForwardIp(request);
-		if (xfIp == null) {
-			return request.getRemoteAddr();
-		} else {
-			return xfIp;
-		}
-	}
+    public static String getClientIp(HttpServletRequest request) {
+        String xfIp = getXForwardIp(request);
+        if (xfIp == null) {
+            return request.getRemoteAddr();
+        } else {
+            return xfIp;
+        }
+    }
 
-	public static String getUrl(HttpServletRequest request) {
-		StringBuffer url = request.getRequestURL();
-		if (request.getQueryString() != null) {
-		    url.append("?").append(request.getQueryString());
-		}
-		return url.toString();
-	}
-	private static String getXForwardIp(HttpServletRequest request) {
-		Enumeration<String> headers = request.getHeaders("x-forwarded-for");
-		if (headers == null) return null;
+    public static String getUrl(HttpServletRequest request) {
+        StringBuffer url = request.getRequestURL();
+        if (request.getQueryString() != null) {
+            url.append("?").append(request.getQueryString());
+        }
+        return url.toString();
+    }
 
-		String xfIp = null;
-		while (headers.hasMoreElements()) {
-			String[] ips = headers.nextElement().split(",");
-			if (ips.length > 0) {
-				xfIp = ips[0];
-			}
-		}
-		return xfIp;
-	}
+    private static String getXForwardIp(HttpServletRequest request) {
+        Enumeration<String> headers = request.getHeaders("x-forwarded-for");
+        if (headers == null) {
+            return null;
+        }
 
-	public static String getAuthenticatedUsername(HttpHeaders requestHeaders) {
+        String xfIp = null;
+        while (headers.hasMoreElements()) {
+            String[] ips = headers.nextElement().split(",");
+            if (ips.length > 0) {
+                xfIp = ips[0];
+            }
+        }
+        return xfIp;
+    }
 
-		final String authSig = "authorization";
-		final String basicSig = "Basic ";
-		final String digestSig = "Digest ";
+    public static String getAuthenticatedUsername(HttpHeaders requestHeaders) {
 
-		if (requestHeaders == null) return null;
+        final String authSig = "authorization";
+        final String basicSig = "Basic ";
+        final String digestSig = "Digest ";
 
-		List <String> entries = null;
-		try {
-			entries = requestHeaders.getRequestHeader(authSig);
-		} catch (Exception e) {
-			logger.error("Failed to get request headers!");
-			return null;
-		}
+        if (requestHeaders == null) {
+            return null;
+        }
 
-        if ((entries == null) || (entries.isEmpty()))
-	   		return null;
+        List<String> entries;
+        try {
+            entries = requestHeaders.getRequestHeader(authSig);
+        } catch (Exception e) {
+            LOGGER.error("Failed to get request headers!");
+            return null;
+        }
 
-	   	String entry = entries.get(0);
+        if ((entries == null) || (entries.isEmpty())) {
+            return null;
+        }
 
-	   	int index;
-	   	if ((index = entry.indexOf(basicSig)) != -1)  {
-			String userAndPassword;
+        String entry = entries.get(0);
 
-		   	try {
-		   		entry = entry.substring(index + basicSig.length());
-		   		byte [] creds = DatatypeConverter.parseBase64Binary(entry);
+        int index;
+        if ((index = entry.indexOf(basicSig)) != -1) {
+            String userAndPassword;
 
-		   		userAndPassword = new String(creds);
-		   		return userAndPassword.substring(0, userAndPassword.indexOf(":"));
+            try {
+                entry = entry.substring(index + basicSig.length());
+                byte[] creds = DatatypeConverter.parseBase64Binary(entry);
 
-		   	} catch (Exception e) {
-		   		return null;
-		   	}
+                userAndPassword = new String(creds);
+                return userAndPassword.substring(0, userAndPassword.indexOf(":"));
 
-	   	} else if ((index = entry.indexOf(digestSig)) != -1) {
-		   	try {
-		   		String props = entry.substring(index + digestSig.length());
-		   		String ps[] =  props.split(",");
+            } catch (Exception e) {
+                return null;
+            }
 
-	   			StringBuilder sb = new StringBuilder();
-                for (String s: ps) sb.append(s).append("\n");
+        } else if ((index = entry.indexOf(digestSig)) != -1) {
+            try {
+                String props = entry.substring(index + digestSig.length());
+                String ps[] = props.split(",");
 
-		   		Properties p = new Properties();
-		   		p.load(new StringReader(sb.toString()));
+                StringBuilder sb = new StringBuilder();
+                for (String s : ps) {
+                    sb.append(s).append("\n");
+                }
 
-		   		String quoted = (String) p.get("username");
-		   		return quoted.substring(1, quoted.length() - 1);
+                Properties p = new Properties();
+                p.load(new StringReader(sb.toString()));
 
-		   	} catch (Exception e) {
-		   		return null;
-		   	}
-	   	}
+                String quoted = (String) p.get("username");
+                return quoted.substring(1, quoted.length() - 1);
 
-	   	return null;
-	}
+            } catch (IOException e) {
+                return null;
+            }
+        }
 
-	public static String getHost(HttpServletRequest request) {
-    	String hostname = "";
-		try {
-			hostname = java.net.InetAddress.getLocalHost().getHostName();
-			int index = hostname.indexOf('.');
-			if (index != -1)
-				hostname = hostname.substring(0, index);
+        return null;
+    }
 
-		} catch (Exception e) {
-			hostname = "Unknown";
-		}
-		return hostname;
-	}
+    public static String getHost(HttpServletRequest request) {
+        String hostname;
+        try {
+            hostname = java.net.InetAddress.getLocalHost().getHostName();
+            int index = hostname.indexOf('.');
+            if (index != -1) {
+                hostname = hostname.substring(0, index);
+            }
 
-	public static String getObfuscatedHost(HttpServletRequest request) {
-    	String hostname = "";
-		try {
-			hostname = java.net.InetAddress.getLocalHost().getHostName();
-			int index = hostname.indexOf('.');
-			if (index != -1)
-				hostname = hostname.substring(0, index);
+        } catch (UnknownHostException e) {
+            hostname = "Unknown";
+        }
+        return hostname;
+    }
 
-			if (hostname.length() > 4) {
-				hostname = hostname.substring(2, 4) + hostname.substring(hostname.length() - 1);
-			}
+    public static String getObfuscatedHost(HttpServletRequest request) {
+        String hostname;
+        try {
+            hostname = java.net.InetAddress.getLocalHost().getHostName();
+            int index = hostname.indexOf('.');
+            if (index != -1) {
+                hostname = hostname.substring(0, index);
+            }
 
-		} catch (Exception e) {
-			hostname = "unk";
-		}
-		return hostname;
-	}
+            if (hostname.length() > 4) {
+                hostname = hostname.substring(2, 4) + hostname.substring(hostname.length() - 1);
+            }
 
-	public static String getPort(HttpServletRequest request) {
-    	int portNum = request.getServerPort();
-    	String portStr = Integer.toString(portNum);
+        } catch (UnknownHostException e) {
+            hostname = "unk";
+        }
+        return hostname;
+    }
 
-		return portStr;
-	}
+    public static String getPort(HttpServletRequest request) {
+        int portNum = request.getServerPort();
+        String portStr = Integer.toString(portNum);
+
+        return portStr;
+    }
+
+    public static String getTomcatLogDir() {
+        String rtnDir;
+        try {
+            String dir = System.getProperty("catalina.base");
+            rtnDir = String.join("/", dir, "logs");
+        } catch (Exception e) {
+            rtnDir = "Unknown";
+        }
+        return rtnDir;
+    }
 }

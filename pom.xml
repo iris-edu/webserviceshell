@@ -7,7 +7,7 @@
     <name>WebServiceShell</name>
     <groupId>edu.iris</groupId>
     <artifactId>webserviceshell</artifactId>
-    <version>2.4.9</version>
+    <version>2.4.10</version>
     <packaging>jar</packaging>
 
     <url>http://iris.edu</url>
@@ -268,14 +268,14 @@
             <uniqueVersion>false</uniqueVersion>
             <id>nexus-releases</id>
             <name>Internal Releases</name>
-            <url>${iris-nexus-releases-url}</url>
+            <url>http://marvin2:8080/nexus/content/repositories/releases</url>
             <layout>default</layout>
         </repository>
         <snapshotRepository>
             <uniqueVersion>true</uniqueVersion>
             <id>nexus-snapshots</id>
             <name>Internal Snapshots</name>
-            <url>${iris-nexus-snapshots-url}</url>
+            <url>http://marvin2:8080/nexus/content/repositories/snapshots</url>
             <layout>default</layout>
         </snapshotRepository>
     </distributionManagement>

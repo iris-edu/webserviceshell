@@ -112,19 +112,23 @@ public class CmdProcessor extends IrisProcessor {
 		}
 
 	    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
+            processBuilder.directory(new File(ri.appConfig.getWorkingDirectory(epName)));
 
 	    processBuilder.environment().put("REQUESTURL", WebUtils.getUrl(ri.request));
 	    processBuilder.environment().put("USERAGENT", WebUtils.getUserAgent(ri.request));
 	    processBuilder.environment().put("IPADDRESS", WebUtils.getClientIp(ri.request));
 	    processBuilder.environment().put("APPNAME", ri.appConfig.getAppName());
 	    processBuilder.environment().put("VERSION", ri.appConfig.getAppVersion());
-        processBuilder.environment().put("CLIENTNAME", WebUtils.getClientName(ri.request));
-        processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
-		String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
-		if (AppConfigurator.isOkString(username)) {
-            processBuilder.environment().put("AUTHENTICATEDUSERNAME", username);
-        }
+            processBuilder.environment().put("CLIENTNAME", WebUtils.getClientName(ri.request));
+            processBuilder.environment().put("HOSTNAME", WebUtils.getHostname());
+            //
+            processBuilder.environment().put("PORT", WebUtils.getPort(ri.request));
+            processBuilder.environment().put("TOMCATLOGDIR", WebUtils.getTomcatLogDir());
+            //
+            String username = WebUtils.getAuthenticatedUsername(ri.requestHeaders);
+            if (AppConfigurator.isOkString(username)) {
+                processBuilder.environment().put("AUTHENTICATEDUSERNAME", username);
+            }
 
 		if (processBuilder == null) {
 			Util.logAndThrowException(ri, Status.INTERNAL_SERVER_ERROR,
