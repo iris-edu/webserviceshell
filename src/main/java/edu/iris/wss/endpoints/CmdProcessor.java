@@ -700,8 +700,8 @@ public class CmdProcessor extends IrisProcessor {
                                 Status.OK, epName, LogKey.getNetwork(key).trim(),
                                 LogKey.getStation(key).trim(), LogKey.getLocation(key).trim(),
                                 LogKey.getChannel(key).trim(), LogKey.getQuality(key).trim(),
-                                rmd.getStart().convertToCalendar().getTime(),
-                                rmd.getEnd().convertToCalendar().getTime(), epName);
+                                Date.from(rmd.getStart().toInstant()),
+                                Date.from(rmd.getEnd().toInstant()), epName);
                     }
                 } catch (Exception ex) {
                     logger.error("Error logging MiniSEED response for record count: "
@@ -769,14 +769,14 @@ public class CmdProcessor extends IrisProcessor {
 			RecordMetaData rmd = logHash.get(key);
 
 			if (rmd != null) {
-				rmd.setIfEarlier(dh.getStartBtime());
-				rmd.setIfLater(dh.getLastSampleBtime());
+				rmd.setIfEarlier(dr.getStartBtime());
+				rmd.setIfLater(dr.getLastSampleBtime());
 				rmd.setSize(rmd.getSize() + (long) dr.getRecordSize());
 			} else {
 				rmd = new RecordMetaData();
 				rmd.setSize((long) dr.getRecordSize());
-				rmd.setIfEarlier(dh.getStartBtime());
-				rmd.setIfLater(dh.getLastSampleBtime());
+				rmd.setIfEarlier(dr.getStartBtime());
+				rmd.setIfLater(dr.getLastSampleBtime());
 				logHash.put(key, rmd);
 			}
 			/*
