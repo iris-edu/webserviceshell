@@ -84,21 +84,4 @@ public class RecordMetaData {
 		}
 	}
 
-    public static void main(String[] args) {
-        RecordMetaData rmd = new RecordMetaData();
-
-            Btime input = new Btime(2011, 36, 17, 24, 50, 9999);
-            rmd.setIfEarlier(input);
-
-            // creating format everytime because SimpleDataFormat is not
-            // thread safe
-            SimpleDateFormat fmt = new SimpleDateFormat(SeisFileDataFormat);
-            fmt.setTimeZone(Util.UTZ_TZ);
-            System.out.println("*** input: " + input + "  as Date obj, start: "
-                    + fmt.format(rmd.getStart().convertToCalendar().getTime()));
-
-            rmd.setIfLater(input);
-            System.out.println("*** input: " + input + "    as Date obj, end: "
-                    + fmt.format(rmd.getEnd().convertToCalendar().getTime()));
-	}
 }
