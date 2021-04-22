@@ -19,13 +19,12 @@
 
 package edu.iris.wss.endpoints;
 
-import edu.iris.wss.endpoints.RecordMetaData;
+
 import edu.iris.wss.framework.Util;
 import edu.sc.seis.seisFile.mseed.Btime;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -59,6 +58,19 @@ public class RecordMetaDataTest {
 
     @After
     public void tearDown() {
+    }
+
+    public Calendar btimeToCalendar(Btime btime) {
+        Calendar cal = Calendar.getInstance();
+
+        cal.set(Calendar.YEAR, btime.getYear());
+        cal.set(Calendar.DAY_OF_YEAR, btime.getDayOfYear());
+        cal.set(Calendar.HOUR_OF_DAY, btime.getHour());
+        cal.set(Calendar.MINUTE, btime.getMin());
+        cal.set(Calendar.SECOND, btime.getSec());
+        cal.set(Calendar.MILLISECOND, btime.getTenthMilli() / 10);
+
+        return cal;
     }
 
     /**
@@ -114,7 +126,7 @@ public class RecordMetaDataTest {
     @Test
     public void testGetStartAndEnd() {
         RecordMetaData instance = new RecordMetaData();
-        Btime expStart = new Btime(new Date());
+        Btime expStart = new Btime(Instant.now());
         instance.setStart(expStart);
         Btime result = instance.getStart();
         assertEquals(expStart, result);
@@ -122,7 +134,7 @@ public class RecordMetaDataTest {
         // check end is default null
         assertEquals(instance.getEnd(), null);
 
-        Btime expEnd = new Btime(new Date());
+        Btime expEnd = new Btime(Instant.now());
         instance.setEnd(expEnd);
         Btime endResult = instance.getEnd();
         assertEquals(expEnd, endResult);
@@ -148,7 +160,7 @@ public class RecordMetaDataTest {
         start.set(Calendar.SECOND, 50);
         start.set(Calendar.MILLISECOND, 999);
 
-        instance.setIfEarlier(new Btime(start.getTime()));
+        instance.setIfEarlier(new Btime(Instant.ofEpochMilli(start.getTimeInMillis())));
 
         // expected string base on constraints of substring in method
         String startExpected = "2011,036,17:24:50.999";
@@ -157,9 +169,10 @@ public class RecordMetaDataTest {
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
         fmt.setTimeZone(Util.UTZ_TZ);
-        String startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
+        String startResult = fmt.format(btimeToCalendar(instance.getStart()).getTime());
         // using the same formatter, I should get the same string from date
         // less the microsecond part
+
         assertTrue(startResult.equals(startExpected));
 
         // an earlier time should result in a change to start
@@ -167,8 +180,8 @@ public class RecordMetaDataTest {
         start.set(Calendar.SECOND, 49);
         start.set(Calendar.MILLISECOND, 123);
 
-        instance.setIfEarlier(new Btime(start.getTime()));
-        startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
+        instance.setIfEarlier(new Btime(Instant.ofEpochMilli(start.getTimeInMillis())));
+        startResult = fmt.format(btimeToCalendar(instance.getStart()).getTime());
         assertTrue(startResult.equals(startExpected));
 
         // a later time should result in no change
@@ -176,8 +189,8 @@ public class RecordMetaDataTest {
         //startExpected = "2011,036,17:24:51.123";
         start.set(Calendar.SECOND, 51);
         start.set(Calendar.MILLISECOND, 123);
-        instance.setIfEarlier(new Btime(start.getTime()));
-        startResult = fmt.format(instance.getStart().convertToCalendar().getTime());
+        instance.setIfEarlier(new Btime(Instant.ofEpochMilli(start.getTimeInMillis())));
+        startResult = fmt.format(btimeToCalendar(instance.getStart()).getTime());
 
         logger.info("*** startPrevious: " + startPrevious);
         logger.info("***   later start: " + start);
@@ -203,22 +216,22 @@ public class RecordMetaDataTest {
         end.set(Calendar.SECOND, 50);
         end.set(Calendar.MILLISECOND, 999);
 
-        instance.setIfLater(new Btime(end.getTime()));
+        instance.setIfLater(new Btime(Instant.ofEpochMilli(end.getTimeInMillis())));
 
         String endExpected = "2011,036,17:24:50.999";
         // creating format everytime because SimpleDataFormat is not
         // thread safe
         SimpleDateFormat fmt = new SimpleDateFormat(RecordMetaData.SeisFileDataFormat);
         fmt.setTimeZone(Util.UTZ_TZ);
-        String endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
+        String endResult = fmt.format(btimeToCalendar(instance.getEnd()).getTime());
         assertTrue(endResult.equals(endExpected));
 
         // a later time should result in a change to end
         endExpected = "2011,036,17:24:51.123";
         end.set(Calendar.SECOND, 51);
         end.set(Calendar.MILLISECOND, 123);
-        instance.setIfLater(new Btime(end.getTime()));
-        endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
+        instance.setIfLater(new Btime(Instant.ofEpochMilli(end.getTimeInMillis())));
+        endResult = fmt.format(btimeToCalendar(instance.getEnd()).getTime());
         assertTrue(endResult.equals(endExpected));
 
         // an earlier time should result in no change
@@ -226,8 +239,8 @@ public class RecordMetaDataTest {
         //endExpected = "2011,036,17:24:49.123";
         end.set(Calendar.SECOND, 49);
         end.set(Calendar.MILLISECOND, 123);
-        instance.setIfLater(new Btime(end.getTime()));
-        endResult = fmt.format(instance.getEnd().convertToCalendar().getTime());
+        instance.setIfLater(new Btime(Instant.ofEpochMilli(end.getTimeInMillis())));
+        endResult = fmt.format(btimeToCalendar(instance.getEnd()).getTime());
 
         logger.info("*** endPrevious: " + endPrevious);
         logger.info("*** earlier end: " + end);
