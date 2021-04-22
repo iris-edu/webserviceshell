@@ -121,7 +121,7 @@
 		<servlet.version>3.0.1</servlet.version>
 		<sc.seis.seisFile>2.0.0</sc.seis.seisFile>
         <dmc.usage.log.version>1.0.2</dmc.usage.log.version>
-        <dmc_logging.version>[1.1.12,)</dmc_logging.version>
+        <dmc_logging.version>1.1.14</dmc_logging.version>
         <hk2.version>2.4.0-b31</hk2.version>
     </properties>
 
@@ -194,7 +194,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.10</version>
+            <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

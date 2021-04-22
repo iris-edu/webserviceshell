@@ -7,6 +7,10 @@ target/
 # vi
 **/*.*.swp
 
+# intelliJ noise
+.idea
+webserviceshell.iml
+
 # netbeans noise
 nbactions.xml
 nb-configuration.xml
