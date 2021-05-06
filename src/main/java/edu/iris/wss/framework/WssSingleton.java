@@ -19,8 +19,6 @@
 
 package edu.iris.wss.framework;
 
-// Reference to support JMS logging option.
-import edu.iris.dmc.jms.service.WebLogService;
 import edu.iris.dmc.logging.rabbitmq.IrisRabbitAsyncPublisher;
 import edu.iris.dmc.logging.rabbitmq.IrisRabbitPublisherFactory;
 
@@ -53,7 +51,6 @@ public class WssSingleton {
 	public StatsKeeper statsKeeper = new StatsKeeper();
 	public IrisSingleton singleton = null;
 
-    public static WebLogService webLogService = null;
     public static IrisRabbitAsyncPublisher rabbitAsyncPublisher = null;
 
     public static final String HEADER_START_IDENTIFIER = "HTTP_HEADERS_START";
@@ -176,9 +173,6 @@ public class WssSingleton {
               AppConfigurator.LoggingMethod.RABBIT_ASYNC)) {
             String fileName = appConfig.getLoggingConfig().toString();
             setupRabbitLogging(fileName);
-        } else if (appConfig.getLoggingType().equals(
-              AppConfigurator.LoggingMethod.JMS)) {
-            setupJMSLogging();
         }
 	}
 
@@ -245,30 +239,6 @@ public class WssSingleton {
                 System.out.println(msg + ex);
                 logger.error(msg, ex);
             }
-        }
-    }
-
-    private void setupJMSLogging() {
-        if (webLogService != null) {
-            // should always be null if webLogService is held as a static,
-            // this implies that more than one WssSingleton object is seeing
-            // this class variable. It should be refactored or there should
-            // be different classloaders used to isolate this class from another
-            String msg = "POSSIBLE ERROR, JMS object already exists, null was"
-                  + " expected for webLogService, webLogService: "
-                  + webLogService;
-            System.out.println(msg);
-            logger.error(msg);
-        }
-
-        webLogService = new WebLogService();
-        try {
-            webLogService.init();
-            logger.info("JMS webLogService init finished");
-        } catch (Exception ex) {
-            String msg = "JMS webLogService init ex: ";
-            System.out.println(msg + ex);
-            logger.error(msg, ex);
         }
     }
 }

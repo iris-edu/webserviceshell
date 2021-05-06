@@ -19,7 +19,6 @@
 
 package edu.iris.wss.utils;
 
-import edu.iris.dmc.jms.WebUsageItem;
 import edu.iris.dmc.logging.usage.WSUsageItem;
 import edu.iris.wss.framework.AppConfigurator;
 import java.text.SimpleDateFormat;
@@ -156,43 +155,6 @@ public class LoggerUtils {
 				break;
 			}
 
-		} else if (loggingType == LoggingMethod.JMS) {
-
-            WebUsageItem wui = new WebUsageItem();
-
-            wui.setApplication(  olderJMSApplciationName);
-            wui.setHost(         wsuRabbit.getHost());
-            wui.setAccessDate(   wsuRabbit.getAccessDate());
-            wui.setClientName(   wsuRabbit.getClientName());
-            wui.setClientIP(     wsuRabbit.getClientIp());
-            wui.setDataSize(     wsuRabbit.getDataSize());
-            wui.setProcessTime(  wsuRabbit.getProcessTimeMsec());
-            wui.setNetwork(      wsuRabbit.getNetwork());
-            wui.setStation(      wsuRabbit.getStation());
-            wui.setChannel(      wsuRabbit.getChannel());
-            wui.setLocation(     wsuRabbit.getLocation());
-            wui.setQuality(      wsuRabbit.getQuality());
-            wui.setStartTime(    wsuRabbit.getStartTime());
-            wui.setEndTime(      wsuRabbit.getEndTime());
-            wui.setErrorType(    wsuRabbit.getErrorType());
-            wui.setUserAgent(    wsuRabbit.getUserAgent());
-            wui.setHttpStatus(   wsuRabbit.getHttpCode());
-            wui.setUserName(     wsuRabbit.getUserName());
-            wui.setExtra(        wsuRabbit.getExtra());
-
-            try {
-                WssSingleton.webLogService.send(wui);
-			} catch (Exception ex) {
-				logger.error("Error while publishing via JMS ex: " + ex
-                      + "  webLogService: " + WssSingleton.webLogService
-                      + "  ex msg: " + ex.getMessage()
-                      + "  application: " + wui.getApplication()
-                      + "  host: " + wui.getHost()
-                      + "  client IP: " + wui.getClientIP()
-                      + "  ErrorType: " + wui.getErrorType());
-
-//                logger.error("Error while publishing via JMS stack:", ex);
-			}
 
 		} else if (loggingType == LoggingMethod.RABBIT_ASYNC) {
             try {

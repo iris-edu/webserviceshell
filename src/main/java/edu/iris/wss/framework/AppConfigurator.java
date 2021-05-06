@@ -54,7 +54,7 @@ import org.apache.log4j.Logger;
 public class AppConfigurator {
 	public static final Logger logger = Logger.getLogger(AppConfigurator.class);
 
-	public static final String wssVersion = "2.4.11";
+public static final String wssVersion = "2.4.12-SNAPSHOT";
 
 	public static final String wssDigestRealmnameSignature = "wss.digest.realmname";
 
@@ -165,7 +165,7 @@ public class AppConfigurator {
     private final Endpoint ep_defaults = new Endpoint();
 
 	public static enum LoggingMethod {
-		LOG4J, JMS, RABBIT_ASYNC
+		LOG4J, RABBIT_ASYNC
 	};
 
     /**
@@ -851,7 +851,7 @@ public class AppConfigurator {
                         throw new Exception("Unrecognized value for paramater: " + key
                               + "  value found: " + newVal
                               + "  should be one of " + LoggingMethod.LOG4J.toString()
-                              + " or " + LoggingMethod.JMS.toString(), ex);
+                              + " or " + LoggingMethod.RABBIT_ASYNC.toString(), ex);
                     }
                 } else if(currentVal instanceof URL) {
                     try {

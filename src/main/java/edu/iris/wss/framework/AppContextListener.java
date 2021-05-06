@@ -68,18 +68,5 @@ public class AppContextListener implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent arg0) {
         logger.info("contextDestroyed called, context: "
               + arg0.getServletContext().getContextPath());
-        if (WssSingleton.webLogService != null) {
-            try {
-                // for JMS
-                WssSingleton.webLogService.cleanUp();
-                logger.info("contextDestroyed called, JMS cleanUp finished");
-            } catch (Exception ex) {
-                System.out.println("*** AppContextListener, webLogService"
-                        + " cleanup exception: " + ex
-                        + "  msg: " + ex.getMessage());
-                logger.info("*** AppContextListener, webLogService cleanup"
-                        + " exception: ", ex);
-            }
-        }
     }
 }
