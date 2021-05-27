@@ -135,9 +135,10 @@
 
         <dependency>
             <groupId>edu.sc.seis</groupId>
-            <artifactId>seisfile</artifactId>
+            <artifactId>seisFile</artifactId>
             <version>${sc.seis.seisFile}</version>
         </dependency>
+
 
         <dependency>
             <groupId>edu.iris</groupId>
